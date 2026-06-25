@@ -1,0 +1,24 @@
+{
+  "name": "sentinel-civic-server",
+  "version": "1.0.0",
+  "description": "SENTINEL-CIVIC backend — Community Hero hyperlocal problem solver",
+  "main": "server.js",
+  "type": "module",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node --watch server.js",
+    "seed": "node src/seed/seedData.js",
+    "test": "node --test src/math/__tests__/*.test.js"
+  },
+  "dependencies": {
+    "@google/generative-ai": "^0.24.0",
+    "@google-cloud/vision": "^4.3.0",
+    "cors": "^2.8.5",
+    "dotenv": "^16.5.0",
+    "express": "^5.1.0",
+    "firebase-admin": "^13.4.0",
+    "multer": "^1.4.5-lts.2",
+    "uuid": "^11.1.0"
+  },
+  "devDependencies": {}
+}
