@@ -57,9 +57,19 @@ function toOllamaMessages(messages, tools) {
       continue;
     }
 
+    let content = msg.content || '';
+    if (msg.role === 'assistant' && msg.toolCalls && msg.toolCalls.length > 0) {
+      content = JSON.stringify({
+        tool_calls: msg.toolCalls.map(tc => ({
+          name: tc.name,
+          args: tc.args || {},
+        })),
+      });
+    }
+
     const ollamaMsg = {
       role: msg.role === 'assistant' ? 'assistant' : 'user',
-      content: msg.content || '',
+      content,
     };
 
     // Ollama supports images via base64

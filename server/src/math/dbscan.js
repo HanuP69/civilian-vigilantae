@@ -156,6 +156,7 @@ export function dbscan(points, epsilon = 0.35, minPts = 2) {
 
     // Seed set — use a queue to expand
     const queue = [...neighbors];
+    const queued = new Set(queue);
     let qi = 0;
 
     while (qi < queue.length) {
@@ -174,7 +175,10 @@ export function dbscan(points, epsilon = 0.35, minPts = 2) {
       const jNeighbors = regionQuery(j);
       if (jNeighbors.length >= minPts) {
         for (const k of jNeighbors) {
-          queue.push(k);
+          if (!queued.has(k) && labels[k] === undefined) {
+            queue.push(k);
+            queued.add(k);
+          }
         }
       }
     }

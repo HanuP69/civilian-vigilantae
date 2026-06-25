@@ -1,29 +1,29 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { fetchDashboardStats, fetchRecurrenceRisk } from '../services/api';
 import { CATEGORY_LABELS, CATEGORY_COLORS } from '../utils/constants';
 import { formatHours, capitalize } from '../utils/formatters';
+import { useToast } from '../hooks/useToast.jsx';
 import { motion } from 'framer-motion';
 
 const CountUp = ({ to, suffix = '' }) => {
   const [count, setCount] = useState(0);
   useEffect(() => {
     if (to === null || to === undefined) return;
-    let start = 0;
+    let startTime = null;
     const duration = 1500;
     const end = parseFloat(to);
     if (isNaN(end)) return;
-    
-    let startTime = null;
+
     const animate = (time) => {
       if (!startTime) startTime = time;
       const progress = Math.min((time - startTime) / duration, 1);
-      const easeProgress = 1 - Math.pow(1 - progress, 3); // cubic ease out
-      setCount(Math.floor(easeProgress * end));
+      const easeProgress = 1 - Math.pow(1 - progress, 3);
+      setCount(Math.round(easeProgress * end));
       if (progress < 1) requestAnimationFrame(animate);
     };
     requestAnimationFrame(animate);
   }, [to]);
-  
+
   if (to === null || to === undefined) return '—';
   return <>{count}{suffix}</>;
 };
@@ -32,21 +32,36 @@ function DashboardPage() {
   const [stats, setStats] = useState(null);
   const [recurrence, setRecurrence] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [tableScrollable, setTableScrollable] = useState(false);
+  const tableRef = useRef(null);
+  const { toast } = useToast();
 
   useEffect(() => {
     Promise.all([
       fetchDashboardStats().catch(() => null),
-      fetchRecurrenceRisk().catch(() => []),
+      fetchRecurrenceRisk().catch(() => null),
     ]).then(([s, r]) => {
+      if (s === null) toast('Failed to load dashboard stats', 'error');
+      if (r === null) toast('Failed to load recurrence risk', 'error');
       setStats(s);
       setRecurrence(Array.isArray(r) ? r : r?.risks || []);
       setLoading(false);
     });
-  }, []);
+  }, [toast]);
+
+  useEffect(() => {
+    const checkScroll = () => {
+      const el = tableRef.current;
+      if (el) setTableScrollable(el.scrollWidth > el.clientWidth);
+    };
+    checkScroll();
+    window.addEventListener('resize', checkScroll);
+    return () => window.removeEventListener('resize', checkScroll);
+  }, [stats]);
 
   if (loading) {
     return (
-      <div className="flex flex-col gap-5">
+      <div className="flex flex-col gap-5" aria-busy="true" aria-label="Loading dashboard">
         <div className="stats-row">
           {[1, 2, 3, 4].map(i => (
             <div key={i} className="skeleton" style={{ height: 90, borderRadius: 'var(--radius-lg)' }} />
@@ -75,7 +90,7 @@ function DashboardPage() {
   };
 
   return (
-    <motion.div 
+    <motion.div
       className="flex flex-col gap-6"
       variants={container}
       initial="hidden"
@@ -110,7 +125,7 @@ function DashboardPage() {
           <div className="flex flex-col gap-3">
             {Object.entries(categoryBreakdown).map(([cat, count]) => (
               <div key={cat} className="flex items-center gap-3">
-                <span className="text-sm" style={{ width: 120, flexShrink: 0 }}>
+                <span className="text-sm" style={{ minWidth: 120, maxWidth: 160, flexShrink: 0 }}>
                   {CATEGORY_LABELS[cat] || capitalize(cat)}
                 </span>
                 <div style={{ flex: 1, height: 24, background: 'var(--bg-surface)', borderRadius: 'var(--radius-sm)', overflow: 'hidden' }}>
@@ -138,8 +153,11 @@ function DashboardPage() {
 
       {departments.length > 0 && (
         <motion.div variants={itemAnim} className="card">
-          <h3 style={{ marginBottom: 'var(--space-4)' }}>Department Performance</h3>
-          <div className="table-container">
+          <div className="flex items-center justify-between" style={{ marginBottom: 'var(--space-4)' }}>
+            <h3>Department Performance</h3>
+            {tableScrollable && <span className="text-xs text-muted">← scroll →</span>}
+          </div>
+          <div className={`table-container ${tableScrollable ? 'is-scrollable' : ''}`} ref={tableRef}>
             <table>
               <thead>
                 <tr>
@@ -151,8 +169,8 @@ function DashboardPage() {
                 </tr>
               </thead>
               <tbody>
-                {departments.map((dept, i) => (
-                  <tr key={i}>
+                {departments.map((dept) => (
+                  <tr key={dept.name}>
                     <td className="font-medium" style={{ color: 'var(--ink-primary)' }}>{dept.name}</td>
                     <td>{dept.total}</td>
                     <td>{dept.resolved}</td>
@@ -175,7 +193,7 @@ function DashboardPage() {
           <h3 style={{ marginBottom: 'var(--space-4)' }}>Recurrence Risk</h3>
           <div className="flex flex-col gap-3">
             {recurrence.slice(0, 10).map((item, i) => (
-              <div key={i} className="card card-compact flex flex-col gap-2">
+              <div key={`${item.ward}-${item.category}-${i}`} className="card card-compact flex flex-col gap-2">
                 <div className="flex justify-between items-center">
                   <span className="text-sm font-medium">{item.ward ? `${item.ward} (${CATEGORY_LABELS[item.category] || capitalize(item.category)})` : `Zone ${i + 1}`}</span>
                   <span className="text-sm font-mono" style={{
@@ -188,7 +206,7 @@ function DashboardPage() {
                   <motion.div
                     className="priority-bar-fill"
                     initial={{ width: 0 }}
-                    animate={{ width: `${Math.round((item.probability || 0) * 100)}%` }}
+                    animate={{ width: `${Math.max(Math.round((item.probability || 0) * 100), 2)}%` }}
                     transition={{ duration: 1, ease: "easeOut", delay: 0.3 }}
                     style={{
                       background: item.probability > 0.7 ? 'var(--error)' : item.probability > 0.4 ? 'var(--warning)' : 'var(--success)',
@@ -196,7 +214,7 @@ function DashboardPage() {
                   />
                 </div>
                 {item.recommendedAction && (
-                  <p className="text-xs text-muted">↳ {item.recommendedAction}</p>
+                  <p className="text-xs text-muted">{item.recommendedAction}</p>
                 )}
               </div>
             ))}

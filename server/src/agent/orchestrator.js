@@ -32,6 +32,8 @@ export async function processReport(reportData, onStep) {
     userName: reportData.reporter_name,
     mediaUrls: reportData.media_urls || [],
     mediaType: reportData.media_type || 'image',
+    mediaBase64: reportData.mediaBase64 || null,
+    mediaMimeType: reportData.mediaMimeType || null,
     classificationResult: reportData.classificationResult || null,
     cloudVisionResult: reportData.cloudVisionResult || null,
     classificationAgreement: reportData.classificationAgreement ?? true,
@@ -43,7 +45,7 @@ export async function processReport(reportData, onStep) {
     { role: 'user', content: buildReportPrompt(reportData) },
   ];
 
-  let result = { ticketId: null, trace: [] };
+  let result = { ticketId: null, merged: false, trace: [] };
 
   for (let round = 0; round < MAX_TOOL_ROUNDS; round++) {
     const complete = trace.startStep('llm_reasoning', { round });
@@ -61,6 +63,8 @@ export async function processReport(reportData, onStep) {
       break;
     }
 
+    messages.push({ role: 'assistant', content: '', toolCalls: response.toolCalls });
+
     for (const toolCall of response.toolCalls) {
       const completeStep = trace.startStep(toolCall.name, toolCall.args);
       try {
@@ -71,12 +75,16 @@ export async function processReport(reportData, onStep) {
 
         if (toolCall.name === 'create_ticket' && toolResult.ticket_id) {
           result.ticketId = toolResult.ticket_id;
+          result.merged = false;
+        }
+        if (toolCall.name === 'merge_into_ticket' && toolResult.ticket_id) {
+          result.ticketId = toolResult.ticket_id;
+          result.merged = true;
         }
         if (toolCall.name === 'classify_issue') {
           ctx.classificationResult = toolResult;
         }
 
-        messages.push({ role: 'assistant', content: '', toolCalls: [toolCall] });
         messages.push({ role: 'tool', name: toolCall.name, content: JSON.stringify(toolResult) });
       } catch (err) {
         completeStep({ error: err.message }, `Error in ${toolCall.name}`, 'error');
@@ -129,7 +137,7 @@ export async function processSchedulerTick(onStep) {
           const handler = toolHandlers[toolCall.name];
           const toolResult = await handler(toolCall.args, { trace });
           completeStep(toolResult, `Scheduler: ${toolCall.name}`);
-          messages.push({ role: 'assistant', content: '' });
+          messages.push({ role: 'assistant', content: '', toolCalls: [toolCall] });
           messages.push({ role: 'tool', name: toolCall.name, content: JSON.stringify(toolResult) });
         } catch (err) {
           completeStep({ error: err.message }, '', 'error');

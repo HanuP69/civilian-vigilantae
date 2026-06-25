@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 
-export function useSSE(url = 'http://localhost:3001/api/events') {
+export function useSSE(url = '/api/events') {
   const [events, setEvents] = useState([]);
   const [isConnected, setIsConnected] = useState(false);
   const sourceRef = useRef(null);
@@ -8,6 +8,7 @@ export function useSSE(url = 'http://localhost:3001/api/events') {
   useEffect(() => {
     const es = new EventSource(url);
     sourceRef.current = es;
+    es.onopen = () => setIsConnected(true);
     es.addEventListener('connected', () => setIsConnected(true));
     const handler = (type) => (e) => {
       try {

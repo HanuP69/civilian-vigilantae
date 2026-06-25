@@ -1,21 +1,68 @@
 import { useState, useEffect } from 'react';
 import { fetchLeaderboard } from '../services/api';
+import { useToast } from '../hooks/useToast.jsx';
 import { motion } from 'framer-motion';
+
+const BADGE_DISPLAY = {
+  'Neighborhood Watch': { emoji: '🛡️', name: 'Neighborhood Watch' },
+  'Verified Reporter': { emoji: '✅', name: 'Verified Reporter' },
+  'Eagle Eye': { emoji: '🔍', name: 'Eagle Eye' },
+  'Community Champion': { emoji: '🏆', name: 'Community Champion' },
+  'Ward Guardian': { emoji: '⭐', name: 'Ward Guardian' },
+};
+
+const getBadgeDisplay = (badge) => {
+  if (typeof badge === 'object' && badge !== null) {
+    return { emoji: badge.emoji || badge.icon || '🏅', name: badge.name || 'Badge' };
+  }
+  return BADGE_DISPLAY[badge] || { emoji: '🏅', name: badge };
+};
+
+const Avatar = ({ seed, name }) => {
+  const [error, setError] = useState(false);
+  if (error) {
+    const initial = (name || '?').charAt(0).toUpperCase();
+    return (
+      <div
+        className="pixel-avatar flex items-center justify-center"
+        style={{ width: 48, height: 48, background: 'var(--bg-surface)', color: 'var(--accent)', fontWeight: 600, fontSize: '1.25rem' }}
+      >
+        {initial}
+      </div>
+    );
+  }
+  return (
+    <img
+      src={`https://api.dicebear.com/7.x/pixel-art/svg?seed=${encodeURIComponent(seed || name)}`}
+      alt={name}
+      loading="lazy"
+      onError={() => setError(true)}
+      className="pixel-avatar"
+      style={{ width: 48, height: 48, backgroundColor: 'var(--bg-surface)' }}
+    />
+  );
+};
 
 function LeaderboardPage() {
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
+  const { toast } = useToast();
 
   useEffect(() => {
     fetchLeaderboard()
-      .then(data => setUsers(Array.isArray(data) ? data : data.users || []))
-      .catch(() => setUsers([]))
+      .then(data => {
+        setUsers(Array.isArray(data) ? data : data.leaderboard || data.users || []);
+      })
+      .catch(() => {
+        setUsers([]);
+        toast('Failed to load leaderboard', 'error');
+      })
       .finally(() => setLoading(false));
-  }, []);
+  }, [toast]);
 
   if (loading) {
     return (
-      <div className="flex flex-col gap-4">
+      <div className="flex flex-col gap-4" aria-busy="true" aria-label="Loading leaderboard">
         <div className="skeleton" style={{ height: 32, width: 200 }} />
         {[1, 2, 3, 4, 5].map(i => (
           <div key={i} className="skeleton pixel-border" style={{ height: 72 }} />
@@ -44,7 +91,7 @@ function LeaderboardPage() {
         <span className="font-pixel text-xs" style={{ color: 'var(--accent)' }}>XP Leaderboard</span>
       </div>
 
-      <motion.div 
+      <motion.div
         className="flex flex-col gap-4"
         variants={container}
         initial="hidden"
@@ -53,60 +100,55 @@ function LeaderboardPage() {
         {users.map((user, i) => {
           const rank = user.rank || i + 1;
           const maxXP = users[0]?.xp || 1;
-          const name = user.name || user.username || user.display_name || `User ${user.id}`;
-          
+          const name = user.name || user.username || user.display_name || `User ${user.id || user.uid || i + 1}`;
+          const badges = user.badges || [];
+
           let rankColor = 'var(--ink-secondary)';
-          if (rank === 1) rankColor = '#FFD700';
-          if (rank === 2) rankColor = '#C0C0C0';
-          if (rank === 3) rankColor = '#CD7F32';
+          if (rank === 1) rankColor = 'var(--rank-gold)';
+          if (rank === 2) rankColor = 'var(--rank-silver)';
+          if (rank === 3) rankColor = 'var(--rank-bronze)';
 
           return (
-            <motion.div 
-              key={user.id || user.uid || i} 
+            <motion.div
+              key={user.id || user.uid || i}
               variants={itemAnim}
               className="card pixel-border flex items-center gap-4"
-              style={{ 
+              style={{
                 padding: 'var(--space-3) var(--space-4)',
                 background: rank <= 3 ? 'var(--bg-elevated)' : 'var(--bg-secondary)',
                 borderColor: rank <= 3 ? rankColor : 'var(--border)'
               }}
             >
-              <div 
-                className="font-pixel" 
-                style={{ 
-                  fontSize: '1.25rem', 
+              <div
+                className="font-pixel"
+                style={{
+                  fontSize: '1.25rem',
                   color: rankColor,
-                  width: '40px',
+                  minWidth: '40px',
                   textAlign: 'center'
                 }}
               >
                 {rank}
               </div>
 
-              <img 
-                src={`https://api.dicebear.com/7.x/pixel-art/svg?seed=${encodeURIComponent(name)}`} 
-                alt={name}
-                className="pixel-avatar"
-                style={{ width: 48, height: 48, backgroundColor: 'var(--bg-surface)' }}
-              />
+              <Avatar seed={name} name={name} />
 
-              <div className="flex flex-col flex-1 gap-1">
-                <span className="font-medium" style={{ color: 'var(--ink-primary)', fontSize: '1.1rem' }}>
+              <div className="flex flex-col flex-1 gap-1" style={{ minWidth: 0 }}>
+                <span className="font-medium truncate" style={{ color: 'var(--ink-primary)', fontSize: '1.1rem' }}>
                   {name}
                 </span>
                 <div className="flex items-center gap-3">
-                  <div className="xp-bar" style={{ flex: 1, maxWidth: 200, height: 8, borderRadius: 0, border: '1px solid var(--border)' }}>
+                  <div className="xp-bar" style={{ flex: 1, maxWidth: 200 }}>
                     <div
                       className="xp-bar-fill"
-                      style={{ 
-                        width: `${((user.xp || 0) / maxXP) * 100}%`,
-                        borderRadius: 0,
+                      style={{
+                        width: `${Math.min(((user.xp || 0) / maxXP) * 100, 100)}%`,
                         background: rank <= 3 ? rankColor : 'var(--accent)'
                       }}
                     />
                   </div>
-                  <span className="text-xs text-muted">
-                    {user.reports_submitted ?? user.reports_count ?? user.total_reports ?? 0} Reports
+                  <span className="text-xs text-muted" style={{ whiteSpace: 'nowrap' }}>
+                    {user.reports ?? user.reports_submitted ?? 0} Reports
                   </span>
                 </div>
               </div>
@@ -115,13 +157,18 @@ function LeaderboardPage() {
                 <span className="font-pixel" style={{ color: 'var(--accent)', fontSize: '1rem' }}>
                   {user.xp ?? 0} XP
                 </span>
-                <div className="flex gap-1">
-                  {(user.badges || []).map((badge, bi) => (
-                    <span key={bi} title={badge.name || badge} style={{ fontSize: '0.875rem' }}>
-                      {badge.emoji || badge.icon || '🏅'}
-                    </span>
-                  ))}
-                </div>
+                {badges.length > 0 && (
+                  <div className="flex gap-1" style={{ fontSize: '0.875rem' }}>
+                    {badges.slice(0, 5).map((badge, bi) => {
+                      const display = getBadgeDisplay(badge);
+                      return (
+                        <span key={bi} title={display.name} role="img" aria-label={display.name}>
+                          {display.emoji}
+                        </span>
+                      );
+                    })}
+                  </div>
+                )}
               </div>
             </motion.div>
           );

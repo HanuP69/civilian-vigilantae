@@ -78,6 +78,21 @@ function toGeminiContents(messages) {
       });
     }
 
+    if (msg.toolCalls && msg.toolCalls.length > 0) {
+      for (const tc of msg.toolCalls) {
+        parts.push({
+          functionCall: {
+            name: tc.name,
+            args: tc.args || {},
+          },
+        });
+      }
+    }
+
+    if (parts.length === 0) {
+      parts.push({ text: '' });
+    }
+
     contents.push({
       role: msg.role === 'assistant' ? 'model' : 'user',
       parts,
@@ -172,7 +187,7 @@ export class GeminiClient extends LLMClient {
 
         return parsed;
       } catch (err) {
-        const isRetryable = err.status === 503 || err.status >= 500;
+        const isRetryable = err.status >= 500;
 
         if (isRetryable && attempt < MAX_RETRIES - 1) {
           const delay = BASE_DELAY_MS * Math.pow(2, attempt);
@@ -206,6 +221,10 @@ export class GeminiClient extends LLMClient {
       const messages = [{ role: 'user', content: text, media }];
       return await this.chat(messages, tools);
     } catch (err) {
+      if (media?.mimeType?.startsWith('video/')) {
+        console.error('[Gemini] Video classification failed and Ollama cannot handle video:', err.message);
+        throw err;
+      }
       if (!this.fallbackClient) this.fallbackClient = new OllamaClient();
       return this.fallbackClient.chatWithMedia(text, media, tools);
     }

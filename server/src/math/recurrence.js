@@ -144,9 +144,9 @@ export function computeRecurrenceRisk(resolvedTickets, forecastDays = 14) {
       0,
     );
     const forecastHours = forecastDays * 24;
-    const t = hoursSinceLast + forecastHours;
-
-    const probability = weibullCDF(t, lambda, k);
+    const F_t0 = weibullCDF(hoursSinceLast, lambda, k);
+    const F_t1 = weibullCDF(hoursSinceLast + forecastHours, lambda, k);
+    const probability = F_t0 >= 1 ? 1 : (F_t1 - F_t0) / (1 - F_t0);
 
     // ── 5. Action ────────────────────────────────────────────────
     const recommendedAction = actionForProbability(probability);

@@ -1,12 +1,11 @@
 export const CATEGORY_COLORS = {
-  road_damage: '#e67e22',
-  water_supply: '#3498db',
-  garbage: '#27ae60',
-  streetlight: '#f1c40f',
-  sewage: '#8e44ad',
-  encroachment: '#e74c3c',
-  noise: '#1abc9c',
-  other: '#95a5a6',
+  pothole: 'oklch(0.68 0.16 55)',
+  water_leak: 'oklch(0.62 0.14 240)',
+  streetlight: 'oklch(0.80 0.15 90)',
+  waste: 'oklch(0.65 0.16 155)',
+  road_damage: 'oklch(0.58 0.20 30)',
+  drainage: 'oklch(0.55 0.18 300)',
+  other: 'oklch(0.65 0.02 260)',
 };
 
 export const SEVERITY_COLORS = {
@@ -25,19 +24,16 @@ export const STATUS_COLORS = {
 };
 
 export const CATEGORY_LABELS = {
-  road_damage: 'Road Damage',
-  water_supply: 'Water Supply',
-  garbage: 'Garbage',
+  pothole: 'Pothole',
+  water_leak: 'Water Leak',
   streetlight: 'Streetlight',
-  sewage: 'Sewage',
-  encroachment: 'Encroachment',
-  noise: 'Noise',
+  waste: 'Waste',
+  road_damage: 'Road Damage',
+  drainage: 'Drainage',
   other: 'Other',
 };
 
 export const WARD_LIST = [
-  'Ward 1', 'Ward 2', 'Ward 3', 'Ward 4', 'Ward 5',
-  'Ward 6', 'Ward 7', 'Ward 8', 'Ward 9', 'Ward 10',
-  'Ward 11', 'Ward 12', 'Ward 13', 'Ward 14', 'Ward 15',
-  'Ward 16', 'Ward 17', 'Ward 18', 'Ward 19', 'Ward 20',
+  'Hazratganj', 'Aminabad', 'Aliganj', 'Gomti Nagar', 'Indira Nagar',
+  'Alambagh', 'Chowk', 'Rajajipuram',
 ];

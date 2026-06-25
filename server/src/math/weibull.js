@@ -159,7 +159,10 @@ export function weibullMLE(times, { maxIterations = 20, convergenceThreshold = 1
   // ── Initial guess for k via method of moments ────────────────────
   // Var(ln T) ≈ π² / (6 k²)  ⟹  k₀ ≈ π / (√6 · σ(ln T))
   const varLogT = logT.reduce((s, v) => s + (v - meanLogT) ** 2, 0) / n;
-  let k = varLogT > 0 ? Math.PI / (Math.sqrt(6 * varLogT)) : 1.0;
+  if (varLogT < 1e-9) {
+    throw new Error('Variance of intervals is too close to zero for Weibull MLE');
+  }
+  let k = Math.PI / (Math.sqrt(6 * varLogT));
 
   // Clamp initial guess to a sensible range
   k = Math.max(0.1, Math.min(k, 10));

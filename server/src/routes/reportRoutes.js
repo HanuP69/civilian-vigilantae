@@ -28,13 +28,18 @@ router.post('/', requireAuth, reportLimiter, upload.single('media'), async (req,
     let mediaUrls = [];
     let mediaType = 'image';
 
+    let mediaBase64 = null;
+    let mediaMimeType = null;
+
     if (req.file) {
       const base64 = req.file.buffer.toString('base64');
+      mediaBase64 = base64;
+      mediaMimeType = req.file.mimetype;
       mediaType = req.file.mimetype.startsWith('video') ? 'video' : req.file.mimetype.startsWith('audio') ? 'audio' : 'image';
-      
+
       const ext = req.file.originalname?.split('.').pop() || 'bin';
       const filename = `${Date.now()}_${Math.random().toString(36).substr(2, 5)}.${ext}`;
-      
+
       let fileUrl = '';
       if (storage) {
         const file = storage.file(`reports/${filename}`);
@@ -60,6 +65,7 @@ router.post('/', requireAuth, reportLimiter, upload.single('media'), async (req,
       reporter_id: reporter_id,
       reporter_name: reporter_name || 'Anonymous',
       media_urls: mediaUrls, media_type: mediaType,
+      mediaBase64, mediaMimeType,
       classificationResult, cloudVisionResult, classificationAgreement,
     };
 
@@ -68,10 +74,16 @@ router.post('/', requireAuth, reportLimiter, upload.single('media'), async (req,
     });
 
     if (result.ticketId && reporter_id !== 'anonymous') {
-      await awardXP(reporter_id, 'report');
+      await awardXP(reporter_id, result.merged ? 'vote' : 'report');
     }
 
-    res.json({ success: true, ticket_id: result.ticketId, trace: result.trace });
+    res.json({
+      success: true,
+      ticket_id: result.ticketId,
+      merged: !!result.merged,
+      classification: classificationResult,
+      trace: result.trace,
+    });
   } catch (err) {
     console.error('[Report] Error:', err);
     res.status(500).json({ error: err.message });

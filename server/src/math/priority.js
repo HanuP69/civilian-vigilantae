@@ -116,6 +116,6 @@ export function computePriority({
     W4 * slaRatio +
     W5 * rSafety;
 
-  // Raw theoretical range: ~0 to 1. Return clamped float [0, 1].
-  return Math.min(Math.max(raw, 0), 1);
+  // Raw theoretical range: ~0 to 1. Return clamped float [0, 100].
+  return Math.min(Math.max(raw, 0), 1) * 100;
 }

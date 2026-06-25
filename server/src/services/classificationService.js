@@ -1,14 +1,7 @@
-import { GoogleGenerativeAI } from '@google/generative-ai';
+import { getLLMClient } from '../llm/index.js';
 import config from '../config/env.js';
 
-let genAI = null;
-function getGenAI() {
-  if (!genAI) genAI = new GoogleGenerativeAI(config.geminiApiKey);
-  return genAI;
-}
-
 export async function classifyWithGemini(base64Data, mimeType, text = '') {
-  const model = getGenAI().getGenerativeModel({ model: 'gemini-2.0-flash' });
   const mediaKind = mimeType.startsWith('video') ? 'video' : mimeType.startsWith('audio') ? 'audio' : 'image';
   const prompt = `You are a civic issue classifier for an Indian city. Analyze this ${mediaKind} and any text description to classify the issue.
 
@@ -23,17 +16,21 @@ Respond in JSON format:
   "evidence": "what you see in the media"
 }`;
 
-  const parts = [{ text: prompt }];
-  if (base64Data) {
-    parts.push({ inlineData: { mimeType, data: base64Data } });
+  try {
+    const client = getLLMClient();
+    const media = base64Data ? { mimeType, data: base64Data } : null;
+    const response = await client.chatWithMedia(prompt, media);
+    const responseText = response.text || '';
+    const jsonMatch = responseText.match(/\{[\s\S]*\}/);
+    if (!jsonMatch) {
+      return { category: 'other', severity: 'medium', confidence: 0.5, reasoning: 'Could not parse response', source: 'llm' };
+    }
+    const parsed = JSON.parse(jsonMatch[0]);
+    return { ...parsed, source: 'llm' };
+  } catch (err) {
+    console.error('[Classifier] Classification failed:', err.message);
+    return { category: 'other', severity: 'medium', confidence: 0.5, reasoning: `Classification failed: ${err.message}`, source: 'error' };
   }
-
-  const result = await model.generateContent({ contents: [{ role: 'user', parts }] });
-  const responseText = result.response.text();
-  const jsonMatch = responseText.match(/\{[\s\S]*\}/);
-  if (!jsonMatch) return { category: 'other', severity: 'medium', confidence: 0.5, reasoning: 'Could not parse response', source: 'gemini' };
-  const parsed = JSON.parse(jsonMatch[0]);
-  return { ...parsed, source: 'gemini' };
 }
 
 export async function classifyWithCloudVision(base64Data) {

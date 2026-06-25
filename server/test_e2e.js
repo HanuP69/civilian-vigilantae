@@ -56,7 +56,7 @@ async function runTests() {
     res = await fetch(`${API_URL}/tickets/${ticketId}`);
     const ticket = await res.json();
     if (!ticket || !ticket.id) throw new Error("Failed to fetch the created ticket");
-    console.log(`   ✅ Fetched Ticket: "${ticket.title}" (Priority: ${Math.round((ticket.priority_score || 0)*100)}%, Status: ${ticket.status})\n`);
+    console.log(`   ✅ Fetched Ticket: "${ticket.title}" (Priority: ${Math.round(ticket.priority_score || 0)}%, Status: ${ticket.status})\n`);
 
     // 4. Vote on the Ticket (Verification)
     console.log('4️⃣ Voting on the ticket (Still an issue)...');
@@ -89,7 +89,7 @@ async function runTests() {
     console.log('7️⃣ Fetching User Leaderboard...');
     res = await fetch(`${API_URL}/users/leaderboard`);
     data = await res.json();
-    console.log(`   ✅ Leaderboard fetched. Top user has ${data[0]?.xp || 0} XP.\n`);
+    console.log(`   ✅ Leaderboard fetched. Top user has ${data.leaderboard?.[0]?.xp || 0} XP.\n`);
 
     console.log('🎉 All E2E tests completed successfully!');
 

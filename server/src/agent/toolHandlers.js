@@ -40,7 +40,12 @@ export const toolHandlers = {
     if (ctx.classificationResult) {
       return ctx.classificationResult;
     }
-    
+
+    if (has_media && ctx?.mediaBase64 && ctx?.mediaMimeType) {
+      const result = await classifyWithGemini(ctx.mediaBase64, ctx.mediaMimeType, text);
+      return result;
+    }
+
     if (text) {
       const result = await classifyWithGemini(null, 'text/plain', text);
       return result;
@@ -145,16 +150,20 @@ export const toolHandlers = {
     const verifiedBy = t.verified_by || [];
     if (ctx?.userId && verifiedBy.includes(ctx.userId)) return { error: 'Already voted' };
 
-    const update = { updated_at: new Date().toISOString() };
-    if (vote_type === 'still_issue') update.verification_up = (t.verification_up || 0) + 1;
-    else update.verification_down = (t.verification_down || 0) + 1;
+    const newUp = (t.verification_up || 0) + (vote_type === 'still_issue' ? 1 : 0);
+    const newDown = (t.verification_down || 0) + (vote_type === 'looks_resolved' ? 1 : 0);
+
+    const update = {
+      updated_at: new Date().toISOString(),
+      verification_up: newUp,
+      verification_down: newDown,
+    };
     if (ctx?.userId) { verifiedBy.push(ctx.userId); update.verified_by = verifiedBy; }
 
-    const newUp = update.verification_up || t.verification_up || 0;
-    const newDown = update.verification_down || t.verification_down || 0;
-    if (newUp >= 3 && t.status === 'reported') update.status = 'verified';
-    if (newUp >= 5 && t.status === 'resolved') update.status = 'reopened';
-    if (newDown >= 5 && t.status !== 'resolved') update.status = 'resolved';
+    const status = t.status;
+    if (newUp >= 5 && status === 'resolved') update.status = 'reopened';
+    else if (newDown >= 5 && status !== 'resolved') update.status = 'resolved';
+    else if (newUp >= 3 && status === 'reported') update.status = 'verified';
 
     await db.collection('tickets').doc(ticket_id).update(update);
     broadcast('verification_recorded', { ticket_id, vote_type, up: newUp, down: newDown });
@@ -167,21 +176,33 @@ export const toolHandlers = {
     const t = doc.data();
     const elapsedHours = (Date.now() - new Date(t.created_at).getTime()) / 3600000;
     const params = DEFAULT_PARAMS[t.category] || DEFAULT_PARAMS.other;
-    const probability = weibullCDF(elapsedHours, params.lambda, params.k);
-    const slaHours = params.lambda;
-    const breached = elapsedHours > slaHours;
+    const slaDeadline = t.sla_deadline ? new Date(t.sla_deadline) : null;
+    const slaHours = slaDeadline
+      ? (slaDeadline.getTime() - new Date(t.created_at).getTime()) / 3600000
+      : params.lambda;
+    const probability = weibullCDF(slaHours, params.lambda, params.k);
+    const breached = slaDeadline ? Date.now() > slaDeadline.getTime() : elapsedHours > slaHours;
     await db.collection('tickets').doc(ticket_id).update({ sla_probability: probability });
-    return { ticket_id, elapsed_hours: Math.round(elapsedHours), sla_hours: slaHours, probability: Math.round(probability * 100) / 100, breached };
+    return { ticket_id, elapsed_hours: Math.round(elapsedHours), sla_hours: Math.round(slaHours), probability: Math.round(probability * 100) / 100, breached };
   },
 
   async escalate_ticket({ ticket_id, reason }) {
     const doc = await db.collection('tickets').doc(ticket_id).get();
     if (!doc.exists) return { error: 'Ticket not found' };
-    await db.collection('tickets').doc(ticket_id).update({
-      status: 'in_progress', priority_score: 95, updated_at: new Date().toISOString(),
+    const t = doc.data();
+    const elapsedHours = (Date.now() - new Date(t.created_at).getTime()) / 3600000;
+    const slaHours = DEFAULT_PARAMS[t.category]?.lambda || 168;
+    const score = computePriority({
+      severity: t.severity === 'low' ? 'medium' : (t.severity === 'medium' ? 'high' : 'critical'),
+      reportCount: (t.child_reports?.length || 0) + 1,
+      verificationUp: t.verification_up || 0, verificationDown: t.verification_down || 0,
+      elapsedHours, slaHours, category: t.category,
     });
-    broadcast('ticket_updated', { ticket_id, event: 'escalated', reason });
-    return { ticket_id, escalated: true, reason };
+    await db.collection('tickets').doc(ticket_id).update({
+      status: 'in_progress', priority_score: score, updated_at: new Date().toISOString(),
+    });
+    broadcast('ticket_updated', { ticket_id, event: 'escalated', reason, priority_score: score });
+    return { ticket_id, escalated: true, reason, priority_score: score };
   },
 
   async notify_reporters({ ticket_id, status }) {

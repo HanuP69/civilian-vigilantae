@@ -49,15 +49,28 @@ function AgentTrace({ trace = [] }) {
     setExpandedIndex(expandedIndex === index ? null : index);
   };
 
+  const handleKey = (e, index) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      toggleExpand(index);
+    }
+  };
+
   return (
     <div className="flex flex-col gap-3" style={{ fontFamily: 'var(--font-mono)' }}>
       <AnimatePresence>
         {trace.map((step, idx) => {
           const isExpanded = expandedIndex === idx;
-          const icon = STEP_ICONS[step.step] || STEP_ICONS[step.name] || 'SYS';
-          const color = STEP_COLORS[step.step] || STEP_COLORS[step.name] || 'var(--ink-muted)';
+          const stepName = step.step || step.name;
+          const icon = STEP_ICONS[stepName] || 'SYS';
+          const color = STEP_COLORS[stepName] || 'var(--ink-muted)';
           const isError = step.status === 'error';
           const isPending = step.status === 'pending';
+          const hasDetail = step.input || step.output || step.error || step.text || step.reasoning;
+          const outputText = step.text || step.output?.text || step.reasoning;
+          const outputWithoutText = step.output && typeof step.output === 'object'
+            ? Object.fromEntries(Object.entries(step.output).filter(([k]) => k !== 'text'))
+            : step.output;
 
           return (
             <motion.div
@@ -65,9 +78,14 @@ function AgentTrace({ trace = [] }) {
               initial={{ opacity: 0, scale: 0.95, y: -10 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               transition={{ type: 'spring', stiffness: 400, damping: 25 }}
-              key={`${idx}-${step.step || step.name}`}
+              key={`${idx}-${stepName}`}
               className="card card-compact"
+              role="button"
+              tabIndex={0}
+              aria-expanded={isExpanded}
+              aria-label={`${stepName} step${step.reasoning ? ': ' + step.reasoning : ''}`}
               onClick={() => toggleExpand(idx)}
+              onKeyDown={(e) => handleKey(e, idx)}
               style={{
                 borderLeft: `4px solid ${isError ? 'var(--error)' : color}`,
                 padding: 'var(--space-3) var(--space-4)',
@@ -86,17 +104,20 @@ function AgentTrace({ trace = [] }) {
                   </span>
                   <div className="flex flex-col">
                     <span className="text-sm font-semibold" style={{ color: 'var(--ink-primary)' }}>
-                      {step.step || step.name || 'system_process'}
+                      {stepName || 'system_process'}
                     </span>
                     <span className="text-xs" style={{ color: 'var(--ink-muted)' }}>
-                      {step.detail || step.result || 'Executing...'}
+                      {step.reasoning || step.detail || step.result || 'Executing...'}
                     </span>
                   </div>
                 </div>
                 <div className="flex items-center gap-3">
-                  {step.duration_ms && (
+                  {step.duration_ms != null && (
                     <span className="text-xs" style={{ color: 'var(--accent)', opacity: 0.8 }}>{step.duration_ms}ms</span>
                   )}
+                  <span aria-hidden="true" style={{ color: 'var(--ink-muted)', fontSize: '0.7rem' }}>
+                    {isExpanded ? '▾' : '▸'}
+                  </span>
                   <span
                     style={{
                       color: isError ? 'var(--error)' : isPending ? 'var(--warning)' : 'var(--success)',
@@ -110,7 +131,7 @@ function AgentTrace({ trace = [] }) {
               </div>
 
               <AnimatePresence>
-                {isExpanded && (step.input || step.output || step.error || step.text || step.reasoning) && (
+                {isExpanded && hasDetail && (
                   <motion.div
                     initial={{ opacity: 0, height: 0 }}
                     animate={{ opacity: 1, height: 'auto' }}
@@ -125,29 +146,29 @@ function AgentTrace({ trace = [] }) {
                         padding: 'var(--space-3)',
                         borderRadius: 'var(--radius-sm)',
                         marginTop: 'var(--space-3)',
-                        border: '1px solid oklch(1 0 0 / 0.1)'
+                        border: '1px solid var(--border)'
                       }}
                       onClick={(e) => e.stopPropagation()}
                     >
-                      {(step.text || step.output?.text || step.reasoning) && (
+                      {outputText && (
                         <div>
                           <span className="font-semibold block mb-1" style={{ color: 'var(--accent)' }}>&gt; OUTPUT_LOG</span>
-                          <p style={{ whiteSpace: 'pre-wrap', color: 'var(--ink-secondary)' }}>{step.text || step.output?.text || step.reasoning}</p>
+                          <p style={{ whiteSpace: 'pre-wrap', color: 'var(--ink-secondary)' }}>{outputText}</p>
                         </div>
                       )}
                       {step.input && Object.keys(step.input).length > 0 && (
                         <div>
                           <span className="font-semibold block mb-1" style={{ color: 'var(--accent)' }}>&gt; PAYLOAD_IN</span>
-                          <pre style={{ overflowX: 'auto', background: 'transparent', color: 'var(--ink-muted)' }}>
+                          <pre style={{ overflowX: 'auto', background: 'transparent', color: 'var(--ink-muted)', maxHeight: 300, overflowY: 'auto' }}>
                             {JSON.stringify(step.input, null, 2)}
                           </pre>
                         </div>
                       )}
-                      {step.output && Object.keys(step.output).length > 0 && (
+                      {outputWithoutText && Object.keys(outputWithoutText).length > 0 && (
                         <div>
                           <span className="font-semibold block mb-1" style={{ color: 'var(--accent)' }}>&gt; PAYLOAD_OUT</span>
-                          <pre style={{ overflowX: 'auto', background: 'transparent', color: 'var(--ink-muted)' }}>
-                            {JSON.stringify(step.output, null, 2)}
+                          <pre style={{ overflowX: 'auto', background: 'transparent', color: 'var(--ink-muted)', maxHeight: 300, overflowY: 'auto' }}>
+                            {JSON.stringify(outputWithoutText, null, 2)}
                           </pre>
                         </div>
                       )}

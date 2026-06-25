@@ -14,21 +14,53 @@ export async function getUser(uid) {
   return doc.exists ? doc.data() : null;
 }
 
+export async function ensureUser(uid) {
+  const doc = await db.collection('users').doc(uid).get();
+  if (doc.exists) return doc.data();
+  const newUser = {
+    uid,
+    display_name: 'Citizen',
+    email: null,
+    photo_url: null,
+    xp: 0,
+    badges: [],
+    reports_submitted: 0,
+    verifications_made: 0,
+    accurate_verifications: 0,
+    joined_at: new Date().toISOString(),
+  };
+  await db.collection('users').doc(uid).set(newUser);
+  return newUser;
+}
+
 export async function awardXP(uid, action) {
   const xp = XP_REWARDS[action] || 0;
-  if (!xp) return;
-  const doc = await db.collection('users').doc(uid).get();
-  if (!doc.exists) return;
-  const user = doc.data();
+  if (!xp) return null;
+  const user = await ensureUser(uid);
   const newXP = (user.xp || 0) + xp;
   const updates = { xp: newXP };
+
+  let reportsSubmitted = user.reports_submitted || 0;
+  let verificationsMade = user.verifications_made || 0;
+  let accurateVerifications = user.accurate_verifications || 0;
+
+  if (action === 'report') {
+    reportsSubmitted++;
+    updates.reports_submitted = reportsSubmitted;
+  } else if (action === 'vote') {
+    verificationsMade++;
+    updates.verifications_made = verificationsMade;
+  } else if (action === 'vote_accurate') {
+    accurateVerifications++;
+    updates.accurate_verifications = accurateVerifications;
+  }
 
   const badges = user.badges || [];
   for (const badge of BADGES) {
     if (badges.includes(badge.name)) continue;
     if (badge.type === 'xp' && newXP >= badge.threshold) badges.push(badge.name);
-    if (badge.type === 'reports' && (user.reports_submitted || 0) >= badge.threshold) badges.push(badge.name);
-    if (badge.type === 'verifications' && (user.accurate_verifications || 0) >= badge.threshold) badges.push(badge.name);
+    if (badge.type === 'reports' && reportsSubmitted >= badge.threshold) badges.push(badge.name);
+    if (badge.type === 'verifications' && accurateVerifications >= badge.threshold) badges.push(badge.name);
   }
   updates.badges = badges;
   await db.collection('users').doc(uid).update(updates);
