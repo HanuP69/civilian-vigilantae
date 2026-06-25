@@ -13,51 +13,48 @@ function App() {
   return (
     <BrowserRouter>
       <div className="app-layout">
-        <nav className="app-navbar">
-          <div className="flex items-center gap-3">
-            <span style={{ fontSize: '1.25rem', fontWeight: 700, letterSpacing: '-0.03em' }}>
-              SENTINEL
+        <nav className="app-navbar animate-fade-up">
+          <div className="flex items-center gap-2">
+            <span style={{ fontSize: '1.5rem', fontWeight: 600, letterSpacing: '-0.02em', fontStyle: 'italic', fontFamily: 'var(--font-serif)' }}>
+              Sentinel
             </span>
-            <span className="badge" style={{ background: 'var(--accent-muted)', color: 'var(--accent)' }}>
-              CIVIC
+            <span style={{ fontSize: '0.875rem', fontWeight: 400, color: 'var(--accent)', letterSpacing: '0.1em', textTransform: 'uppercase' }}>
+              Civic
             </span>
           </div>
-          <div style={{ marginLeft: 'auto' }} className="flex items-center gap-3">
-            <div className="flex items-center gap-2 text-sm">
+          
+          <div className="nav-links">
+            <NavLink to="/" end className={({ isActive }) => `nav-link${isActive ? ' active' : ''}`}>
+              Map
+            </NavLink>
+            <NavLink to="/dashboard" className={({ isActive }) => `nav-link${isActive ? ' active' : ''}`}>
+              Dashboard
+            </NavLink>
+            <NavLink to="/leaderboard" className={({ isActive }) => `nav-link${isActive ? ' active' : ''}`}>
+              Leaderboard
+            </NavLink>
+            <NavLink to="/report" className={({ isActive }) => `btn btn-primary`}>
+              Report Issue
+            </NavLink>
+            
+            <div className="flex items-center gap-2 text-xs" style={{ marginLeft: 'var(--space-4)' }}>
               <span
                 style={{
-                  width: 8,
-                  height: 8,
+                  width: 6,
+                  height: 6,
                   borderRadius: '50%',
                   background: isConnected ? 'var(--success)' : 'var(--ink-muted)',
                   display: 'inline-block',
                 }}
               />
-              <span className="text-secondary">
-                {isConnected ? 'Live' : 'Offline'}
+              <span className="text-muted">
+                {isConnected ? 'LIVE' : 'OFFLINE'}
               </span>
             </div>
           </div>
         </nav>
 
-        <aside className="app-sidebar">
-          <span className="sidebar-section-label">Navigation</span>
-          <NavLink to="/" end className={({ isActive }) => `sidebar-link${isActive ? ' active' : ''}`}>
-            <span>🗺️</span> Map
-          </NavLink>
-          <NavLink to="/dashboard" className={({ isActive }) => `sidebar-link${isActive ? ' active' : ''}`}>
-            <span>📊</span> Dashboard
-          </NavLink>
-          <NavLink to="/leaderboard" className={({ isActive }) => `sidebar-link${isActive ? ' active' : ''}`}>
-            <span>🏆</span> Leaderboard
-          </NavLink>
-          <span className="sidebar-section-label">Actions</span>
-          <NavLink to="/report" className={({ isActive }) => `sidebar-link${isActive ? ' active' : ''}`}>
-            <span>➕</span> Report Issue
-          </NavLink>
-        </aside>
-
-        <main className="app-main">
+        <main className="app-main animate-fade-up stagger-1">
           <Routes>
             <Route path="/" element={<HomePage />} />
             <Route path="/report" element={<ReportPage />} />

@@ -15,6 +15,15 @@ function ReportPage() {
   const [submitting, setSubmitting] = useState(false);
   const [result, setResult] = useState(null);
   const [dragOver, setDragOver] = useState(false);
+  const [lat, setLat] = useState(null);
+  const [lng, setLng] = useState(null);
+  const [detecting, setDetecting] = useState(false);
+  
+  const [recording, setRecording] = useState(false);
+  const [audioUrl, setAudioUrl] = useState(null);
+  const mediaRecorderRef = useRef(null);
+  const audioChunksRef = useRef([]);
+
   const fileRef = useRef(null);
 
   const handleFile = (f) => {
@@ -32,6 +41,56 @@ function ReportPage() {
     handleFile(f);
   };
 
+  const getLocation = () => {
+    setDetecting(true);
+    if ('geolocation' in navigator) {
+      navigator.geolocation.getCurrentPosition(
+        (pos) => {
+          setLat(pos.coords.latitude);
+          setLng(pos.coords.longitude);
+          setDetecting(false);
+        },
+        () => setDetecting(false)
+      );
+    } else {
+      setDetecting(false);
+    }
+  };
+
+  const startRecording = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const recorder = new MediaRecorder(stream);
+      mediaRecorderRef.current = recorder;
+      audioChunksRef.current = [];
+      
+      recorder.ondataavailable = e => {
+        if (e.data.size > 0) audioChunksRef.current.push(e.data);
+      };
+      
+      recorder.onstop = () => {
+        const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
+        const url = URL.createObjectURL(audioBlob);
+        setAudioUrl(url);
+        // Also set as file so it gets uploaded
+        setFile(new File([audioBlob], 'voice_report.webm', { type: 'audio/webm' }));
+        stream.getTracks().forEach(track => track.stop());
+      };
+      
+      recorder.start();
+      setRecording(true);
+    } catch (err) {
+      console.error('Audio recording failed', err);
+    }
+  };
+
+  const stopRecording = () => {
+    if (mediaRecorderRef.current && recording) {
+      mediaRecorderRef.current.stop();
+      setRecording(false);
+    }
+  };
+
   const handleSubmit = async () => {
     setSubmitting(true);
     try {
@@ -39,9 +98,15 @@ function ReportPage() {
       if (file) formData.append('media', file);
       formData.append('text', description);
       formData.append('address', address);
-      formData.append('lat', '26.85');
-      formData.append('lng', '80.95');
-      formData.append('reporter_id', 'user-1');
+      formData.append('lat', lat != null ? lat.toString() : '26.85');
+      formData.append('lng', lng != null ? lng.toString() : '80.95');
+      
+      let userId = localStorage.getItem('userId');
+      if (!userId) {
+        userId = `user-${Math.random().toString(36).substr(2, 6)}`;
+        localStorage.setItem('userId', userId);
+      }
+      formData.append('reporter_id', userId);
       const res = await submitReport(formData);
       setResult(res);
       if (res.category) setClassification(res.category);
@@ -60,66 +125,72 @@ function ReportPage() {
   };
 
   return (
-    <div style={{ maxWidth: 640, margin: '0 auto' }}>
-      <h2 style={{ marginBottom: 'var(--space-6)' }}>Report an Issue</h2>
+    <div className="report-page-container animate-fade-up" style={{ maxWidth: 720, margin: '0 auto', paddingBottom: 'var(--space-10)' }}>
+      <header style={{ marginBottom: 'var(--space-8)', textAlign: 'center' }}>
+        <h2 className="font-serif animate-reveal" style={{ fontSize: '3rem', marginBottom: 'var(--space-3)' }}>Report an Issue</h2>
+        <p className="text-secondary font-sans animate-fade-up stagger-1" style={{ fontSize: '1.125rem' }}>Help us improve the city by reporting infrastructure or civic concerns.</p>
+      </header>
 
-      <div className="flex items-center gap-2" style={{ marginBottom: 'var(--space-6)' }}>
+      {/* Step Indicators */}
+      <div className="flex items-center gap-2 animate-fade-up stagger-2" style={{ marginBottom: 'var(--space-10)' }}>
         {STEPS.map((s, i) => (
-          <div key={s} className="flex items-center gap-2" style={{ flex: 1 }}>
+          <div key={s} className="flex items-center gap-3" style={{ flex: 1 }}>
             <div
-              className="flex items-center"
+              className="flex items-center justify-center"
               style={{
-                width: 28,
-                height: 28,
+                width: 32,
+                height: 32,
                 borderRadius: '50%',
-                justifyContent: 'center',
-                fontSize: '0.75rem',
-                fontWeight: 600,
-                background: i <= step ? 'var(--accent)' : 'var(--bg-surface)',
-                color: i <= step ? 'white' : 'var(--ink-muted)',
-                flexShrink: 0,
+                fontSize: '0.875rem',
+                fontFamily: 'var(--font-serif)',
+                background: i <= step ? 'var(--accent)' : 'transparent',
+                border: `1px solid ${i <= step ? 'var(--accent)' : 'var(--border)'}`,
+                color: i <= step ? 'var(--bg-primary)' : 'var(--ink-muted)',
+                transition: 'all 0.4s ease',
               }}
             >
               {i + 1}
             </div>
-            <span className={`text-sm ${i <= step ? 'font-medium' : 'text-muted'}`}>{s}</span>
+            <span className={`text-sm ${i <= step ? 'font-medium' : 'text-muted'}`} style={{ letterSpacing: '0.05em', textTransform: 'uppercase', transition: 'color 0.4s ease' }}>{s}</span>
             {i < STEPS.length - 1 && (
               <div style={{
                 flex: 1,
-                height: 2,
+                height: 1,
                 background: i < step ? 'var(--accent)' : 'var(--border)',
-                borderRadius: 1,
+                transition: 'background 0.4s ease',
               }} />
             )}
           </div>
         ))}
       </div>
 
-      <div className="card" style={{ minHeight: 300 }}>
+      {/* Form Area */}
+      <div className="animate-fade-up stagger-3" style={{ minHeight: 400, position: 'relative' }}>
         {step === 0 && (
-          <div className="flex flex-col gap-4">
+          <div className="flex flex-col gap-6 animate-fade-up">
+            <h3 className="font-serif" style={{ fontSize: '1.75rem', color: 'var(--accent)' }}>Upload Media</h3>
             <div
               onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
               onDragLeave={() => setDragOver(false)}
               onDrop={handleDrop}
               onClick={() => fileRef.current?.click()}
               style={{
-                border: `2px dashed ${dragOver ? 'var(--accent)' : 'var(--border)'}`,
+                border: `1px dashed ${dragOver ? 'var(--accent)' : 'var(--border)'}`,
                 borderRadius: 'var(--radius-lg)',
-                padding: 'var(--space-8)',
+                padding: 'var(--space-10) var(--space-5)',
                 textAlign: 'center',
                 cursor: 'pointer',
-                background: dragOver ? 'var(--accent-muted)' : 'transparent',
-                transition: 'all 150ms ease-out',
+                background: dragOver ? 'var(--bg-hover)' : 'var(--bg-secondary)',
+                transition: 'all 0.3s ease',
               }}
             >
               {preview ? (
-                <img src={preview} alt="Preview" style={{ maxHeight: 200, borderRadius: 'var(--radius-md)' }} />
+                <img src={preview} alt="Preview" style={{ maxHeight: 240, borderRadius: 'var(--radius-md)', margin: '0 auto' }} />
               ) : (
-                <div>
-                  <span style={{ fontSize: '2rem', display: 'block', marginBottom: 'var(--space-2)' }}>📷</span>
-                  <p className="font-medium">Drop image or video here</p>
-                  <p className="text-sm text-muted">or click to browse</p>
+                <div className="flex flex-col items-center justify-center">
+                  <span style={{ fontSize: '3rem', marginBottom: 'var(--space-4)', opacity: 0.8 }}>📷</span>
+                  <p className="font-serif" style={{ fontSize: '1.25rem', marginBottom: 'var(--space-2)' }}>Drag & drop your image or video</p>
+                  <p className="text-sm text-muted">or click to browse your files</p>
                 </div>
               )}
               <input
@@ -130,40 +201,74 @@ function ReportPage() {
                 onChange={e => handleFile(e.target.files[0])}
               />
             </div>
-            <button className="btn btn-secondary" style={{ alignSelf: 'flex-start' }}>
-              🎙️ Record Voice
-            </button>
+            
+            <div className="flex items-center gap-4" style={{ marginTop: 'var(--space-2)' }}>
+              <div style={{ flex: 1, height: 1, background: 'var(--border)' }} />
+              <span className="text-xs text-muted" style={{ textTransform: 'uppercase', letterSpacing: '0.1em' }}>OR</span>
+              <div style={{ flex: 1, height: 1, background: 'var(--border)' }} />
+            </div>
+
+            {audioUrl ? (
+              <div className="flex items-center justify-center gap-4" style={{ padding: 'var(--space-4)', background: 'var(--bg-secondary)', borderRadius: 'var(--radius-lg)' }}>
+                <audio src={audioUrl} controls style={{ height: 40 }} />
+                <button className="btn btn-ghost btn-sm" onClick={() => { setAudioUrl(null); setFile(null); }}>Discard</button>
+              </div>
+            ) : (
+              <button 
+                className={`btn flex justify-center items-center ${recording ? 'btn-danger' : 'btn-secondary'}`} 
+                style={{ padding: 'var(--space-4)', fontSize: '1.125rem', borderRadius: 'var(--radius-lg)', width: '100%' }}
+                onClick={recording ? stopRecording : startRecording}
+              >
+                {recording ? '⏹️ Stop Recording' : '🎙️ Record Voice Note instead'}
+              </button>
+            )}
           </div>
         )}
 
         {step === 1 && (
-          <div className="flex flex-col gap-4">
-            <label className="font-medium text-sm">Address</label>
-            <input
-              type="text"
-              placeholder="Enter location address..."
-              value={address}
-              onChange={e => setAddress(e.target.value)}
-            />
-            <p className="text-xs text-muted">📍 Auto-detect location on submit</p>
+          <div className="flex flex-col gap-6 animate-fade-up">
+            <h3 className="font-serif" style={{ fontSize: '1.75rem', color: 'var(--accent)' }}>Location Details</h3>
+            <div className="flex flex-col gap-3">
+              <label className="text-sm text-muted" style={{ textTransform: 'uppercase', letterSpacing: '0.05em' }}>Street Address</label>
+              <div className="flex gap-3">
+                <input
+                  type="text"
+                  placeholder="Enter the location of the issue..."
+                  value={address}
+                  onChange={e => setAddress(e.target.value)}
+                  style={{ flex: 1, fontSize: '1.25rem', padding: 'var(--space-4)', background: 'var(--bg-secondary)', border: 'none', borderBottom: '2px solid var(--border)', borderRadius: 'var(--radius-sm) var(--radius-sm) 0 0' }}
+                />
+                <button className="btn btn-secondary" onClick={getLocation} disabled={detecting} style={{ padding: '0 var(--space-6)' }}>
+                  {detecting ? '📍 Detecting...' : '📍 Auto-detect'}
+                </button>
+              </div>
+              <p className="text-xs text-secondary" style={{ marginTop: 'var(--space-2)' }}>
+                {lat != null ? `Coordinates locked: ${lat.toFixed(4)}, ${lng.toFixed(4)}` : 'If no address is provided, we will attempt to auto-detect your location on submit.'}
+              </p>
+            </div>
           </div>
         )}
 
         {step === 2 && (
-          <div className="flex flex-col gap-4">
-            <label className="font-medium text-sm">Description</label>
-            <textarea
-              rows={5}
-              placeholder="Describe the issue in detail..."
-              value={description}
-              onChange={e => setDescription(e.target.value)}
-            />
+          <div className="flex flex-col gap-6 animate-fade-up">
+            <h3 className="font-serif" style={{ fontSize: '1.75rem', color: 'var(--accent)' }}>Issue Description</h3>
+            <div className="flex flex-col gap-3">
+              <label className="text-sm text-muted" style={{ textTransform: 'uppercase', letterSpacing: '0.05em' }}>Provide details</label>
+              <textarea
+                rows={6}
+                placeholder="Describe what happened, the current state, and any potential hazards..."
+                value={description}
+                onChange={e => setDescription(e.target.value)}
+                style={{ fontSize: '1.125rem', lineHeight: 1.6, padding: 'var(--space-4)', background: 'var(--bg-secondary)', border: 'none', borderBottom: '2px solid var(--border)', borderRadius: 'var(--radius-sm) var(--radius-sm) 0 0', resize: 'vertical' }}
+              />
+            </div>
+            
             {classification && (
-              <div className="card card-compact flex items-center gap-3">
-                <span>🤖</span>
+              <div className="flex items-center gap-4" style={{ padding: 'var(--space-4)', background: 'var(--bg-surface)', borderRadius: 'var(--radius-lg)', border: '1px solid oklch(1 0 0 / 0.05)' }}>
+                <span style={{ fontSize: '1.5rem' }}>🤖</span>
                 <div>
-                  <p className="text-sm font-medium">AI Classification</p>
-                  <p className="text-sm text-secondary">{capitalize(classification)}</p>
+                  <p className="text-xs text-muted" style={{ textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '2px' }}>AI Classification</p>
+                  <p className="font-serif" style={{ fontSize: '1.25rem', color: 'var(--ink-primary)' }}>{capitalize(classification)}</p>
                 </div>
               </div>
             )}
@@ -171,50 +276,56 @@ function ReportPage() {
         )}
 
         {step === 3 && (
-          <div className="flex flex-col gap-4">
-            <h3>Review Your Report</h3>
-            <div className="flex flex-col gap-3">
+          <div className="flex flex-col gap-8 animate-fade-up">
+            <h3 className="font-serif" style={{ fontSize: '1.75rem', color: 'var(--accent)' }}>Review & Submit</h3>
+            
+            <div className="flex flex-col gap-5" style={{ padding: 'var(--space-6)', background: 'var(--bg-secondary)', borderRadius: 'var(--radius-lg)', border: '1px solid oklch(1 0 0 / 0.05)' }}>
               {preview && (
-                <img src={preview} alt="Attached" style={{ maxHeight: 120, borderRadius: 'var(--radius-md)', alignSelf: 'flex-start' }} />
+                <div style={{ marginBottom: 'var(--space-2)' }}>
+                  <img src={preview} alt="Attached" style={{ maxHeight: 160, borderRadius: 'var(--radius-md)' }} />
+                </div>
               )}
-              <div className="flex gap-2">
-                <span className="text-sm text-muted">Address:</span>
-                <span className="text-sm">{address || '—'}</span>
+              <div className="flex flex-col gap-1">
+                <span className="text-xs text-muted" style={{ textTransform: 'uppercase', letterSpacing: '0.05em' }}>Address</span>
+                <span className="font-serif" style={{ fontSize: '1.25rem' }}>{address || '—'}</span>
               </div>
-              <div className="flex gap-2">
-                <span className="text-sm text-muted">Description:</span>
-                <span className="text-sm">{description || '—'}</span>
+              <div className="flex flex-col gap-1">
+                <span className="text-xs text-muted" style={{ textTransform: 'uppercase', letterSpacing: '0.05em' }}>Description</span>
+                <span className="text-secondary" style={{ fontSize: '1.125rem', lineHeight: 1.6 }}>{description || '—'}</span>
               </div>
-              <div className="flex gap-2">
-                <span className="text-sm text-muted">Coordinates:</span>
-                <span className="text-sm font-mono">26.85, 80.95</span>
+              <div className="flex flex-col gap-1">
+                <span className="text-xs text-muted" style={{ textTransform: 'uppercase', letterSpacing: '0.05em' }}>Coordinates</span>
+                <span className="font-mono text-sm">{lat != null ? `${lat.toFixed(4)}, ${lng.toFixed(4)}` : '26.85, 80.95 (Default)'}</span>
               </div>
             </div>
+
             {!result && (
               <button
-                className="btn btn-primary btn-lg"
+                className="btn btn-primary flex justify-center items-center"
+                style={{ padding: 'var(--space-4)', fontSize: '1.25rem', borderRadius: 'var(--radius-lg)' }}
                 onClick={handleSubmit}
                 disabled={submitting}
               >
-                {submitting ? 'Submitting…' : 'Submit Report'}
+                {submitting ? 'Submitting to intelligence layer...' : 'Submit Report'}
               </button>
             )}
+
             {result && (
-              <div className="card" style={{ background: 'var(--bg-surface)' }}>
+              <div className="animate-fade-up" style={{ padding: 'var(--space-6)', background: 'var(--bg-surface)', borderRadius: 'var(--radius-lg)', border: result.error ? '1px solid var(--error)' : '1px solid var(--success)' }}>
                 {result.error ? (
-                  <p style={{ color: 'var(--error)' }}>{result.error}</p>
+                  <p style={{ color: 'var(--error)', fontSize: '1.125rem' }}>{result.error}</p>
                 ) : (
-                  <div className="flex flex-col gap-3">
-                    <div className="flex items-center gap-2">
-                      <span style={{ color: 'var(--success)' }}>✓</span>
-                      <span className="font-medium">Report submitted successfully</span>
+                  <div className="flex flex-col gap-4">
+                    <div className="flex items-center gap-3">
+                      <div style={{ width: 32, height: 32, borderRadius: '50%', background: 'var(--success)', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.25rem' }}>✓</div>
+                      <span className="font-serif" style={{ fontSize: '1.5rem', color: 'var(--ink-primary)' }}>Report submitted successfully</span>
                     </div>
                     {result.ticket_id && (
-                      <p className="text-sm text-secondary">Ticket ID: {result.ticket_id}</p>
+                      <p className="text-secondary" style={{ letterSpacing: '0.05em' }}>Ticket ID: <span className="font-mono">{result.ticket_id}</span></p>
                     )}
                     {result.agent_trace && (
-                      <div style={{ marginTop: 'var(--space-4)' }}>
-                        <p className="text-sm font-semibold mb-2" style={{ color: 'var(--ink-primary)' }}>Processing Trace:</p>
+                      <div style={{ marginTop: 'var(--space-4)', paddingTop: 'var(--space-4)', borderTop: '1px solid oklch(1 0 0 / 0.05)' }}>
+                        <p className="text-sm text-muted" style={{ textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 'var(--space-4)' }}>Processing Trace</p>
                         <AgentTrace trace={result.agent_trace} />
                       </div>
                     )}
@@ -226,21 +337,23 @@ function ReportPage() {
         )}
       </div>
 
-      <div className="flex justify-between" style={{ marginTop: 'var(--space-5)' }}>
+      <div className="flex justify-between items-center animate-fade-up stagger-4" style={{ marginTop: 'var(--space-8)', paddingTop: 'var(--space-6)', borderTop: '1px solid oklch(1 0 0 / 0.05)' }}>
         <button
-          className="btn btn-secondary"
+          className="btn btn-ghost text-secondary"
+          style={{ fontSize: '1.125rem' }}
           onClick={() => setStep(s => s - 1)}
-          disabled={step === 0}
+          disabled={step === 0 || result != null}
         >
-          ← Back
+          {step > 0 ? '← Back' : ''}
         </button>
-        {step < 3 && (
+        {step < 3 && !result && (
           <button
-            className="btn btn-primary"
+            className="btn btn-secondary"
+            style={{ fontSize: '1.125rem', padding: 'var(--space-3) var(--space-6)', borderRadius: 'var(--radius-full)' }}
             onClick={() => setStep(s => s + 1)}
             disabled={!canNext()}
           >
-            Next →
+            Continue →
           </button>
         )}
       </div>
