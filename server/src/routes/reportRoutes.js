@@ -17,7 +17,7 @@ const reportLimiter = rateLimit({ windowMs: 15 * 60 * 1000, max: 20, message: { 
 
 router.post('/', requireAuth, reportLimiter, upload.single('media'), async (req, res) => {
   try {
-    const { text, lat, lng, reporter_name } = req.body;
+    const { text, lat, lng, reporter_name, report_id } = req.body;
     const reporter_id = req.user.id;
     const latitude = parseFloat(lat);
     const longitude = parseFloat(lng);
@@ -61,6 +61,7 @@ router.post('/', requireAuth, reportLimiter, upload.single('media'), async (req,
     }
 
     const reportData = {
+      id: report_id || undefined,
       text, lat: latitude, lng: longitude,
       reporter_id: reporter_id,
       reporter_name: reporter_name || 'Anonymous',

@@ -2,23 +2,20 @@
  * @module llm/OllamaClient
  * @description Ollama API client implementing the LLMClient interface.
  *
- * Used as an offline fallback when Gemini is unavailable.
- * Uses qwen3:8b with JSON schema constrained decoding.
+ * Uses local Ollama with structured JSON output for tool calling.
+ * Handles multi-turn tool-calling loops by injecting tool instructions
+ * only once and appending tool results as user messages.
  */
 
 import config from '../config/env.js';
 import { LLMClient } from './LLMClient.js';
 
 /**
- * Convert our generic tool definitions into a JSON schema that Ollama
- * can use for constrained decoding (format parameter).
- *
- * Since Ollama doesn't support native function calling in the same way
- * as Gemini, we instruct the model to output a structured JSON response
- * with a "tool_calls" array.
+ * Build the system prompt addendum describing available tools.
+ * Only injected once into the system message, not repeated per turn.
  *
  * @param {import('./LLMClient.js').ToolDefinition[]} tools
- * @returns {string} system prompt addendum describing available tools
+ * @returns {string}
  */
 function buildToolSystemPrompt(tools) {
   if (!tools || tools.length === 0) return '';
@@ -27,11 +24,16 @@ function buildToolSystemPrompt(tools) {
     `- ${t.name}: ${t.description}\n  Parameters: ${JSON.stringify(t.parameters)}`
   ).join('\n');
 
-  return `\n\nYou have access to the following tools. To use a tool, respond with a JSON object containing a "tool_calls" array. Each element should have "name" (tool name) and "args" (object with parameters). If you don't need a tool, respond with a "text" field instead.\n\nAvailable tools:\n${toolDescriptions}\n\nResponse format (when using tools):\n{"tool_calls": [{"name": "tool_name", "args": {...}}]}\n\nResponse format (when not using tools):\n{"text": "your response"}`;
+  return `\n\nYou have access to the following tools. To use a tool, respond ONLY with a JSON object: {"tool_calls": [{"name": "tool_name", "args": {...}}]}. You MUST respond with valid JSON — no markdown, no extra text.\n\nAvailable tools:\n${toolDescriptions}\n\nIMPORTANT: Respond with ONLY the JSON object. No explanation, no markdown code fences.`;
 }
 
 /**
  * Convert our generic messages to Ollama's chat format.
+ *
+ * - System message: inject tool descriptions once
+ * - Assistant with toolCalls: convert to JSON string so Ollama sees the tool call
+ * - Tool results: inject as user messages "Tool X returned: ..."
+ * - Regular user/assistant: pass through
  *
  * @param {import('./LLMClient.js').Message[]} messages
  * @param {import('./LLMClient.js').ToolDefinition[]} [tools]
@@ -39,24 +41,30 @@ function buildToolSystemPrompt(tools) {
  */
 function toOllamaMessages(messages, tools) {
   const ollamaMessages = [];
+  let toolPromptInjected = false;
 
   for (const msg of messages) {
+    // System message — inject tool descriptions on first occurrence
     if (msg.role === 'system') {
+      const toolPrompt = (tools && tools.length > 0) ? buildToolSystemPrompt(tools) : '';
       ollamaMessages.push({
         role: 'system',
-        content: msg.content + buildToolSystemPrompt(tools),
+        content: msg.content + toolPrompt,
       });
+      toolPromptInjected = true;
       continue;
     }
 
+    // Tool result — inject as user message
     if (msg.role === 'tool') {
       ollamaMessages.push({
         role: 'user',
-        content: `Tool "${msg.name}" returned: ${msg.content}`,
+        content: `Tool "${msg.name}" returned: ${msg.content}\n\nNow proceed to the next step based on the result. If you need to call another tool, respond with ONLY a JSON object like {"tool_calls": [{"name": "...", "args": {...}}]}. If all processing is complete, respond with {"text": "your summary"}.`,
       });
       continue;
     }
 
+    // Assistant message with tool calls — convert to JSON string
     let content = msg.content || '';
     if (msg.role === 'assistant' && msg.toolCalls && msg.toolCalls.length > 0) {
       content = JSON.stringify({
@@ -72,7 +80,7 @@ function toOllamaMessages(messages, tools) {
       content,
     };
 
-    // Ollama supports images via base64
+    // Multimodal support (images)
     if (msg.media && msg.media.mimeType?.startsWith('image/')) {
       ollamaMsg.images = [msg.media.data];
     }
@@ -80,8 +88,8 @@ function toOllamaMessages(messages, tools) {
     ollamaMessages.push(ollamaMsg);
   }
 
-  // If no system message was present, inject tool descriptions as system message
-  if (tools?.length > 0 && !messages.some(m => m.role === 'system')) {
+  // If no system message was present but tools exist, inject tool prompt
+  if (tools?.length > 0 && !toolPromptInjected) {
     ollamaMessages.unshift({
       role: 'system',
       content: 'You are a helpful assistant.' + buildToolSystemPrompt(tools),
@@ -93,16 +101,23 @@ function toOllamaMessages(messages, tools) {
 
 /**
  * Parse Ollama's response into our standard LLMResponse format.
+ * Handles cases where the model wraps JSON in markdown fences.
  *
- * @param {Object} data — Ollama API response
+ * @param {string} content — raw text from Ollama
  * @returns {import('./LLMClient.js').LLMResponse}
  */
-function parseOllamaResponse(data) {
-  const content = data.message?.content || '';
+function parseOllamaResponse(content) {
+  if (!content) return { toolCalls: [], text: '' };
+
+  // Strip markdown code fences if present
+  let cleaned = content.trim();
+  if (cleaned.startsWith('```')) {
+    cleaned = cleaned.replace(/^```(?:json)?\s*\n?/, '').replace(/\n?```\s*$/, '');
+  }
 
   // Try to parse as JSON (tool calls)
   try {
-    const parsed = JSON.parse(content);
+    const parsed = JSON.parse(cleaned);
 
     if (parsed.tool_calls && Array.isArray(parsed.tool_calls)) {
       return {
@@ -114,14 +129,33 @@ function parseOllamaResponse(data) {
       };
     }
 
-    if (parsed.text) {
+    if (typeof parsed.text === 'string') {
       return { toolCalls: [], text: parsed.text };
     }
-  } catch (_) {
-    // Not JSON — treat as plain text response
-  }
 
-  return { toolCalls: [], text: content };
+    // Model returned JSON but not in expected shape — treat as text
+    return { toolCalls: [], text: cleaned };
+  } catch (_) {
+    // Not valid JSON — check if it contains a JSON block
+    const jsonBlock = cleaned.match(/\{[\s\S]*\}/);
+    if (jsonBlock) {
+      try {
+        const parsed = JSON.parse(jsonBlock[0]);
+        if (parsed.tool_calls && Array.isArray(parsed.tool_calls)) {
+          return {
+            toolCalls: parsed.tool_calls.map(tc => ({
+              name: tc.name,
+              args: tc.args || {},
+            })),
+            text: '',
+          };
+        }
+      } catch (_) {}
+    }
+
+    // Plain text response — treat as final text
+    return { toolCalls: [], text: cleaned };
+  }
 }
 
 export class OllamaClient extends LLMClient {
@@ -147,20 +181,27 @@ export class OllamaClient extends LLMClient {
       stream: false,
       options: {
         temperature: 0.2,
+        num_predict: 1024,
       },
     };
 
-    // If tools are present, use JSON format for constrained decoding
-    if (tools && tools.length > 0) {
+    // Use JSON format only for the first call (no tool results yet).
+    // After tool results exist in history, drop format:json to let the model
+    // respond more naturally and avoid JSON parsing failures mid-conversation.
+    const hasToolResults = messages.some(m => m.role === 'tool');
+    if (tools && tools.length > 0 && !hasToolResults) {
       body.format = 'json';
     }
 
     try {
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 60000);
       const res = await fetch(`${this.baseUrl}/api/chat`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(body),
-      });
+        signal: controller.signal,
+      }).finally(() => clearTimeout(timeout));
 
       if (!res.ok) {
         const errText = await res.text();
@@ -174,8 +215,12 @@ export class OllamaClient extends LLMClient {
         console.log(`[Ollama] tokens — eval: ${data.eval_count}, prompt: ${data.prompt_eval_count || '?'}`);
       }
 
-      return parseOllamaResponse(data);
+      return parseOllamaResponse(data.message?.content || '');
     } catch (err) {
+      if (err.name === 'AbortError') {
+        console.error(`[Ollama] Request timed out or server unreachable at ${this.baseUrl}`);
+        throw new Error(`Ollama unreachable at ${this.baseUrl} (timeout). Is 'ollama serve' running and is the model '${this.model}' pulled?`);
+      }
       console.error(`[Ollama] Error:`, err.message || err);
       throw err;
     }

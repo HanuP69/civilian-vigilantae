@@ -1,9 +1,11 @@
 import { useState, useRef } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
+import { AnimatePresence } from 'framer-motion';
 import { submitReport } from '../services/api';
 import { capitalize } from '../utils/formatters';
 import { useToast } from '../hooks/useToast.jsx';
-import AgentTrace from '../components/agent/AgentTrace';
+import { useAgentStream } from '../hooks/useAgentStream.js';
+import AgentReveal from '../components/agent/AgentReveal.jsx';
 
 const STEPS = ['Media', 'Location', 'Details', 'Review'];
 
@@ -24,6 +26,8 @@ function ReportPage() {
   const [classification, setClassification] = useState(null);
   const [submitting, setSubmitting] = useState(false);
   const [result, setResult] = useState(null);
+  const [activeReportId, setActiveReportId] = useState(null);
+  const [traceSteps, setTraceSteps] = useState([]);
   const [dragOver, setDragOver] = useState(false);
   const [lat, setLat] = useState(null);
   const [lng, setLng] = useState(null);
@@ -35,6 +39,9 @@ function ReportPage() {
   const mediaRecorderRef = useRef(null);
   const audioChunksRef = useRef([]);
   const fileRef = useRef(null);
+
+  const agentStream = useAgentStream(activeReportId, traceSteps);
+  const showReveal = activeReportId !== null && (submitting || agentStream.isComplete);
 
   const handleFile = (f) => {
     if (!f) return;
@@ -48,6 +55,7 @@ function ReportPage() {
   const removeFile = () => {
     setFile(null);
     setPreview(null);
+    if (audioUrl) URL.revokeObjectURL(audioUrl);
     setAudioUrl(null);
   };
 
@@ -132,28 +140,39 @@ function ReportPage() {
 
   const handleSubmit = async () => {
     setSubmitting(true);
-    try {
-      const formData = new FormData();
-      if (file) formData.append('media', file);
-      formData.append('text', description);
-      formData.append('address', address);
-      formData.append('lat', lat != null ? lat.toString() : '26.85');
-      formData.append('lng', lng != null ? lng.toString() : '80.95');
-      formData.append('reporter_name', 'Anonymous');
+    const formData = new FormData();
+    if (file) formData.append('media', file);
+    formData.append('text', description);
+    formData.append('address', address);
+    formData.append('lat', lat != null ? lat.toString() : '26.85');
+    formData.append('lng', lng != null ? lng.toString() : '80.95');
+    formData.append('reporter_name', 'Anonymous');
 
-      const res = await submitReport(formData);
-      setResult(res);
-      if (res.classification) setClassification(res.classification.category);
-      if (res.success && res.merged) {
-        toast('Report merged into existing ticket', 'success');
-      } else if (res.success) {
-        toast('Report submitted successfully', 'success');
-      }
+    let res;
+    try {
+      res = await submitReport(formData);
     } catch {
       setResult({ error: 'Submission failed. Please check your connection and try again.' });
       toast('Submission failed', 'error');
-    } finally {
       setSubmitting(false);
+      setActiveReportId(null);
+      setTraceSteps([]);
+      return;
+    }
+
+    setActiveReportId(res.report_id);
+    setResult(res);
+    if (res.trace) setTraceSteps(res.trace);
+    if (res.classification) setClassification(res.classification.category);
+  };
+
+  const handleCloseReveal = () => {
+    setSubmitting(false);
+    setActiveReportId(null);
+    if (result?.success && result?.merged) {
+      toast('Report merged into existing ticket', 'success');
+    } else if (result?.success) {
+      toast('Report submitted successfully', 'success');
     }
   };
 
@@ -165,8 +184,11 @@ function ReportPage() {
     setDescription('');
     setClassification(null);
     setResult(null);
+    setActiveReportId(null);
+    setTraceSteps([]);
     setLat(null);
     setLng(null);
+    if (audioUrl) URL.revokeObjectURL(audioUrl);
     setAudioUrl(null);
     setGeoError('');
   };
@@ -193,44 +215,28 @@ function ReportPage() {
         <p className="text-secondary font-sans animate-fade-up stagger-1" style={{ fontSize: '1.125rem' }}>Help us improve the city by reporting infrastructure or civic concerns.</p>
       </header>
 
-      <div className="flex items-center gap-2 animate-fade-up stagger-2" style={{ marginBottom: 'var(--space-10)' }}>
+      <div className="report-step-rail animate-fade-up stagger-2">
         {STEPS.map((s, i) => (
-          <div key={s} className="flex items-center gap-3" style={{ flex: 1 }}>
+          <div key={s} className="report-step">
             <button
               type="button"
               onClick={() => goToStep(i)}
-              className="flex items-center justify-center"
               aria-label={`Go to step ${i + 1}: ${s}`}
-              style={{
-                width: 32,
-                height: 32,
-                borderRadius: '50%',
-                fontSize: '0.875rem',
-                fontFamily: 'var(--font-serif)',
-                background: i <= step ? 'var(--accent)' : 'transparent',
-                border: `1px solid ${i <= step ? 'var(--accent)' : 'var(--border)'}`,
-                color: i <= step ? 'var(--bg-primary)' : 'var(--ink-muted)',
-                transition: 'all 0.4s ease',
-                cursor: result ? 'default' : 'pointer',
-              }}
+              className={`report-step-node ${i === step ? 'active' : ''} ${i < step ? 'done' : ''}`}
+              disabled={!!result}
             >
-              {i + 1}
+              {i < step ? '✓' : i + 1}
             </button>
             <button
               type="button"
               onClick={() => goToStep(i)}
-              className={`text-sm ${i <= step ? 'font-medium' : 'text-muted'}`}
-              style={{ letterSpacing: '0.05em', textTransform: 'uppercase', transition: 'color 0.4s ease', cursor: result ? 'default' : 'pointer', background: 'none' }}
+              className={`report-step-label ${i === step ? 'active' : ''}`}
+              disabled={!!result}
             >
               {s}
             </button>
             {i < STEPS.length - 1 && (
-              <div style={{
-                flex: 1,
-                height: 1,
-                background: i < step ? 'var(--accent)' : 'var(--border)',
-                transition: 'background 0.4s ease',
-              }} />
+              <div className={`report-step-connector ${i < step ? 'done' : ''}`} />
             )}
           </div>
         ))}
@@ -239,22 +245,16 @@ function ReportPage() {
       <div className="animate-fade-up stagger-3" style={{ minHeight: 320, position: 'relative' }}>
         {step === 0 && (
           <div className="flex flex-col gap-6 animate-fade-up">
-            <h3 className="section-title" style={{ fontSize: '1.75rem' }}>Upload Media</h3>
+            <div className="flex items-center justify-between">
+              <h3 className="section-title" style={{ fontSize: '1.75rem', marginBottom: 0 }}>Upload Media</h3>
+              <span className="text-xs text-muted">optional · powers AI classification</span>
+            </div>
             <div
+              className={`dropzone ${dragOver ? 'dragover' : ''}`}
               onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
               onDragLeave={() => setDragOver(false)}
               onDrop={handleDrop}
               onClick={() => fileRef.current?.click()}
-              style={{
-                border: `1px dashed ${dragOver ? 'var(--accent)' : 'var(--border)'}`,
-                borderRadius: 'var(--radius-lg)',
-                padding: 'var(--space-10) var(--space-5)',
-                textAlign: 'center',
-                cursor: 'pointer',
-                background: dragOver ? 'var(--bg-hover)' : 'var(--bg-secondary)',
-                transition: 'all 0.3s ease',
-                position: 'relative',
-              }}
             >
               {preview ? (
                 <div style={{ position: 'relative' }}>
@@ -265,16 +265,16 @@ function ReportPage() {
                     onClick={(e) => { e.stopPropagation(); removeFile(); }}
                     style={{ position: 'absolute', top: 'var(--space-2)', right: 'var(--space-2)' }}
                   >
-                    Remove
+                    ✕ Remove
                   </button>
                 </div>
               ) : (
                 <div className="flex flex-col items-center justify-center">
-                  <div style={{ width: '48px', height: '48px', borderRadius: '50%', background: 'var(--bg-primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 'var(--space-4)' }}>
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
+                  <div style={{ width: '56px', height: '56px', borderRadius: '50%', background: 'var(--bg-primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 'var(--space-4)' }}>
+                    <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
                   </div>
                   <p className="font-serif" style={{ fontSize: '1.25rem', marginBottom: 'var(--space-2)' }}>Drag & drop your image or video</p>
-                  <p className="text-sm text-muted">or click to browse your files</p>
+                  <p className="text-sm text-muted">or click to browse · JPG, PNG, MP4</p>
                 </div>
               )}
               <input
@@ -286,7 +286,7 @@ function ReportPage() {
               />
             </div>
 
-            <div className="flex items-center gap-4" aria-hidden="true" style={{ marginTop: 'var(--space-2)' }}>
+            <div className="flex items-center gap-4" aria-hidden="true">
               <div style={{ flex: 1, height: 1, background: 'var(--border)' }} />
               <span className="text-xs text-muted" style={{ textTransform: 'uppercase', letterSpacing: '0.1em' }}>OR</span>
               <div style={{ flex: 1, height: 1, background: 'var(--border)' }} />
@@ -297,13 +297,22 @@ function ReportPage() {
                 <audio src={audioUrl} controls aria-label="Voice note recording" style={{ height: 40 }} />
                 <button className="btn btn-ghost btn-sm" onClick={() => { setAudioUrl(null); removeFile(); }}>Discard</button>
               </div>
+            ) : recording ? (
+              <button
+                className="btn btn-danger flex justify-center items-center"
+                style={{ padding: 'var(--space-4)', fontSize: '1.125rem', borderRadius: 'var(--radius-lg)', width: '100%' }}
+                onClick={stopRecording}
+              >
+                <span className="rec-indicator"><span className="rec-dot" /> Recording</span>
+                <span style={{ marginLeft: 'var(--space-3)' }}>Tap to stop</span>
+              </button>
             ) : (
               <button
-                className={`btn flex justify-center items-center ${recording ? 'btn-danger' : 'btn-secondary'}`}
+                className="btn btn-secondary flex justify-center items-center"
                 style={{ padding: 'var(--space-4)', fontSize: '1.125rem', borderRadius: 'var(--radius-lg)', width: '100%' }}
-                onClick={recording ? stopRecording : startRecording}
+                onClick={startRecording}
               >
-                {recording ? 'Stop Recording' : 'Record Voice Note instead'}
+                🎙 Record Voice Note instead
               </button>
             )}
           </div>
@@ -312,27 +321,35 @@ function ReportPage() {
         {step === 1 && (
           <div className="flex flex-col gap-6 animate-fade-up">
             <h3 className="section-title" style={{ fontSize: '1.75rem' }}>Location Details</h3>
-            <div className="flex flex-col gap-3">
+            <div className="flex flex-col gap-4">
               <label className="flex flex-col gap-1">
                 <span className="label">Street Address</span>
                 <div className="flex gap-3">
                   <input
                     type="text"
-                    placeholder="Enter the location of the issue..."
+                    placeholder="e.g. Near Hazratganj crossing, Lucknow"
                     value={address}
                     onChange={e => setAddress(e.target.value)}
                     style={{ flex: 1, fontSize: '1.25rem', padding: 'var(--space-4)', background: 'var(--bg-secondary)' }}
                   />
                   <button className="btn btn-secondary" onClick={getLocation} disabled={detecting} style={{ padding: '0 var(--space-6)' }}>
-                    {detecting ? 'Detecting...' : 'Auto-detect'}
+                    {detecting ? 'Locating...' : '📍 Auto-detect'}
                   </button>
                 </div>
               </label>
               {geoError && (
-                <p className="text-sm" style={{ color: 'var(--error)', marginTop: 'var(--space-1)' }}>{geoError}</p>
+                <p className="text-sm" style={{ color: 'var(--error)' }}>{geoError}</p>
               )}
-              <p className="text-xs text-secondary" style={{ marginTop: 'var(--space-2)' }}>
-                {lat != null ? `Coordinates locked: ${lat.toFixed(4)}, ${lng.toFixed(4)}` : 'If no address is provided, we will attempt to auto-detect your location on submit.'}
+              {lat != null && !geoError && (
+                <div className="report-location-confirmed">
+                  <span>✓</span>
+                  <span>Location locked · coordinates captured for geo-clustering</span>
+                </div>
+              )}
+              <p className="text-xs text-secondary">
+                {lat != null
+                  ? <span className="report-coord-display">📐 {lat.toFixed(4)}, {lng.toFixed(4)}</span>
+                  : 'We use your location to cluster duplicate reports and route to the right ward.'}
               </p>
             </div>
           </div>
@@ -340,10 +357,13 @@ function ReportPage() {
 
         {step === 2 && (
           <div className="flex flex-col gap-6 animate-fade-up">
-            <h3 className="section-title" style={{ fontSize: '1.75rem' }}>Issue Description</h3>
+            <div className="flex items-center justify-between">
+              <h3 className="section-title" style={{ fontSize: '1.75rem', marginBottom: 0 }}>Issue Description</h3>
+              <span className="text-xs text-muted">{description.trim().length} chars</span>
+            </div>
             <div className="flex flex-col gap-3">
               <label className="flex flex-col gap-1">
-                <span className="label">Provide details</span>
+                <span className="label">What's the issue?</span>
                 <textarea
                   rows={6}
                   placeholder="Describe what happened, the current state, and any potential hazards..."
@@ -352,6 +372,23 @@ function ReportPage() {
                   style={{ fontSize: '1.125rem', lineHeight: 1.6, padding: 'var(--space-4)', background: 'var(--bg-secondary)', resize: 'vertical' }}
                 />
               </label>
+              <div className="report-example">
+                <span className="text-xs text-muted" style={{ alignSelf: 'center' }}>Quick fill:</span>
+                {[
+                  'Large pothole flooding the road after rain',
+                  'Streetlight not working for a week, area is dark at night',
+                  'Garbage piling up near the bus stop',
+                ].map((ex, i) => (
+                  <button
+                    key={i}
+                    type="button"
+                    className="report-example-chip"
+                    onClick={() => setDescription(ex)}
+                  >
+                    {ex}
+                  </button>
+                ))}
+              </div>
             </div>
 
             {classification && (
@@ -368,37 +405,37 @@ function ReportPage() {
 
         {step === 3 && (
           <div className="flex flex-col gap-8 animate-fade-up">
-            <h3 className="section-title" style={{ fontSize: '1.75rem' }}>Review & Submit</h3>
+            <h3 className="section-title" style={{ fontSize: '1.75rem' }}>Review & Dispatch</h3>
 
-            <div className="flex flex-col gap-5 panel">
+            <div className="report-review-grid">
               {preview && (
-                <div style={{ marginBottom: 'var(--space-2)' }}>
-                  <img src={preview} alt="Attached" style={{ maxHeight: 160, borderRadius: 'var(--radius-md)' }} />
+                <div className="review-field review-field-full" style={{ textAlign: 'center' }}>
+                  <img src={preview} alt="Attached" style={{ maxHeight: 180, borderRadius: 'var(--radius-md)', margin: '0 auto' }} />
                 </div>
               )}
               {mediaType && (
-                <div className="flex flex-col gap-1">
+                <div className="review-field">
                   <span className="label">Media</span>
-                  <span className="font-serif" style={{ fontSize: '1.25rem' }}>{MEDIA_TYPES[mediaType]}{file ? ` · ${file.name}` : ''}</span>
+                  <span className="font-serif" style={{ fontSize: '1.1rem' }}>{MEDIA_TYPES[mediaType]}{file ? ` · ${file.name}` : ''}</span>
                 </div>
               )}
               {classification && (
-                <div className="flex flex-col gap-1">
+                <div className="review-field">
                   <span className="label">AI Classification</span>
-                  <span className="font-serif" style={{ fontSize: '1.25rem' }}>{capitalize(classification)}</span>
+                  <span className="font-serif" style={{ fontSize: '1.1rem', color: 'var(--accent)' }}>{capitalize(classification)}</span>
                 </div>
               )}
-              <div className="flex flex-col gap-1">
-                <span className="label">Address</span>
-                <span className="font-serif" style={{ fontSize: '1.25rem' }}>{address || '—'}</span>
+              <div className="review-field">
+                <span className="label">Location</span>
+                <span className="font-serif" style={{ fontSize: '1.1rem' }}>{address || '—'}</span>
               </div>
-              <div className="flex flex-col gap-1">
-                <span className="label">Description</span>
-                <span className="text-secondary" style={{ fontSize: '1.125rem', lineHeight: 1.6 }}>{description || '—'}</span>
-              </div>
-              <div className="flex flex-col gap-1">
+              <div className="review-field">
                 <span className="label">Coordinates</span>
-                <span className="font-mono text-sm">{lat != null ? `${lat.toFixed(4)}, ${lng.toFixed(4)}` : '26.85, 80.95 (Default)'}</span>
+                <span className="font-mono text-sm" style={{ color: 'var(--accent)' }}>{lat != null ? `${lat.toFixed(4)}, ${lng.toFixed(4)}` : 'default'}</span>
+              </div>
+              <div className="review-field review-field-full">
+                <span className="label">Description</span>
+                <span className="text-secondary" style={{ fontSize: '1.05rem', lineHeight: 1.6 }}>{description || '—'}</span>
               </div>
             </div>
 
@@ -409,7 +446,7 @@ function ReportPage() {
                 onClick={handleSubmit}
                 disabled={submitting}
               >
-                {submitting ? 'Submitting to intelligence layer...' : 'Submit Report'}
+                {submitting ? 'Dispatching to agent...' : '⚡ Dispatch to Agent'}
               </button>
             )}
 
@@ -426,19 +463,13 @@ function ReportPage() {
             {result && !result.error && (
               <div className="flex flex-col gap-4 panel" style={{ borderColor: 'var(--success)' }}>
                 <div className="flex items-center gap-3">
-                  <div style={{ width: 32, height: 32, borderRadius: '50%', background: 'var(--success)', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.875rem', fontWeight: 600 }}>OK</div>
+                  <div style={{ width: 32, height: 32, borderRadius: '50%', background: 'var(--success)', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.875rem', fontWeight: 600 }}>✓</div>
                   <span className="font-serif" style={{ fontSize: '1.5rem', color: 'var(--ink-primary)' }}>
-                    {result.merged ? 'Report merged successfully' : 'Report submitted successfully'}
+                    {result.merged ? 'Merged into existing report' : 'Report dispatched'}
                   </span>
                 </div>
                 {result.ticket_id && (
                   <p className="text-secondary" style={{ letterSpacing: '0.05em' }}>Ticket ID: <span className="font-mono">{result.ticket_id}</span></p>
-                )}
-                {result.trace && result.trace.length > 0 && (
-                  <div style={{ marginTop: 'var(--space-4)', paddingTop: 'var(--space-4)', borderTop: '1px solid var(--border-subtle)' }}>
-                    <p className="label" style={{ marginBottom: 'var(--space-4)' }}>Processing Trace</p>
-                    <AgentTrace trace={result.trace} />
-                  </div>
                 )}
                 <div className="flex gap-3" style={{ marginTop: 'var(--space-4)' }}>
                   {result.ticket_id && (
@@ -479,6 +510,18 @@ function ReportPage() {
           </div>
         )}
       </div>
+
+      <AnimatePresence>
+        {showReveal && (
+          <AgentReveal
+            steps={agentStream.steps}
+            isComplete={agentStream.isComplete}
+            startedAt={agentStream.startedAt}
+            result={result}
+            onClose={handleCloseReveal}
+          />
+        )}
+      </AnimatePresence>
     </div>
   );
 }

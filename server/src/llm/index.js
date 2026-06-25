@@ -23,12 +23,14 @@ export function getLLMClient() {
   if (_instance) return _instance;
 
   const backend = config.llmBackend;
+  const key = config.geminiApiKey;
+  const isPlaceholder = !key || key === 'your_key' || key.includes('your_') || key.includes('_here');
 
   if (backend === 'ollama') {
     console.log('[LLM] Using Ollama backend:', config.ollamaModel);
     _instance = new OllamaClient();
-  } else if (backend === 'mock' || !config.geminiApiKey || config.geminiApiKey === 'your_key') {
-    console.log('[LLM] Using MockClient for testing.');
+  } else if (backend === 'mock' || isPlaceholder) {
+    console.log('[LLM] No valid Gemini key — using MockClient for offline demo.');
     _instance = new MockClient();
   } else {
     console.log('[LLM] Using Gemini backend: gemini-2.0-flash');
