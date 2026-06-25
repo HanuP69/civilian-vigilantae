@@ -19,6 +19,9 @@ router.get('/:id', async (req, res) => {
 
 router.patch('/:id', async (req, res) => {
   try {
+    const userId = req.headers['x-user-id'] || req.body.userId;
+    if (!userId) return res.status(401).json({ error: 'Unauthorized: Missing user ID' });
+    
     const result = await updateTicket(req.params.id, req.body);
     res.json(result);
   } catch (err) { res.status(500).json({ error: err.message }); }

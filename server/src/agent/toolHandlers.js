@@ -3,7 +3,10 @@ import { dbscan, compositeDistance } from '../math/dbscan.js';
 import { computePriority } from '../math/priority.js';
 import { weibullCDF, DEFAULT_PARAMS } from '../math/weibull.js';
 import { computeRecurrenceRisk } from '../math/recurrence.js';
+import { haversine } from '../math/haversine.js';
 import { v4 as uuidv4 } from 'uuid';
+import { broadcast } from '../services/sseService.js';
+import { classifyWithGemini } from '../services/classificationService.js';
 
 const DEPARTMENTS = {
   pothole: 'Roads & Infrastructure', water_leak: 'Water Supply', streetlight: 'Electrical & Lighting',
@@ -26,19 +29,10 @@ function resolveWard(lat, lng) {
   let closest = WARD_LOOKUP[0];
   let minDist = Infinity;
   for (const w of WARD_LOOKUP) {
-    const d = Math.sqrt((lat - w.center[0]) ** 2 + (lng - w.center[1]) ** 2);
+    const d = haversine(lat, lng, w.center[0], w.center[1]);
     if (d < minDist) { minDist = d; closest = w; }
   }
   return closest.name;
-}
-
-let sseClients = [];
-export function setSseClients(clients) { sseClients = clients; }
-
-function broadcast(event, data) {
-  for (const client of sseClients) {
-    try { client.res.write(`event: ${event}\ndata: ${JSON.stringify(data)}\n\n`); } catch (_) {}
-  }
 }
 
 export const toolHandlers = {
@@ -46,6 +40,12 @@ export const toolHandlers = {
     if (ctx.classificationResult) {
       return ctx.classificationResult;
     }
+    
+    if (text) {
+      const result = await classifyWithGemini(null, 'text/plain', text);
+      return result;
+    }
+
     return { category: 'other', severity: 'medium', confidence: 0.5, reasoning: 'Text-only fallback classification' };
   },
 
@@ -152,8 +152,9 @@ export const toolHandlers = {
 
     const newUp = update.verification_up || t.verification_up || 0;
     const newDown = update.verification_down || t.verification_down || 0;
-    if (newDown >= 3 && t.status === 'reported') update.status = 'verified';
-    if (newUp >= 5 && t.status === 'resolved') { update.status = 'reopened'; }
+    if (newUp >= 3 && t.status === 'reported') update.status = 'verified';
+    if (newUp >= 5 && t.status === 'resolved') update.status = 'reopened';
+    if (newDown >= 5 && t.status !== 'resolved') update.status = 'resolved';
 
     await db.collection('tickets').doc(ticket_id).update(update);
     broadcast('verification_recorded', { ticket_id, vote_type, up: newUp, down: newDown });

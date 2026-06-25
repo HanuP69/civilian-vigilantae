@@ -1,5 +1,7 @@
 import express from 'express';
 import cors from 'cors';
+import path from 'path';
+import fs from 'fs';
 import config from './config/env.js';
 import { loadSeedData } from './services/ticketService.js';
 import { startScheduler } from './scheduler/slaScheduler.js';
@@ -26,11 +28,16 @@ loadSeedData().then(() => {
 /** CORS — allow the configured frontend origin */
 app.use(cors({ origin: config.clientUrl, credentials: true }));
 
-/** Parse JSON bodies (limit raised to 50 MB for media uploads) */
-app.use(express.json({ limit: '50mb' }));
+/** Parse JSON bodies (limit raised to 100 MB for media uploads) */
+app.use(express.json({ limit: '100mb' }));
 
 /** Parse URL-encoded bodies */
-app.use(express.urlencoded({ extended: true, limit: '50mb' }));
+app.use(express.urlencoded({ extended: true, limit: '100mb' }));
+
+/** Serve static uploads */
+const uploadDir = path.join(process.cwd(), 'uploads');
+if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir, { recursive: true });
+app.use('/uploads', express.static(uploadDir));
 
 /**
  * Simple request logger.

@@ -104,8 +104,18 @@ export function generateTickets(count = 800) {
       resolvedAt = new Date(createdAt.getTime() + resolutionHours * 60 * 60 * 1000);
     }
 
-    const vUp = status === 'resolved' ? Math.floor(rand(2, 15)) : Math.floor(rand(0, 10));
-    const vDown = status === 'resolved' ? Math.floor(rand(0, 3)) : Math.floor(rand(0, 5));
+    let vUp = 0;
+    let vDown = 0;
+    if (status === 'resolved') {
+      vUp = Math.floor(rand(0, 3));
+      vDown = Math.floor(rand(5, 15));
+    } else if (status === 'verified' || status === 'in_progress' || status === 'reopened') {
+      vUp = Math.floor(rand(3, 15));
+      vDown = Math.floor(rand(0, 2));
+    } else {
+      vUp = Math.floor(rand(0, 2));
+      vDown = 0;
+    }
     const reportCount = Math.floor(rand(1, 6));
 
     const priorityScore = computePriority({
@@ -142,8 +152,8 @@ export function generateTickets(count = 800) {
     });
   }
 
-  // Create ~30 duplicate clusters
-  for (let c = 0; c < 30; c++) {
+  // Create ~5 duplicate clusters
+  for (let c = 0; c < 5; c++) {
     const base = tickets[Math.floor(Math.random() * tickets.length)];
     const clusterId = `cluster-${c}`;
     base.cluster_id = clusterId;
@@ -208,7 +218,7 @@ export function generateDepartments(tickets) {
 }
 
 export function generateAll() {
-  const tickets = generateTickets(800);
+  const tickets = generateTickets(75);
   const users = generateUsers();
   const departments = generateDepartments(tickets);
   return { tickets, users, departments };

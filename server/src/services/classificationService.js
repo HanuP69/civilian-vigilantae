@@ -9,7 +9,8 @@ function getGenAI() {
 
 export async function classifyWithGemini(base64Data, mimeType, text = '') {
   const model = getGenAI().getGenerativeModel({ model: 'gemini-2.0-flash' });
-  const prompt = `You are a civic issue classifier for an Indian city. Analyze this ${mimeType.startsWith('video') ? 'video' : 'image'} and any text description to classify the issue.
+  const mediaKind = mimeType.startsWith('video') ? 'video' : mimeType.startsWith('audio') ? 'audio' : 'image';
+  const prompt = `You are a civic issue classifier for an Indian city. Analyze this ${mediaKind} and any text description to classify the issue.
 
 ${text ? `Citizen description: "${text}"` : ''}
 

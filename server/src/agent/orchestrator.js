@@ -104,37 +104,43 @@ export async function processSchedulerTick(onStep) {
 
   if (openTickets.length === 0) return { processed: 0, trace: trace.getSteps() };
 
-  const ticketSummaries = openTickets.slice(0, 20).map(t => ({
-    id: t.id, category: t.category, severity: t.severity, status: t.status,
-    created_at: t.created_at, ward: t.ward,
-    elapsed_hours: Math.round((Date.now() - new Date(t.created_at).getTime()) / 3600000),
-  }));
+  let processedCount = 0;
+  
+  for (let i = 0; i < openTickets.length; i += 20) {
+    const chunk = openTickets.slice(i, i + 20);
+    const ticketSummaries = chunk.map(t => ({
+      id: t.id, category: t.category, severity: t.severity, status: t.status,
+      created_at: t.created_at, ward: t.ward,
+      elapsed_hours: Math.round((Date.now() - new Date(t.created_at).getTime()) / 3600000),
+    }));
 
-  const messages = [
-    { role: 'system', content: SYSTEM_PROMPT },
-    { role: 'user', content: `Scheduler tick: Review these ${openTickets.length} open tickets for SLA breaches and priority updates. Check SLA status for the most critical ones and escalate if needed.\n\nTickets:\n${JSON.stringify(ticketSummaries, null, 2)}` },
-  ];
+    const messages = [
+      { role: 'system', content: SYSTEM_PROMPT },
+      { role: 'user', content: `Scheduler tick: Review these ${chunk.length} open tickets for SLA breaches and priority updates. Check SLA status for the most critical ones and escalate if needed.\n\nTickets:\n${JSON.stringify(ticketSummaries, null, 2)}` },
+    ];
 
-  for (let round = 0; round < MAX_TOOL_ROUNDS; round++) {
-    const response = await llm.chat(messages, tools);
-    if (response.toolCalls.length === 0) break;
+    for (let round = 0; round < MAX_TOOL_ROUNDS; round++) {
+      const response = await llm.chat(messages, tools);
+      if (response.toolCalls.length === 0) break;
 
-    for (const toolCall of response.toolCalls) {
-      const completeStep = trace.startStep(toolCall.name, toolCall.args);
-      try {
-        const handler = toolHandlers[toolCall.name];
-        const toolResult = await handler(toolCall.args, { trace });
-        completeStep(toolResult, `Scheduler: ${toolCall.name}`);
-        messages.push({ role: 'assistant', content: '' });
-        messages.push({ role: 'tool', name: toolCall.name, content: JSON.stringify(toolResult) });
-      } catch (err) {
-        completeStep({ error: err.message }, '', 'error');
-        messages.push({ role: 'tool', name: toolCall.name, content: JSON.stringify({ error: err.message }) });
+      for (const toolCall of response.toolCalls) {
+        const completeStep = trace.startStep(toolCall.name, toolCall.args);
+        try {
+          const handler = toolHandlers[toolCall.name];
+          const toolResult = await handler(toolCall.args, { trace });
+          completeStep(toolResult, `Scheduler: ${toolCall.name}`);
+          messages.push({ role: 'assistant', content: '' });
+          messages.push({ role: 'tool', name: toolCall.name, content: JSON.stringify(toolResult) });
+        } catch (err) {
+          completeStep({ error: err.message }, '', 'error');
+          messages.push({ role: 'tool', name: toolCall.name, content: JSON.stringify({ error: err.message }) });
+        }
       }
     }
+    processedCount += chunk.length;
   }
 
-  return { processed: openTickets.length, trace: trace.getSteps() };
+  return { processed: processedCount, trace: trace.getSteps() };
 }
 
 function buildReportPrompt(data) {

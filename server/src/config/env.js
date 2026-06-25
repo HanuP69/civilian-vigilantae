@@ -40,7 +40,7 @@ const config = Object.freeze({
 
   // Ollama
   ollamaBaseUrl:        process.env.OLLAMA_BASE_URL       || 'http://localhost:11434',
-  ollamaModel:          process.env.OLLAMA_MODEL          || 'qwen3:8b',
+  ollamaModel:          (process.env.OLLAMA_MODEL === 'qwen3:8b' ? null : process.env.OLLAMA_MODEL) || 'qwen2.5:7b-instruct-q4_K_M',
 });
 
 export default config;

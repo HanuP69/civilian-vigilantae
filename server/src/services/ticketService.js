@@ -2,14 +2,15 @@ import { db } from '../config/firebase.js';
 
 export async function getAllTickets(filters = {}) {
   let query = db.collection('tickets');
+  
+  if (filters.status) query = query.where('status', '==', filters.status);
+  if (filters.category) query = query.where('category', '==', filters.category);
+  if (filters.ward) query = query.where('ward', '==', filters.ward);
+  if (filters.severity) query = query.where('severity', '==', filters.severity);
+
   const snap = await query.get();
   let tickets = [];
   snap.forEach(doc => tickets.push(doc.data()));
-
-  if (filters.status) tickets = tickets.filter(t => t.status === filters.status);
-  if (filters.category) tickets = tickets.filter(t => t.category === filters.category);
-  if (filters.ward) tickets = tickets.filter(t => t.ward === filters.ward);
-  if (filters.severity) tickets = tickets.filter(t => t.severity === filters.severity);
 
   tickets.sort((a, b) => (b.priority_score || 0) - (a.priority_score || 0));
   return tickets;

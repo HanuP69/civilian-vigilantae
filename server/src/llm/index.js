@@ -9,6 +9,7 @@
 import config from '../config/env.js';
 import { GeminiClient } from './GeminiClient.js';
 import { OllamaClient } from './OllamaClient.js';
+import { MockClient } from './MockClient.js';
 
 /** @type {import('./LLMClient.js').LLMClient|null} */
 let _instance = null;
@@ -26,6 +27,9 @@ export function getLLMClient() {
   if (backend === 'ollama') {
     console.log('[LLM] Using Ollama backend:', config.ollamaModel);
     _instance = new OllamaClient();
+  } else if (backend === 'mock' || !config.geminiApiKey || config.geminiApiKey === 'your_key') {
+    console.log('[LLM] Using MockClient for testing.');
+    _instance = new MockClient();
   } else {
     console.log('[LLM] Using Gemini backend: gemini-2.0-flash');
     _instance = new GeminiClient();

@@ -9,6 +9,7 @@
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import config from '../config/env.js';
 import { LLMClient } from './LLMClient.js';
+import { OllamaClient } from './OllamaClient.js';
 
 /** Max retries on transient failures */
 const MAX_RETRIES = 3;
@@ -171,13 +172,19 @@ export class GeminiClient extends LLMClient {
 
         return parsed;
       } catch (err) {
-        const isRetryable = err.status === 429 || err.status === 503 || err.status >= 500;
+        const isRetryable = err.status === 503 || err.status >= 500;
 
         if (isRetryable && attempt < MAX_RETRIES - 1) {
           const delay = BASE_DELAY_MS * Math.pow(2, attempt);
           console.warn(`[Gemini] Retryable error (${err.status}), retrying in ${delay}ms...`);
           await sleep(delay);
           continue;
+        }
+
+        if (err.status === 429 || err.message?.includes('Quota') || err.message?.includes('403')) {
+          console.warn(`[Gemini] Quota/Auth error (${err.status}), falling back to Ollama...`);
+          if (!this.fallbackClient) this.fallbackClient = new OllamaClient();
+          return this.fallbackClient.chat(messages, tools);
         }
 
         console.error(`[Gemini] Error:`, err.message || err);
@@ -195,13 +202,12 @@ export class GeminiClient extends LLMClient {
    * @returns {Promise<import('./LLMClient.js').LLMResponse>}
    */
   async chatWithMedia(text, media, tools) {
-    const messages = [
-      {
-        role: 'user',
-        content: text,
-        media,
-      },
-    ];
-    return this.chat(messages, tools);
+    try {
+      const messages = [{ role: 'user', content: text, media }];
+      return await this.chat(messages, tools);
+    } catch (err) {
+      if (!this.fallbackClient) this.fallbackClient = new OllamaClient();
+      return this.fallbackClient.chatWithMedia(text, media, tools);
+    }
   }
 }
