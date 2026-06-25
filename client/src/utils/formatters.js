@@ -13,7 +13,7 @@ export function timeAgo(date) {
 
 export function formatPriority(score) {
   if (score == null) return '—';
-  return `${Math.round(score * 100)}%`;
+  return `${Math.round(score)}%`;
 }
 
 export function formatHours(h) {

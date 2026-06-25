@@ -1,14 +1,38 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { fetchTickets } from '../services/api';
 import { CATEGORY_LABELS, CATEGORY_COLORS, WARD_LIST } from '../utils/constants';
 import { timeAgo, formatPriority } from '../utils/formatters';
 import { capitalize } from '../utils/formatters';
+import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
+import 'leaflet/dist/leaflet.css';
+import L from 'leaflet';
+
+const createMarkerIcon = (priorityScore, isActive) => {
+  const color = priorityScore > 70 ? '#E57373' : priorityScore > 40 ? '#FFB74D' : '#81C784';
+  const scale = isActive ? 'scale(1.5)' : 'scale(1)';
+  return L.divIcon({
+    className: 'custom-leaflet-marker',
+    html: `<div style="
+      width: 14px; height: 14px; 
+      background-color: ${color}; 
+      border: 2px solid #1A1A1A; 
+      border-radius: 2px; /* Sharp corners instead of circle for sophisticated look */
+      box-shadow: 2px 2px 8px rgba(0,0,0,0.8);
+      transform: ${scale};
+      transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    "></div>`,
+    iconSize: [14, 14],
+    iconAnchor: [7, 7]
+  });
+};
 
 function HomePage() {
   const [tickets, setTickets] = useState([]);
   const [loading, setLoading] = useState(true);
   const [filters, setFilters] = useState({ status: '', category: '', ward: '' });
+  const [activeTicketId, setActiveTicketId] = useState(null);
+  const mapRef = useRef(null);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -25,6 +49,13 @@ function HomePage() {
 
   const handleFilter = (key, value) => {
     setFilters(prev => ({ ...prev, [key]: value }));
+  };
+
+  const handleHover = (ticket) => {
+    setActiveTicketId(ticket.id);
+    if (mapRef.current && ticket.lat && ticket.lng) {
+      mapRef.current.flyTo([ticket.lat, ticket.lng], 15, { duration: 1.2, easeLinearity: 0.25 });
+    }
   };
 
   const severityClass = (s) => `badge badge-severity-${(s || 'low').toLowerCase()}`;
@@ -47,12 +78,31 @@ function HomePage() {
         
         {/* Left Column: Map & Filters */}
         <div className="flex flex-col gap-6">
-          <div className="map-container flex items-center" style={{ minHeight: '350px', background: 'var(--bg-secondary)', border: '1px solid oklch(1 0 0 / 0.05)', borderRadius: 'var(--radius-lg)' }}>
-            <div style={{ textAlign: 'center', width: '100%' }}>
-              <span style={{ fontSize: '2.5rem', display: 'block', marginBottom: 'var(--space-3)' }}>🗺️</span>
-              <p className="font-medium" style={{ fontFamily: 'var(--font-serif)', fontSize: '1.25rem' }}>Live Map</p>
-              <p className="text-sm text-muted">Aesthetic map placeholder</p>
-            </div>
+          <div className="map-container" style={{ height: '350px', background: 'var(--bg-secondary)', border: '1px solid oklch(1 0 0 / 0.05)', borderRadius: 'var(--radius-lg)', overflow: 'hidden' }}>
+            <MapContainer ref={mapRef} center={[26.8467, 80.9462]} zoom={11} style={{ height: '100%', width: '100%' }}>
+              <TileLayer
+                attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png"
+              />
+              {tickets.filter(t => t.lat && t.lng).map(t => (
+                <Marker 
+                  key={t.id} 
+                  position={[t.lat, t.lng]}
+                  icon={createMarkerIcon(t.priority_score, activeTicketId === t.id)}
+                  zIndexOffset={activeTicketId === t.id ? 1000 : 0}
+                >
+                  <Popup>
+                    <div style={{ fontFamily: 'var(--font-sans)' }}>
+                      <strong>{t.title || t.ai_title || 'Report'}</strong><br/>
+                      {t.ward}<br/>
+                      <span className={`badge badge-status-${(t.status || 'reported').toLowerCase().replace(/ /g, '-')}`} style={{ marginTop: '4px', display: 'inline-block' }}>
+                        {capitalize(t.status)}
+                      </span>
+                    </div>
+                  </Popup>
+                </Marker>
+              ))}
+            </MapContainer>
           </div>
 
           <div className="flex flex-col gap-4" style={{ padding: 'var(--space-5)', background: 'var(--bg-secondary)', borderRadius: 'var(--radius-lg)', border: '1px solid oklch(1 0 0 / 0.05)' }}>
@@ -116,13 +166,14 @@ function HomePage() {
                   className="card flex-col gap-3"
                   style={{ 
                     cursor: 'pointer', 
-                    background: 'var(--bg-primary)', 
+                    background: activeTicketId === ticket.id ? 'var(--bg-secondary)' : 'var(--bg-primary)', 
                     border: '1px solid oklch(1 0 0 / 0.05)',
                     transition: 'transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), background 0.4s ease',
-                    animationDelay: `${i * 0.05}s`
+                    animationDelay: `${i * 0.05}s`,
+                    transform: activeTicketId === ticket.id ? 'translateY(-4px)' : 'translateY(0)'
                   }}
-                  onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-4px)'; e.currentTarget.style.background = 'var(--bg-secondary)'; }}
-                  onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.background = 'var(--bg-primary)'; }}
+                  onMouseEnter={() => handleHover(ticket)}
+                  onMouseLeave={() => setActiveTicketId(null)}
                 >
                   <div className="flex justify-between items-start">
                     <span className="font-serif" style={{ fontSize: '1.25rem', fontWeight: 500, color: 'var(--ink-primary)' }}>
@@ -150,16 +201,16 @@ function HomePage() {
                     <div style={{ marginTop: 'var(--space-2)' }}>
                       <div className="flex justify-between text-xs" style={{ marginBottom: 'var(--space-1)' }}>
                         <span className="text-muted">Priority Score</span>
-                        <span style={{ color: ticket.priority_score > 0.7 ? 'var(--error)' : 'var(--accent)' }}>
-                          {Math.round(ticket.priority_score * 100)}%
+                        <span style={{ color: ticket.priority_score > 70 ? 'var(--error)' : 'var(--accent)' }}>
+                          {Math.round(ticket.priority_score)}%
                         </span>
                       </div>
                       <div className="priority-bar" style={{ height: '2px', background: 'var(--bg-surface)' }}>
                         <div
                           className="priority-bar-fill"
                           style={{
-                            width: `${Math.round(ticket.priority_score * 100)}%`,
-                            background: ticket.priority_score > 0.7 ? 'var(--error)' : ticket.priority_score > 0.4 ? 'var(--warning)' : 'var(--accent)',
+                            width: `${Math.round(ticket.priority_score)}%`,
+                            background: ticket.priority_score > 70 ? 'var(--error)' : ticket.priority_score > 40 ? 'var(--warning)' : 'var(--accent)',
                           }}
                         />
                       </div>

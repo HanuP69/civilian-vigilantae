@@ -146,8 +146,8 @@ function TicketPage() {
             <div style={{ padding: 'var(--space-5)', background: 'var(--bg-secondary)', border: '1px solid var(--accent-muted)', borderRadius: 'var(--radius-lg)' }}>
               <h4 className="text-xs text-muted" style={{ textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 'var(--space-2)' }}>Computed Priority</h4>
               <div className="flex items-end justify-between" style={{ marginBottom: 'var(--space-3)' }}>
-                <span className="font-serif" style={{ fontSize: '2.5rem', lineHeight: 1, color: ticket.priority_score > 0.7 ? 'var(--error)' : 'var(--accent)' }}>
-                  {Math.round(ticket.priority_score * 100)}%
+                <span className="font-serif" style={{ fontSize: '2.5rem', lineHeight: 1, color: ticket.priority_score > 70 ? 'var(--error)' : 'var(--accent)' }}>
+                  {Math.round(ticket.priority_score)}%
                 </span>
                 <span className="text-sm text-secondary" style={{ paddingBottom: '4px' }}>{formatPriority(ticket.priority_score)}</span>
               </div>
@@ -155,8 +155,8 @@ function TicketPage() {
                 <div
                   className="priority-bar-fill"
                   style={{
-                    width: `${Math.round(ticket.priority_score * 100)}%`,
-                    background: ticket.priority_score > 0.7 ? 'var(--error)' : ticket.priority_score > 0.4 ? 'var(--warning)' : 'var(--accent)',
+                    width: `${Math.round(ticket.priority_score)}%`,
+                    background: ticket.priority_score > 70 ? 'var(--error)' : ticket.priority_score > 40 ? 'var(--warning)' : 'var(--accent)',
                   }}
                 />
               </div>
@@ -190,7 +190,7 @@ function TicketPage() {
                 onClick={() => handleVote('still_issue')}
                 disabled={voting}
               >
-                <span>🔺 Still an issue</span>
+                <span>Still an issue</span>
                 {ticket.verification_up != null && <span style={{ opacity: 0.8 }}>{ticket.verification_up}</span>}
               </button>
               <button
@@ -199,7 +199,7 @@ function TicketPage() {
                 onClick={() => handleVote('looks_resolved')}
                 disabled={voting}
               >
-                <span>✅ Looks resolved</span>
+                <span>Looks resolved</span>
                 {ticket.verification_down != null && <span style={{ opacity: 0.8 }}>{ticket.verification_down}</span>}
               </button>
             </div>

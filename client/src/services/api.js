@@ -12,14 +12,27 @@ export async function fetchTicket(id) {
 }
 
 export async function submitReport(formData) {
-  const res = await fetch(`${API}/reports`, { method: 'POST', body: formData });
+  let userId = localStorage.getItem('userId');
+  if (!userId) {
+    userId = `user-${Math.random().toString(36).substr(2, 6)}`;
+    localStorage.setItem('userId', userId);
+  }
+  const res = await fetch(`${API}/reports`, { 
+    method: 'POST', 
+    headers: { 'Authorization': `Bearer ${userId}` },
+    body: formData 
+  });
   return res.json();
 }
 
 export async function submitVerification(ticketId, voteType, userId) {
+  const token = localStorage.getItem('userId') || userId;
   const res = await fetch(`${API}/verify/${ticketId}`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: { 
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${token}`
+    },
     body: JSON.stringify({ vote_type: voteType, user_id: userId }),
   });
   return res.json();

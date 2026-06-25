@@ -1,20 +1,21 @@
 import { useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 
 const STEP_ICONS = {
-  llm_reasoning: '🧠',
-  classify_issue: '🏷️',
-  geo_resolve: '📍',
-  find_cluster: '🔍',
-  compute_priority: '⚡',
-  create_ticket: '🎫',
-  merge_into_ticket: '🔀',
-  record_verification: '✅',
-  check_sla_status: '⏱️',
-  escalate_ticket: '⚠️',
-  notify_reporters: '📢',
-  flag_for_review: '🚩',
-  query_recurrence_risk: '📈',
-  agent_response: '💬'
+  llm_reasoning: 'LLM',
+  classify_issue: 'CLS',
+  geo_resolve: 'GEO',
+  find_cluster: 'FND',
+  compute_priority: 'PRI',
+  create_ticket: 'TKT',
+  merge_into_ticket: 'MRG',
+  record_verification: 'VRF',
+  check_sla_status: 'SLA',
+  escalate_ticket: 'ESC',
+  notify_reporters: 'NOT',
+  flag_for_review: 'FLG',
+  query_recurrence_risk: 'RSK',
+  agent_response: 'RES'
 };
 
 const STEP_COLORS = {
@@ -49,100 +50,123 @@ function AgentTrace({ trace = [] }) {
   };
 
   return (
-    <div className="trace-timeline flex flex-col gap-3">
-      {trace.map((step, idx) => {
-        const isExpanded = expandedIndex === idx;
-        const icon = STEP_ICONS[step.step] || STEP_ICONS[step.name] || '⚙️';
-        const color = STEP_COLORS[step.step] || STEP_COLORS[step.name] || 'var(--ink-muted)';
-        const isError = step.status === 'error';
-        const isPending = step.status === 'pending';
+    <div className="flex flex-col gap-3" style={{ fontFamily: 'var(--font-mono)' }}>
+      <AnimatePresence>
+        {trace.map((step, idx) => {
+          const isExpanded = expandedIndex === idx;
+          const icon = STEP_ICONS[step.step] || STEP_ICONS[step.name] || 'SYS';
+          const color = STEP_COLORS[step.step] || STEP_COLORS[step.name] || 'var(--ink-muted)';
+          const isError = step.status === 'error';
+          const isPending = step.status === 'pending';
 
-        return (
-          <div
-            key={idx}
-            className={`trace-step card card-compact card-interactive flex flex-col gap-2 ${isExpanded ? 'expanded' : ''}`}
-            onClick={() => toggleExpand(idx)}
-            style={{
-              animationDelay: `${idx * 150}ms`,
-              borderLeft: `4px solid ${isError ? 'var(--error)' : color}`,
-              padding: 'var(--space-3) var(--space-4)',
-              cursor: 'pointer'
-            }}
-          >
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <span style={{ fontSize: '1.2rem' }}>{icon}</span>
-                <div className="flex flex-col">
-                  <span className="text-sm font-semibold" style={{ color: 'var(--ink-primary)' }}>
-                    {step.step || step.name || 'System Step'}
+          return (
+            <motion.div
+              layout
+              initial={{ opacity: 0, scale: 0.95, y: -10 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              transition={{ type: 'spring', stiffness: 400, damping: 25 }}
+              key={`${idx}-${step.step || step.name}`}
+              className="card card-compact"
+              onClick={() => toggleExpand(idx)}
+              style={{
+                borderLeft: `4px solid ${isError ? 'var(--error)' : color}`,
+                padding: 'var(--space-3) var(--space-4)',
+                cursor: 'pointer',
+                background: 'var(--bg-secondary)',
+                borderRadius: '0 8px 8px 0',
+                borderTop: '1px solid var(--border)',
+                borderRight: '1px solid var(--border)',
+                borderBottom: '1px solid var(--border)',
+              }}
+            >
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <span className="text-xs" style={{ background: color, color: '#111', padding: '2px 6px', fontWeight: 700, borderRadius: '2px' }}>
+                    {icon}
                   </span>
-                  <span className="text-xs text-muted">
-                    {step.detail || step.result || step.reasoning || 'Executed step'}
+                  <div className="flex flex-col">
+                    <span className="text-sm font-semibold" style={{ color: 'var(--ink-primary)' }}>
+                      {step.step || step.name || 'system_process'}
+                    </span>
+                    <span className="text-xs" style={{ color: 'var(--ink-muted)' }}>
+                      {step.detail || step.result || 'Executing...'}
+                    </span>
+                  </div>
+                </div>
+                <div className="flex items-center gap-3">
+                  {step.duration_ms && (
+                    <span className="text-xs" style={{ color: 'var(--accent)', opacity: 0.8 }}>{step.duration_ms}ms</span>
+                  )}
+                  <span
+                    style={{
+                      color: isError ? 'var(--error)' : isPending ? 'var(--warning)' : 'var(--success)',
+                      fontSize: '0.8rem',
+                      fontWeight: 700
+                    }}
+                  >
+                    {isError ? '[FAIL]' : isPending ? '[WAIT]' : '[ OK ]'}
                   </span>
                 </div>
               </div>
-              <div className="flex items-center gap-2">
-                {step.duration_ms && (
-                  <span className="text-xs text-mono text-muted">{step.duration_ms}ms</span>
-                )}
-                <span
-                  style={{
-                    color: isError ? 'var(--error)' : isPending ? 'var(--warning)' : 'var(--success)',
-                    fontSize: '0.8rem',
-                    fontWeight: 600
-                  }}
-                >
-                  {isError ? '✗' : isPending ? '…' : '✓'}
-                </span>
-              </div>
-            </div>
 
-            {isExpanded && (step.input || step.output || step.error || step.text) && (
-              <div
-                className="trace-details text-xs flex flex-col gap-2"
-                style={{
-                  background: 'var(--bg-surface)',
-                  padding: 'var(--space-3)',
-                  borderRadius: 'var(--radius-md)',
-                  marginTop: 'var(--space-2)'
-                }}
-                onClick={(e) => e.stopPropagation()}
-              >
-                {step.text && (
-                  <div>
-                    <span className="font-semibold text-muted block mb-1">Message:</span>
-                    <p style={{ whiteSpace: 'pre-wrap' }}>{step.text}</p>
-                  </div>
+              <AnimatePresence>
+                {isExpanded && (step.input || step.output || step.error || step.text || step.reasoning) && (
+                  <motion.div
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: 'auto' }}
+                    exit={{ opacity: 0, height: 0 }}
+                    transition={{ duration: 0.2 }}
+                    style={{ overflow: 'hidden' }}
+                  >
+                    <div
+                      className="text-xs flex flex-col gap-2"
+                      style={{
+                        background: 'var(--bg-primary)',
+                        padding: 'var(--space-3)',
+                        borderRadius: 'var(--radius-sm)',
+                        marginTop: 'var(--space-3)',
+                        border: '1px solid oklch(1 0 0 / 0.1)'
+                      }}
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      {(step.text || step.output?.text || step.reasoning) && (
+                        <div>
+                          <span className="font-semibold block mb-1" style={{ color: 'var(--accent)' }}>&gt; OUTPUT_LOG</span>
+                          <p style={{ whiteSpace: 'pre-wrap', color: 'var(--ink-secondary)' }}>{step.text || step.output?.text || step.reasoning}</p>
+                        </div>
+                      )}
+                      {step.input && Object.keys(step.input).length > 0 && (
+                        <div>
+                          <span className="font-semibold block mb-1" style={{ color: 'var(--accent)' }}>&gt; PAYLOAD_IN</span>
+                          <pre style={{ overflowX: 'auto', background: 'transparent', color: 'var(--ink-muted)' }}>
+                            {JSON.stringify(step.input, null, 2)}
+                          </pre>
+                        </div>
+                      )}
+                      {step.output && Object.keys(step.output).length > 0 && (
+                        <div>
+                          <span className="font-semibold block mb-1" style={{ color: 'var(--accent)' }}>&gt; PAYLOAD_OUT</span>
+                          <pre style={{ overflowX: 'auto', background: 'transparent', color: 'var(--ink-muted)' }}>
+                            {JSON.stringify(step.output, null, 2)}
+                          </pre>
+                        </div>
+                      )}
+                      {step.error && (
+                        <div>
+                          <span className="font-semibold block mb-1" style={{ color: 'var(--error)' }}>&gt; STDERR</span>
+                          <pre style={{ color: 'var(--error)', overflowX: 'auto', background: 'transparent' }}>
+                            {step.error}
+                          </pre>
+                        </div>
+                      )}
+                    </div>
+                  </motion.div>
                 )}
-                {step.input && Object.keys(step.input).length > 0 && (
-                  <div>
-                    <span className="font-semibold text-muted block mb-1">Input Arguments:</span>
-                    <pre className="text-mono" style={{ overflowX: 'auto', background: 'rgba(0,0,0,0.2)', padding: 'var(--space-2)', borderRadius: 'var(--radius-sm)' }}>
-                      {JSON.stringify(step.input, null, 2)}
-                    </pre>
-                  </div>
-                )}
-                {step.output && Object.keys(step.output).length > 0 && (
-                  <div>
-                    <span className="font-semibold text-muted block mb-1">Returned Output:</span>
-                    <pre className="text-mono" style={{ overflowX: 'auto', background: 'rgba(0,0,0,0.2)', padding: 'var(--space-2)', borderRadius: 'var(--radius-sm)' }}>
-                      {JSON.stringify(step.output, null, 2)}
-                    </pre>
-                  </div>
-                )}
-                {step.error && (
-                  <div>
-                    <span className="font-semibold text-muted block mb-1" style={{ color: 'var(--error)' }}>Error details:</span>
-                    <pre className="text-mono" style={{ color: 'var(--error)', overflowX: 'auto', background: 'rgba(0,0,0,0.2)', padding: 'var(--space-2)', borderRadius: 'var(--radius-sm)' }}>
-                      {step.error}
-                    </pre>
-                  </div>
-                )}
-              </div>
-            )}
-          </div>
-        );
-      })}
+              </AnimatePresence>
+            </motion.div>
+          );
+        })}
+      </AnimatePresence>
     </div>
   );
 }

@@ -188,7 +188,9 @@ function ReportPage() {
                 <img src={preview} alt="Preview" style={{ maxHeight: 240, borderRadius: 'var(--radius-md)', margin: '0 auto' }} />
               ) : (
                 <div className="flex flex-col items-center justify-center">
-                  <span style={{ fontSize: '3rem', marginBottom: 'var(--space-4)', opacity: 0.8 }}>📷</span>
+                  <div style={{ width: '48px', height: '48px', borderRadius: '50%', background: 'var(--bg-primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 'var(--space-4)', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}>
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
+                  </div>
                   <p className="font-serif" style={{ fontSize: '1.25rem', marginBottom: 'var(--space-2)' }}>Drag & drop your image or video</p>
                   <p className="text-sm text-muted">or click to browse your files</p>
                 </div>
@@ -219,7 +221,7 @@ function ReportPage() {
                 style={{ padding: 'var(--space-4)', fontSize: '1.125rem', borderRadius: 'var(--radius-lg)', width: '100%' }}
                 onClick={recording ? stopRecording : startRecording}
               >
-                {recording ? '⏹️ Stop Recording' : '🎙️ Record Voice Note instead'}
+                {recording ? 'Stop Recording' : 'Record Voice Note instead'}
               </button>
             )}
           </div>
@@ -239,7 +241,7 @@ function ReportPage() {
                   style={{ flex: 1, fontSize: '1.25rem', padding: 'var(--space-4)', background: 'var(--bg-secondary)', border: 'none', borderBottom: '2px solid var(--border)', borderRadius: 'var(--radius-sm) var(--radius-sm) 0 0' }}
                 />
                 <button className="btn btn-secondary" onClick={getLocation} disabled={detecting} style={{ padding: '0 var(--space-6)' }}>
-                  {detecting ? '📍 Detecting...' : '📍 Auto-detect'}
+                  {detecting ? 'Detecting...' : 'Auto-detect'}
                 </button>
               </div>
               <p className="text-xs text-secondary" style={{ marginTop: 'var(--space-2)' }}>
@@ -265,7 +267,7 @@ function ReportPage() {
             
             {classification && (
               <div className="flex items-center gap-4" style={{ padding: 'var(--space-4)', background: 'var(--bg-surface)', borderRadius: 'var(--radius-lg)', border: '1px solid oklch(1 0 0 / 0.05)' }}>
-                <span style={{ fontSize: '1.5rem' }}>🤖</span>
+                <span style={{ fontSize: '1.25rem', fontWeight: 600, fontFamily: 'var(--font-serif)', color: 'var(--accent)' }}>AI</span>
                 <div>
                   <p className="text-xs text-muted" style={{ textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '2px' }}>AI Classification</p>
                   <p className="font-serif" style={{ fontSize: '1.25rem', color: 'var(--ink-primary)' }}>{capitalize(classification)}</p>
@@ -317,7 +319,7 @@ function ReportPage() {
                 ) : (
                   <div className="flex flex-col gap-4">
                     <div className="flex items-center gap-3">
-                      <div style={{ width: 32, height: 32, borderRadius: '50%', background: 'var(--success)', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.25rem' }}>✓</div>
+                      <div style={{ width: 32, height: 32, borderRadius: '50%', background: 'var(--success)', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.875rem', fontWeight: 600 }}>OK</div>
                       <span className="font-serif" style={{ fontSize: '1.5rem', color: 'var(--ink-primary)' }}>Report submitted successfully</span>
                     </div>
                     {result.ticket_id && (
