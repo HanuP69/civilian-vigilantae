@@ -13,7 +13,7 @@
  * Usage: node test_e2e.js
  */
 
-const API_URL = 'http://localhost:3001/api';
+const API_URL = 'http://127.0.0.1:3001/api';
 const USER_ID = `test-user-${Math.random().toString(36).substring(2, 8)}`;
 
 async function runTests() {

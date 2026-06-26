@@ -216,3 +216,31 @@ export function weibullMLE(times, { maxIterations = 20, convergenceThreshold = 1
 
   return { lambda, k };
 }
+
+/**
+ * Compute the conditional probability that an issue is resolved before t1
+ * given that it has survived (remained unresolved) until t0.
+ *
+ * ```
+ * P(T ≤ t1 | T > t0) = [F(t1) - F(t0)] / [1 - F(t0)]
+ *                    = 1 - exp((t0/λ)^k - (t1/λ)^k)
+ * ```
+ *
+ * @param {number} t0     — elapsed survival time (hours, ≥ 0)
+ * @param {number} t1     — deadline time (hours, ≥ t0)
+ * @param {number} lambda — scale parameter (> 0)
+ * @param {number} k      — shape parameter (> 0)
+ * @returns {number} conditional probability in [0, 1]
+ */
+export function weibullConditionalProbability(t0, t1, lambda, k) {
+  if (t0 < 0 || t1 < t0) return 0;
+  if (lambda <= 0 || k <= 0) {
+    throw new RangeError('lambda and k must be positive');
+  }
+  if (t0 === 0) return 1 - Math.exp(-Math.pow(t1 / lambda, k));
+  
+  const term0 = Math.pow(t0 / lambda, k);
+  const term1 = Math.pow(t1 / lambda, k);
+  return 1 - Math.exp(term0 - term1);
+}
+

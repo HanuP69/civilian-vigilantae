@@ -1,5 +1,5 @@
 import { computePriority } from '../math/priority.js';
-import { weibullCDF, DEFAULT_PARAMS } from '../math/weibull.js';
+import { weibullCDF, DEFAULT_PARAMS, weibullConditionalProbability } from '../math/weibull.js';
 import { writeFileSync } from 'fs';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
@@ -123,6 +123,83 @@ export function generateTickets(count = 800) {
       elapsedHours: Math.min(elapsedHours, slaHours * 2), slaHours, category,
     });
 
+    let cloudVisionResult = null;
+    let classificationAgreement = true;
+    const aiClassification = { category, severity, confidence: Math.round(rand(0.75, 0.95) * 100) / 100, source: 'llm' };
+
+    // Simulate Cloud Vision labeling for 40% of reports
+    if (Math.random() < 0.40) {
+      const isAgreed = Math.random() >= 0.15; // 85% agreement
+      const visionScore = Math.round(rand(0.60, 0.95) * 100) / 100;
+      
+      const matchedLabel = isAgreed
+        ? (category === 'pothole' ? 'Pothole' : (category === 'water_leak' ? 'Water pipe' : (category === 'streetlight' ? 'Street light' : 'Garbage')))
+        : (category === 'pothole' ? 'Water pipe' : 'Pothole');
+        
+      cloudVisionResult = {
+        labels: [
+          { description: matchedLabel, score: visionScore }
+        ],
+        confidence: visionScore,
+        source: 'cloud_vision'
+      };
+      
+      classificationAgreement = isAgreed;
+      
+      // Calculate Bayesian consensus probability and entropy
+      const prior = {};
+      const CATEGORIES_LIST = ['pothole', 'water_leak', 'streetlight', 'waste', 'road_damage', 'drainage', 'other'];
+      CATEGORIES_LIST.forEach(c => {
+        prior[c] = (c === category) ? aiClassification.confidence : (1 - aiClassification.confidence) / (CATEGORIES_LIST.length - 1);
+      });
+      
+      const likelihood = {};
+      CATEGORIES_LIST.forEach(c => { likelihood[c] = 0; });
+      
+      const VISION_TO_CATEGORY_MAPPING = {
+        'Pothole': 'pothole', 'Road surface': 'pothole',
+        'Water': 'water_leak', 'Pipe': 'water_leak', 'Leak': 'water_leak',
+        'Street light': 'streetlight',
+        'Garbage': 'waste', 'Waste': 'waste',
+      };
+      
+      for (const [kw, cat] of Object.entries(VISION_TO_CATEGORY_MAPPING)) {
+        if (matchedLabel.toLowerCase().includes(kw.toLowerCase())) {
+          likelihood[cat] += visionScore;
+        }
+      }
+      
+      // Softmax likelihood
+      const exps = {};
+      let sumExp = 0;
+      CATEGORIES_LIST.forEach(c => {
+        exps[c] = Math.exp(likelihood[c]);
+        sumExp += exps[c];
+      });
+      CATEGORIES_LIST.forEach(c => { likelihood[c] = exps[c] / sumExp; });
+      
+      // Posterior
+      const posterior = {};
+      let sumPost = 0;
+      CATEGORIES_LIST.forEach(c => {
+        posterior[c] = prior[c] * likelihood[c];
+        sumPost += posterior[c];
+      });
+      
+      let entropy = 0;
+      CATEGORIES_LIST.forEach(c => {
+        const p = posterior[c] / sumPost;
+        if (p > 0) entropy -= p * Math.log2(p);
+      });
+      
+      aiClassification.entropy = Math.round(entropy * 100) / 100;
+    }
+
+    const slaParams = DEFAULT_PARAMS[category] || DEFAULT_PARAMS.other;
+    const slaProbability = status === 'resolved' && resolvedAt
+      ? (resolvedAt.getTime() <= slaDeadline.getTime() ? 1.0 : 0.0)
+      : Math.round(weibullConditionalProbability(elapsedHours, slaHours, slaParams.lambda, slaParams.k) * 100) / 100;
+
     const randomSuffix = Math.random().toString(36).substring(2, 8);
     tickets.push({
       id: `ticket-${i}-${randomSuffix}`,
@@ -135,15 +212,16 @@ export function generateTickets(count = 800) {
       ward: ward.name,
       department: DEPARTMENTS[category],
       media_urls: [], media_type: 'image',
-      ai_classification: { category, severity, confidence: rand(0.75, 0.99), source: 'gemini' },
-      cloud_vision_result: null, classification_agreement: true,
+      ai_classification: aiClassification,
+      cloud_vision_result: cloudVisionResult,
+      classification_agreement: classificationAgreement,
       reporter_id: `user-${reporterIdx}`,
       reporter_name: NAMES[reporterIdx - 1],
       verification_up: vUp, verification_down: vDown,
       verified_by: [],
       cluster_id: null, merged_into: null, child_reports: [],
       sla_deadline: slaDeadline.toISOString(),
-      sla_probability: weibullCDF(elapsedHours, slaHours, DEFAULT_PARAMS[category]?.k || 1.3),
+      sla_probability: slaProbability,
       agent_trace: [],
       resolution_media_url: null,
       created_at: createdAt.toISOString(),

@@ -1,12 +1,12 @@
 import { db } from '../config/firebase.js';
 import { dbscan, compositeDistance } from '../math/dbscan.js';
 import { computePriority } from '../math/priority.js';
-import { weibullCDF, DEFAULT_PARAMS } from '../math/weibull.js';
+import { weibullCDF, DEFAULT_PARAMS, weibullConditionalProbability, weibullMLE } from '../math/weibull.js';
 import { computeRecurrenceRisk } from '../math/recurrence.js';
 import { haversine } from '../math/haversine.js';
 import { v4 as uuidv4 } from 'uuid';
 import { broadcast } from '../services/sseService.js';
-import { classifyWithGemini } from '../services/classificationService.js';
+import { classifyWithLLM } from '../services/classificationService.js';
 
 const DEPARTMENTS = {
   pothole: 'Roads & Infrastructure', water_leak: 'Water Supply', streetlight: 'Electrical & Lighting',
@@ -42,12 +42,12 @@ export const toolHandlers = {
     }
 
     if (has_media && ctx?.mediaBase64 && ctx?.mediaMimeType) {
-      const result = await classifyWithGemini(ctx.mediaBase64, ctx.mediaMimeType, text);
+      const result = await classifyWithLLM(ctx.mediaBase64, ctx.mediaMimeType, text);
       return result;
     }
 
     if (text) {
-      const result = await classifyWithGemini(null, 'text/plain', text);
+      const result = await classifyWithLLM(null, 'text/plain', text);
       return result;
     }
 
@@ -191,10 +191,46 @@ export const toolHandlers = {
     const slaHours = slaDeadline
       ? (slaDeadline.getTime() - new Date(t.created_at).getTime()) / 3600000
       : params.lambda;
-    const probability = weibullCDF(slaHours, params.lambda, params.k);
+
+    // Localized Weibull MLE Parameter Estimation
+    const resolvedSnap = await db.collection('tickets')
+      .where('status', '==', 'resolved')
+      .where('ward', '==', t.ward)
+      .where('category', '==', t.category)
+      .get();
+    
+    const intervals = [];
+    resolvedSnap.forEach(rd => {
+      const ticketData = rd.data();
+      if (ticketData.resolved_at && ticketData.created_at) {
+        const durationH = (new Date(ticketData.resolved_at).getTime() - new Date(ticketData.created_at).getTime()) / 3600000;
+        if (durationH > 0) intervals.push(durationH);
+      }
+    });
+
+    let fitParams = { lambda: params.lambda, k: params.k };
+    let localizedUsed = false;
+    if (intervals.length >= 3) {
+      try {
+        fitParams = weibullMLE(intervals);
+        localizedUsed = true;
+      } catch (err) {
+        // Fallback to category defaults if MLE fails to converge
+      }
+    }
+
     const breached = slaDeadline ? Date.now() > slaDeadline.getTime() : elapsedHours > slaHours;
+    const probability = breached ? 0 : weibullConditionalProbability(elapsedHours, slaHours, fitParams.lambda, fitParams.k);
+
     await db.collection('tickets').doc(ticket_id).update({ sla_probability: probability });
-    return { ticket_id, elapsed_hours: Math.round(elapsedHours), sla_hours: Math.round(slaHours), probability: Math.round(probability * 100) / 100, breached };
+    return { 
+      ticket_id, 
+      elapsed_hours: Math.round(elapsedHours), 
+      sla_hours: Math.round(slaHours), 
+      probability: Math.round(probability * 100) / 100, 
+      breached,
+      localized_params: { lambda: Math.round(fitParams.lambda * 10) / 10, k: Math.round(fitParams.k * 100) / 100, localizedUsed }
+    };
   },
 
   async escalate_ticket({ ticket_id, reason }) {
@@ -245,5 +281,50 @@ export const toolHandlers = {
     const risks = computeRecurrenceRisk(resolved, 14);
     const match = risks.find(r => r.ward === ward && r.category === category);
     return match || { ward, category, probability: 0.3, recommendation: 'Low risk' };
+  },
+
+  async query_ward_historical_stats({ ward, category }) {
+    const snap = await db.collection('tickets')
+      .where('ward', '==', ward)
+      .where('category', '==', category)
+      .get();
+    
+    const scores = [];
+    let resolvedCount = 0;
+    let totalDurations = 0;
+
+    snap.forEach(doc => {
+      const t = doc.data();
+      if (t.priority_score !== undefined) scores.push(t.priority_score);
+      if (t.status === 'resolved' && t.resolved_at && t.created_at) {
+        resolvedCount++;
+        totalDurations += (new Date(t.resolved_at).getTime() - new Date(t.created_at).getTime()) / 3600000;
+      }
+    });
+
+    const count = snap.size;
+    if (count === 0) {
+      return { ward, category, count: 0, mean_priority: 50, stdev_priority: 0, avg_resolution_hours: 0 };
+    }
+
+    const sum = scores.reduce((a, b) => a + b, 0);
+    const mean = sum / (scores.length || 1);
+    const variance = scores.reduce((s, v) => s + (v - mean) ** 2, 0) / (scores.length || 1);
+    const stdev = Math.sqrt(variance);
+
+    return {
+      ward,
+      category,
+      count,
+      mean_priority: Math.round(mean * 10) / 10,
+      stdev_priority: Math.round(stdev * 10) / 10,
+      avg_resolution_hours: resolvedCount > 0 ? Math.round(totalDurations / resolvedCount) : null
+    };
+  },
+
+  async audit_ticket_details({ ticket_id }) {
+    const doc = await db.collection('tickets').doc(ticket_id).get();
+    if (!doc.exists) return { error: 'Ticket not found' };
+    return doc.data();
   },
 };

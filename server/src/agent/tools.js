@@ -165,6 +165,29 @@ export const TOOL_DEFINITIONS = [
       required: ['ward', 'category'],
     },
   },
+  {
+    name: 'query_ward_historical_stats',
+    description: 'Query historical metrics for a specific ward and category to audit averages and check for anomaly/outlier thresholds.',
+    parameters: {
+      type: 'object',
+      properties: {
+        ward: { type: 'string', description: 'Ward name' },
+        category: { type: 'string', description: 'Issue category' },
+      },
+      required: ['ward', 'category'],
+    },
+  },
+  {
+    name: 'audit_ticket_details',
+    description: 'Query details of an existing ticket in the database to double-check classification or priority anomalies.',
+    parameters: {
+      type: 'object',
+      properties: {
+        ticket_id: { type: 'string', description: 'The ticket ID to audit' },
+      },
+      required: ['ticket_id'],
+    },
+  }
 ];
 
 /**
@@ -177,11 +200,13 @@ export function getToolsForContext(context) {
   const reportTools = [
     'classify_issue', 'geo_resolve', 'find_cluster', 'compute_priority',
     'create_ticket', 'merge_into_ticket', 'notify_reporters', 'flag_for_review',
+    'query_ward_historical_stats', 'audit_ticket_details'
   ];
 
   const schedulerTools = [
     'check_sla_status', 'compute_priority', 'escalate_ticket',
     'notify_reporters', 'flag_for_review', 'query_recurrence_risk',
+    'query_ward_historical_stats', 'audit_ticket_details'
   ];
 
   if (context === 'report') {
@@ -192,3 +217,4 @@ export function getToolsForContext(context) {
   }
   return TOOL_DEFINITIONS;
 }
+

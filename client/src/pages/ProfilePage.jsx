@@ -295,7 +295,6 @@ function ProfilePage() {
   const [activeTab, setActiveTab] = useState('quests');
   const [shopCategory, setShopCategory] = useState('all');
   const [questFilter, setQuestFilter] = useState('active');
-  const [equipping, setEquipping] = useState(null);
   const [showCustomizer, setShowCustomizer] = useState(false);
   const [customSkin, setCustomSkin] = useState(0);
   const [customHair, setCustomHair] = useState(0);
@@ -363,15 +362,12 @@ function ProfilePage() {
   };
 
   const handleEquipAvatar = async (avatarValue) => {
-    setEquipping(avatarValue);
     try {
       await apiEquipAvatar(avatarValue);
       toast('Avatar equipped!', 'success');
       await refreshProfile();
     } catch (err) {
       toast(err.message || 'Failed to equip avatar', 'error');
-    } finally {
-      setEquipping(null);
     }
   };
 
@@ -571,67 +567,6 @@ function ProfilePage() {
               <span className="font-pixel" style={{ fontSize: '0.45rem', color: 'var(--ink-muted)', marginTop: '4px', display: 'block' }}>GOLD BALANCE</span>
             </div>
 
-          </div>
-
-          {/* Avatar Customizer */}
-          <div className="card pixel-border" style={{ borderRadius: 0, padding: 'var(--space-4)' }}>
-            <h3 className="font-pixel" style={{ margin: '0 0 var(--space-4) 0', fontSize: '0.65rem', borderBottom: '2px solid var(--border)', paddingBottom: 'var(--space-2)' }}>👤 CUSTOMIZE AVATAR</h3>
-            
-            <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', justifyContent: 'center' }}>
-              {/* Default Avatar Choice */}
-              <button
-                onClick={() => handleEquipAvatar('default')}
-                disabled={equipping !== null}
-                style={{
-                  width: 36,
-                  height: 36,
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  background: (user.photo_url === null || user.photo_url === 'default') ? 'var(--accent)' : 'oklch(0.2 0.01 260)',
-                  border: '2px solid #000',
-                  boxShadow: (user.photo_url === null || user.photo_url === 'default') ? 'none' : '1px 1px 0 rgba(0,0,0,0.5)',
-                  cursor: 'pointer',
-                  borderRadius: 0,
-                  padding: 0
-                }}
-                title="Default Seed Avatar"
-              >
-                <span className="font-pixel" style={{ fontSize: '0.4rem', color: (user.photo_url === null || user.photo_url === 'default') ? '#000' : 'var(--ink-secondary)' }}>DEF</span>
-              </button>
-
-              {/* Unlocked Avatars */}
-              {(user.unlocked_avatars || []).map((avatarVal) => {
-                const isEquipped = user.photo_url === avatarVal;
-                const shopItem = SHOP_ITEMS.find(i => i.value === avatarVal);
-                
-                return (
-                  <button
-                    key={avatarVal}
-                    onClick={() => handleEquipAvatar(avatarVal)}
-                    disabled={equipping !== null}
-                    style={{
-                      width: 36,
-                      height: 36,
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      background: isEquipped ? 'var(--accent)' : 'oklch(0.2 0.01 260)',
-                      border: '2px solid #000',
-                      boxShadow: isEquipped ? 'none' : '1px 1px 0 rgba(0,0,0,0.5)',
-                      cursor: 'pointer',
-                      borderRadius: 0,
-                      padding: 0
-                    }}
-                    title={shopItem?.name || avatarVal}
-                  >
-                    <div style={{ transform: 'scale(0.8)' }}>
-                      <ShopItemIcon id={shopItem?.id} />
-                    </div>
-                  </button>
-                );
-              })}
-            </div>
           </div>
 
           {/* Telemetry Stats Card */}

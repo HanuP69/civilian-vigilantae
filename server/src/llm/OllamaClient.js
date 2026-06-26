@@ -82,7 +82,8 @@ function toOllamaMessages(messages, tools) {
 
     // Multimodal support (images)
     if (msg.media && msg.media.mimeType?.startsWith('image/')) {
-      ollamaMsg.images = [msg.media.data];
+      const base64Data = msg.media.data.replace(/^data:image\/[a-zA-Z+]+;base64,/, '');
+      ollamaMsg.images = [base64Data];
     }
 
     ollamaMessages.push(ollamaMsg);
@@ -173,10 +174,13 @@ export class OllamaClient extends LLMClient {
    * @returns {Promise<import('./LLMClient.js').LLMResponse>}
    */
   async chat(messages, tools) {
+    const hasImage = messages.some(m => m.media && m.media.mimeType?.startsWith('image/'));
+    const activeModel = hasImage ? (config.ollamaVisionModel || 'llava:latest') : this.model;
+
     const ollamaMessages = toOllamaMessages(messages, tools);
 
     const body = {
-      model: this.model,
+      model: activeModel,
       messages: ollamaMessages,
       stream: false,
       options: {

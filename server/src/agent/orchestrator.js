@@ -8,20 +8,23 @@ const MAX_TOOL_ROUNDS = 6;
 const SYSTEM_PROMPT = `You are SENTINEL-CIVIC, an AI agent that processes citizen reports about community issues in Lucknow, India. You autonomously classify, deduplicate, prioritize, and route civic issue reports.
 
 When processing a new report:
-1. First classify the issue using classify_issue
-2. Resolve the geographic location using geo_resolve
-3. Check for duplicates using find_cluster
-4. If duplicate found, merge using merge_into_ticket
-5. If new issue, create a ticket using create_ticket
-6. Compute priority using compute_priority
-7. Notify reporters using notify_reporters
+1. First classify the issue using classify_issue.
+2. Resolve the geographic location using geo_resolve.
+3. Check for duplicates using find_cluster.
+4. If a duplicate is found, merge it using merge_into_ticket.
+5. If the issue is new:
+   - Audit the classification: if entropy is high (> 1.8) or a multi-model disagreement is flagged, query historical statistics using query_ward_historical_stats. If the category remains highly ambiguous, use flag_for_review.
+   - Otherwise, create a ticket using create_ticket.
+6. Compute priority using compute_priority.
+7. Perform a Self-Audit on the ticket: query details using audit_ticket_details and compare priority/severity with ward baselines. If priority is anomalous, explain it in your reasoning or flag for review.
+8. Notify reporters using notify_reporters.
 
 When checking SLA status:
-1. Check each ticket's SLA using check_sla_status
-2. If breached, escalate using escalate_ticket
-3. Recompute priority using compute_priority
+1. Check each ticket's SLA using check_sla_status.
+2. If breached or conditional breach probability is high, escalate using escalate_ticket.
+3. Recompute priority using compute_priority.
 
-Always provide clear reasoning for your decisions. Be decisive and efficient.`;
+Always explain your mathematical and logical reasoning (referencing Bayesian consensus, entropy, and Weibull probability deviations in your thoughts).`;
 
 export async function processReport(reportData, onStep) {
   const llm = getLLMClient();
@@ -158,8 +161,15 @@ function buildReportPrompt(data) {
   if (data.lat && data.lng) prompt += `Location: (${data.lat}, ${data.lng})\n`;
   if (data.media_urls?.length) prompt += `Media: ${data.media_urls.length} ${data.media_type || 'image'}(s) attached\n`;
   if (data.classificationResult) {
-    prompt += `AI Classification (pre-computed): ${JSON.stringify(data.classificationResult)}\n`;
+    prompt += `Bayesian Consensus AI Classification (pre-computed):\n`;
+    prompt += `- Category: ${data.classificationResult.category}\n`;
+    prompt += `- Confidence: ${data.classificationResult.confidence}\n`;
+    prompt += `- Information Entropy (Uncertainty): ${data.classificationResult.entropy || 0}\n`;
+    prompt += `- Reasoning: "${data.classificationResult.reasoning}"\n`;
+    if (data.classificationAgreement === false) {
+      prompt += `WARNING: Multi-model disagreement detected! Gemini and Cloud Vision classifications diverged.\n`;
+    }
   }
-  prompt += `\nProcess this report: classify it, resolve location, check for duplicates, create or merge ticket, compute priority, and notify.`;
+  prompt += `\nProcess this report: resolve location, check for duplicates, create or merge ticket, compute priority, perform a self-audit, and notify. If classification entropy is high (> 1.8) or there is a classification disagreement, audit the ward's historical stats or flag for review.`;
   return prompt;
 }
