@@ -330,6 +330,14 @@ export const toolHandlers = {
       await updateVoterReputations(votes, finalStatus);
     }
 
+    // Update active community missions progress
+    try {
+      const { progressMission } = await import('../services/missionService.js');
+      await progressMission(ticket_id, userId, vote_type);
+    } catch (mErr) {
+      console.warn('[Orchestrator] Failed to advance mission progress:', mErr.message);
+    }
+
     broadcast('verification_recorded', { ticket_id, vote_type, up: newUp, down: newDown, status: finalStatus });
     return { ticket_id, verification_up: newUp, verification_down: newDown };
   },

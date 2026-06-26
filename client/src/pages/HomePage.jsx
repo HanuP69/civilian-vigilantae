@@ -30,6 +30,7 @@ const haversineApprox = (a, b) => {
 function HomePage() {
   const [tickets, setTickets] = useState([]);
   const [recurrence, setRecurrence] = useState([]);
+  const [missions, setMissions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [filters, setFilters] = useState({ status: '', category: '', ward: '' });
   const [activeTicketId, setActiveTicketId] = useState(null);
@@ -64,6 +65,13 @@ function HomePage() {
   useEffect(() => {
     fetchRecurrenceRisk()
       .then(data => setRecurrence(Array.isArray(data) ? data : data?.risks || []))
+      .catch(() => {});
+  }, []);
+
+  useEffect(() => {
+    fetch('/api/missions')
+      .then(res => res.json())
+      .then(data => setMissions(Array.isArray(data) ? data : []))
       .catch(() => {});
   }, []);
 
@@ -299,6 +307,7 @@ function HomePage() {
               tickets={tickets}
               clusterGroups={clusterGroups}
               recurrence={recurrence}
+              missions={missions}
               slaByWard={slaByWard}
               layer={layer}
               activeTicketId={activeTicketId}

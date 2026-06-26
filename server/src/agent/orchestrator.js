@@ -210,8 +210,36 @@ export async function processReport(reportData, onStep) {
   const notifyReasoning = await enrichReasoning('notify_reporters', notifyResult) || 'Dispatched push notification alerts to regional sentinels.';
   completeNotify(notifyResult, notifyReasoning);
 
-  // Store full trace in ticket.agent_trace along with Phase 2/4 explainability fields
+  // 11. Root Cause Diagnosis
   const { db } = await import('../config/firebase.js');
+  let reportsForRootCause = [];
+  if (merged) {
+    try {
+      const ticketSnap = await db.collection('tickets').doc(ticketId).get();
+      if (ticketSnap.exists) {
+        const ticketData = ticketSnap.data();
+        reportsForRootCause.push({
+          title: ticketData.title,
+          description: ticketData.description,
+          address: ticketData.address,
+          ward: ticketData.ward
+        });
+      }
+    } catch (err) {
+      console.warn('[Orchestrator] Failed to fetch existing ticket for root cause:', err.message);
+    }
+  }
+  reportsForRootCause.push({
+    title: reportData.text?.substring(0, 50) || 'Incident Report',
+    description: reportData.text,
+    address: geoResult.address,
+    ward: geoResult.ward
+  });
+
+  const { analyzeRootCause } = await import('../services/rootCauseService.js');
+  const rootCauseResult = await analyzeRootCause(classificationResult.category, reportsForRootCause);
+
+  // Store full trace in ticket.agent_trace along with Phase 2/4 explainability fields and root cause diagnosis
   await db.collection('tickets').doc(ticketId).update({
     agent_trace: trace.getSteps(),
     verification_score: verificationResult.verification_score,
@@ -224,6 +252,7 @@ export async function processReport(reportData, onStep) {
     dispatch_plan: planResult,
     cluster_explanation: clusterReasoning,
     cluster_detail: clusterResult,
+    root_cause: rootCauseResult,
   });
 
   // Log final agent response

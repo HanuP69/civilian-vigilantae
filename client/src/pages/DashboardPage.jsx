@@ -322,10 +322,52 @@ const itemAnim = {
   show: { opacity: 1, y: 0, transition: { type: 'spring', stiffness: 300, damping: 24 } },
 };
 
+const solveKnapsack = (items, capacity) => {
+  if (!items || items.length === 0 || capacity <= 0) {
+    return { selected: [], totalValue: 0, totalCost: 0 };
+  }
+  const scale = 100;
+  const W = Math.floor(capacity / scale);
+  const n = items.length;
+  
+  const K = Array(n + 1).fill(0).map(() => Array(W + 1).fill(0));
+  
+  for (let i = 1; i <= n; i++) {
+    const item = items[i - 1];
+    const w = Math.max(1, Math.floor(item.cost / scale));
+    const v = item.value;
+    for (let j = 0; j <= W; j++) {
+      if (w <= j) {
+        K[i][j] = Math.max(K[i - 1][j], K[i - 1][j - w] + v);
+      } else {
+        K[i][j] = K[i - 1][j];
+      }
+    }
+  }
+  
+  const selected = [];
+  let j = W;
+  for (let i = n; i > 0; i--) {
+    const item = items[i - 1];
+    const w = Math.max(1, Math.floor(item.cost / scale));
+    if (K[i][j] !== K[i - 1][j]) {
+      selected.push(item.original);
+      j -= w;
+    }
+  }
+  
+  return {
+    selected,
+    totalValue: K[n][W],
+    totalCost: selected.reduce((sum, item) => sum + (item.estimated_cost || 4000), 0)
+  };
+};
+
 function DashboardPage() {
   const [stats, setStats] = useState(null);
   const [recurrence, setRecurrence] = useState([]);
   const [tickets, setTickets] = useState([]);
+  const [budget, setBudget] = useState(80000);
   const [loading, setLoading] = useState(true);
   const [expandedRisk, setExpandedRisk] = useState(null);
   const [activeInfo, setActiveInfo] = useState({});
@@ -404,6 +446,17 @@ function DashboardPage() {
   const createdSpark = useMemo(() => build7dSpark(tickets, 'created_at'), [tickets]);
   const resolvedSpark = useMemo(() => build7dSpark(tickets, 'resolved_at'), [tickets]);
   const velocity = useMemo(() => buildVelocity30d(tickets), [tickets]);
+
+  const optimizedLedger = useMemo(() => {
+    const activeTickets = tickets.filter(t => t.status !== 'resolved');
+    const items = activeTickets.map(t => ({
+      id: t.id,
+      cost: Number(t.estimated_cost) || 4000,
+      value: Number(t.priority_score) || 10,
+      original: t
+    }));
+    return solveKnapsack(items, budget);
+  }, [tickets, budget]);
 
   const mathMetrics = useMemo(() => {
     // 1. Verification Confidence
@@ -940,6 +993,156 @@ function DashboardPage() {
             })}
           </div>
         )}
+      </motion.div>
+
+      {/* 4. Guild Resource Optimization Ledger (Knapsack) */}
+      <motion.div variants={itemAnim} className="card rpg-panel" style={{ marginBottom: 'var(--space-6)', position: 'relative', borderRadius: 0 }}>
+        <div className="flex items-center justify-between" style={{ marginBottom: 'var(--space-4)', flexWrap: 'wrap', gap: 'var(--space-2)' }}>
+          <div className="flex items-center gap-3">
+            <h3 className="font-pixel" style={{ fontSize: '0.65rem', margin: 0, color: 'var(--accent)' }}>[ ⚖️ GUILD RESOURCE OPTIMIZATION LEDGER ]</h3>
+            <button className="btn-info-icon" onClick={() => toggleInfo('knapsack_info')} aria-label="Formula details for Knapsack">ⓘ</button>
+          </div>
+          <span className="font-pixel text-muted" style={{ fontSize: '0.45rem' }}>MATHEMATICAL DISPATCH SOLVER</span>
+        </div>
+
+        {activeInfo.knapsack_info && (
+          <div 
+            className="metric-explanation-panel" 
+            style={{ 
+              position: 'absolute', 
+              top: 0, 
+              left: 0, 
+              width: '100%', 
+              height: '100%', 
+              backgroundColor: 'rgba(21, 22, 29, 0.96)', 
+              backdropFilter: 'blur(4px)',
+              borderRadius: 0,
+              zIndex: 30,
+              display: 'flex',
+              flexDirection: 'column',
+              justifyContent: 'space-between',
+              margin: 0,
+              padding: 'var(--space-5)',
+              boxSizing: 'border-box'
+            }}
+          >
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-2)' }}>
+              <div className="flex justify-between items-center">
+                <span style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--accent)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                  Knapsack Dispatch Solver
+                </span>
+                <button className="btn-close-inline" onClick={() => toggleInfo('knapsack_info')}>✕</button>
+              </div>
+              <p className="text-secondary text-xs rpg-scrollbar" style={{ lineHeight: 1.4, margin: 0, overflowY: 'auto', maxHeight: '140px' }}>
+                Given a municipal budget, the Knapsack Solver chooses the subset of tickets that maximizes the sum of priority scores (representing civic utility) without exceeding the budget limit.
+              </p>
+            </div>
+            <div className="formula-box" style={{ marginTop: 'auto' }}>
+              <Latex math="\max \sum x_i \cdot p_i \quad \text{s.t.} \quad \sum x_i \cdot c_i \le B \quad x_i \in \{0,1\}" block />
+            </div>
+          </div>
+        )}
+
+        {/* Budget Control Slider and Stats */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 'var(--space-6)', marginBottom: 'var(--space-6)' }}>
+          <div style={{ padding: 'var(--space-4)', background: 'var(--bg-primary)', border: '1px solid var(--border-subtle)' }}>
+            <div className="flex justify-between items-center" style={{ marginBottom: 'var(--space-3)' }}>
+              <span className="font-pixel text-muted" style={{ fontSize: '0.45rem' }}>TREASURY LIMIT</span>
+              <span className="font-mono" style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--accent)' }}>
+                ₹{(budget / 1000).toFixed(0)}k Gold
+              </span>
+            </div>
+            <input 
+              type="range" 
+              min={10000} 
+              max={300000} 
+              step={5000} 
+              value={budget} 
+              onChange={(e) => setBudget(Number(e.target.value))}
+              style={{ width: '100%', accentColor: 'var(--accent)', cursor: 'pointer', background: 'var(--border)' }}
+            />
+            <div className="flex justify-between text-xs text-muted font-mono" style={{ marginTop: '8px' }}>
+              <span>₹10k</span>
+              <span>₹150k</span>
+              <span>₹300k</span>
+            </div>
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 'var(--space-3)' }}>
+            <div className="summary-card text-center flex flex-col justify-center" style={{ padding: 'var(--space-3)', borderRadius: 0 }}>
+              <span className="font-pixel text-muted" style={{ fontSize: '0.35rem', marginBottom: '4px' }}>SOLVED</span>
+              <span style={{ fontSize: '1.15rem', fontWeight: 700, color: 'var(--success)' }} className="font-mono">
+                {optimizedLedger.selected.length}
+              </span>
+            </div>
+            <div className="summary-card text-center flex flex-col justify-center" style={{ padding: 'var(--space-3)', borderRadius: 0 }}>
+              <span className="font-pixel text-muted" style={{ fontSize: '0.35rem', marginBottom: '4px' }}>COST ALLOC</span>
+              <span style={{ fontSize: '1.15rem', fontWeight: 700, color: 'var(--ink-primary)' }} className="font-mono">
+                ₹{(optimizedLedger.totalCost / 1000).toFixed(1)}k
+              </span>
+            </div>
+            <div className="summary-card text-center flex flex-col justify-center" style={{ padding: 'var(--space-3)', borderRadius: 0 }}>
+              <span className="font-pixel text-muted" style={{ fontSize: '0.35rem', marginBottom: '4px' }}>UTILITY PTS</span>
+              <span style={{ fontSize: '1.15rem', fontWeight: 700, color: 'var(--accent)' }} className="font-mono">
+                +{optimizedLedger.totalValue}
+              </span>
+            </div>
+          </div>
+        </div>
+
+        {/* Selected / Allocated Tickets */}
+        <div>
+          <h4 className="font-pixel" style={{ fontSize: '0.55rem', color: 'var(--ink-secondary)', marginBottom: 'var(--space-3)' }}>
+            [ OPTIMIZED DISPATCH ALIGNMENT ]
+          </h4>
+          {optimizedLedger.selected.length === 0 ? (
+            <p className="text-secondary text-xs" style={{ fontStyle: 'italic' }}>
+              Treasury capacity too low to dispatch any quests. Increase treasury limit.
+            </p>
+          ) : (
+            <div className="rpg-scrollbar" style={{ maxHeight: '250px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 'var(--space-2)' }}>
+              {optimizedLedger.selected.map(ticket => (
+                <div 
+                  key={ticket.id} 
+                  style={{ 
+                    display: 'flex', 
+                    justifyContent: 'space-between', 
+                    alignItems: 'center', 
+                    padding: 'var(--space-2) var(--space-3)', 
+                    border: '1px solid var(--border-subtle)', 
+                    background: 'var(--bg-primary)',
+                    fontSize: '0.72rem'
+                  }}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', minWidth: 0, flex: 1 }}>
+                    <span 
+                      style={{ 
+                        display: 'inline-block', 
+                        width: '8px', 
+                        height: '8px', 
+                        backgroundColor: CATEGORY_COLORS[ticket.category] || 'var(--border)' 
+                      }} 
+                    />
+                    <span style={{ color: 'var(--ink-primary)', fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                      {ticket.title || ticket.ai_title || 'Untitled Anomaly'}
+                    </span>
+                    <span className="text-muted" style={{ fontSize: '0.65rem' }}>
+                      ({(ticket.ward || '—').toUpperCase()})
+                    </span>
+                  </div>
+                  <div style={{ display: 'flex', gap: '12px', alignItems: 'center', fontWeight: 'bold' }}>
+                    <span style={{ color: 'oklch(0.68 0.16 55)' }}>
+                      ₹{(ticket.estimated_cost || 4000).toLocaleString()}
+                    </span>
+                    <span style={{ color: 'var(--accent)' }}>
+                      +{ticket.priority_score || 10} Utility
+                    </span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
       </motion.div>
 
       {departments.length > 0 && (

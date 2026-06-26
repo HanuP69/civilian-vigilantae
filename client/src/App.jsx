@@ -12,6 +12,8 @@ import LeaderboardPage from './pages/LeaderboardPage';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
 import ProfilePage from './pages/ProfilePage';
+import MissionsPage from './pages/MissionsPage';
+import CopilotDrawer from './components/copilot/CopilotDrawer';
 import './index.css';
 
 function NotFoundPage() {
@@ -47,6 +49,7 @@ function Navbar({ isConnected }) {
 
   const slots = [
     { name: 'Map', path: '/', icon: '🗺️', label: 'MAP REALM', desc: 'Browse live anomalies' },
+    { name: 'Missions', path: '/missions', icon: '🧭', label: 'QUESTS', desc: 'Citizen sweeps & rewards' },
     { name: 'Ledger', path: '/dashboard', icon: '📊', label: 'OPERATIONS', desc: 'SLA threat forecasts' },
     { name: 'Leaders', path: '/leaderboard', icon: '🏆', label: 'CHAMPIONS', desc: 'Hero XP rankings' },
     { 
@@ -74,14 +77,14 @@ function Navbar({ isConnected }) {
     display: 'inline-block',
   };
 
-  const coords = [
-    { x: 100, y: 0 },    // Right
-    { x: 50, y: 86.6 },  // Bottom-Right
-    { x: -50, y: 86.6 }, // Bottom-Left
-    { x: -100, y: 0 },   // Left
-    { x: -50, y: -86.6 },// Top-Left
-    { x: 50, y: -86.6 }, // Top-Right
-  ];
+  const radius = 100;
+  const coords = slots.map((_, index) => {
+    const angle = (index * 2 * Math.PI) / slots.length;
+    return {
+      x: radius * Math.cos(angle),
+      y: radius * Math.sin(angle)
+    };
+  });
 
   return (
     <>
@@ -364,12 +367,14 @@ function AppContent() {
       </div>
 
       <Navbar isConnected={isConnected} />
+      <CopilotDrawer />
 
       <main className="app-main animate-fade-up stagger-1" style={{ paddingTop: '80px', position: 'relative', zIndex: 1 }}>
         <Routes>
           <Route path="/" element={<HomePage />} />
           <Route path="/report" element={<ReportPage />} />
           <Route path="/ticket/:id" element={<TicketPage />} />
+          <Route path="/missions" element={<MissionsPage />} />
           <Route path="/dashboard" element={<DashboardPage />} />
           <Route path="/leaderboard" element={<LeaderboardPage />} />
           <Route path="/login" element={<LoginPage />} />

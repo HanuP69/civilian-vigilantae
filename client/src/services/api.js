@@ -122,3 +122,16 @@ export async function apiEquipAvatar(avatarValue) {
   });
   return handleResponse(res);
 }
+
+export async function sendCopilotMessage(message, chatHistory = []) {
+  const token = localStorage.getItem('userId');
+  const res = await fetch(`${API}/copilot/chat`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${token}`
+    },
+    body: JSON.stringify({ message, chatHistory })
+  });
+  return handleResponse(res);
+}

@@ -161,6 +161,7 @@ function ConfigurableMap({
   tickets = [],
   clusterGroups = [],
   recurrence = [],
+  missions = [],
   slaByWard = {},
   layer = 'reports',
   activeTicketId = null,
@@ -312,6 +313,55 @@ function ConfigurableMap({
       });
     }
 
+    // Render active missions as glowing sweeps on Google Maps
+    if (Array.isArray(missions)) {
+      missions.filter(m => m.status === 'active' && m.coordinates).forEach(mission => {
+        const position = { lat: Number(mission.coordinates.lat), lng: Number(mission.coordinates.lng) };
+        const circle = new window.google.maps.Circle({
+          map,
+          center: position,
+          radius: 200,
+          strokeColor: '#ffd700',
+          strokeOpacity: 0.8,
+          strokeWeight: 2,
+          fillColor: '#ffd700',
+          fillOpacity: 0.25,
+        });
+
+        const marker = new window.google.maps.Marker({
+          position,
+          map,
+          title: `QUEST: ${mission.title}`,
+          icon: {
+            path: window.google.maps.SymbolPath.CIRCLE,
+            scale: 8,
+            fillColor: '#ffd700',
+            fillOpacity: 0.9,
+            strokeWeight: 2,
+            strokeColor: '#ffffff',
+          },
+        });
+
+        marker.addListener('click', () => {
+          const content = `
+            <div style="font-family: 'Press Start 2P', monospace; min-width: 180px; padding: 4px; line-height: 1.4;">
+              <strong style="font-size: 8px; color: var(--accent); display: block; margin-bottom: 4px;">🧭 ${mission.title}</strong>
+              <p style="font-size: 6.5px; color: var(--ink-secondary); margin-bottom: 6px;">${mission.description}</p>
+              <div style="font-size: 6px; color: var(--success); margin-bottom: 6px;">REWARDS: +${mission.xp_reward} XP · ${mission.gold_reward} GOLD</div>
+              <div style="font-size: 6px; color: var(--ink-muted); margin-bottom: 6px;">PROGRESS: ${mission.current_confirmations}/${mission.target_confirmations} CONFIRMATIONS</div>
+              <a href="/missions" style="color: var(--accent); font-size: 6px; text-decoration: underline;">GO TO QUEST BOARD →</a>
+            </div>
+          `;
+          infoWindow.setContent(content);
+          infoWindow.open({ anchor: marker, map });
+        });
+
+        overlaysRef.current.push(circle);
+        overlaysRef.current.push(marker);
+        addBounds(position.lat, position.lng);
+      });
+    }
+
     const currentDataLength = positions.length;
     const shouldFit = googleLastFitRef.current.layer !== layer || googleLastFitRef.current.dataLength !== currentDataLength;
 
@@ -332,7 +382,7 @@ function ConfigurableMap({
       }
       googleLastFitRef.current = { layer, dataLength: currentDataLength };
     }
-  }, [provider, googleReady, tickets, clusterGroups, recurrence, slaByWard, layer, activeTicketId, onMarkerClick, onMarkerHover, wardCenters, categoryColors, categoryLabels, capitalize, center, zoom]);
+  }, [provider, googleReady, tickets, clusterGroups, recurrence, missions, slaByWard, layer, activeTicketId, onMarkerClick, onMarkerHover, wardCenters, categoryColors, categoryLabels, capitalize, center, zoom]);
 
   if (provider === 'leaflet') {
     return (
@@ -451,6 +501,59 @@ function ConfigurableMap({
                       </div>
                     </Tooltip>
                   </Circle>
+                );
+              })}
+
+          {Array.isArray(missions) &&
+            missions
+              .filter(m => m.status === 'active' && m.coordinates)
+              .map((mission, index) => {
+                const pos = [Number(mission.coordinates.lat), Number(mission.coordinates.lng)];
+                return (
+                  <div key={`mission-${index}`}>
+                    <Circle
+                      center={pos}
+                      radius={200}
+                      pathOptions={{
+                        color: '#ffd700',
+                        fillColor: '#ffd700',
+                        fillOpacity: 0.25,
+                        weight: 2,
+                        dashArray: '5, 5'
+                      }}
+                    />
+                    <Marker
+                      position={pos}
+                      icon={L.divIcon({
+                        className: 'custom-leaflet-marker-wrapper',
+                        html: `
+                          <div class="rpg-quest-pin-container active" style="filter: drop-shadow(0 0 8px #ffd700);">
+                            <div class="rpg-quest-pin-shadow"></div>
+                            <div class="rpg-quest-pin" style="image-rendering: pixelated; font-size: 1.5rem;">🧭</div>
+                          </div>
+                        `,
+                        iconSize: [32, 40],
+                        iconAnchor: [16, 40],
+                        popupAnchor: [0, -40]
+                      })}
+                    >
+                      <Popup>
+                        <div className="font-sans" style={{ minWidth: 180, padding: '4px' }}>
+                          <strong className="font-pixel" style={{ fontSize: '0.55rem', color: 'var(--accent)', display: 'block', marginBottom: '4px' }}>🧭 {mission.title}</strong>
+                          <p className="text-secondary" style={{ fontSize: '0.45rem', marginBottom: '6px' }}>{mission.description}</p>
+                          <div className="font-pixel text-success" style={{ fontSize: '0.45rem', marginBottom: '6px' }}>
+                            REWARDS: +{mission.xp_reward} XP · {mission.gold_reward} GOLD
+                          </div>
+                          <div className="font-pixel text-muted" style={{ fontSize: '0.45rem', marginBottom: '8px' }}>
+                            PROGRESS: {mission.current_confirmations} / {mission.target_confirmations}
+                          </div>
+                          <Link to="/missions" className="font-pixel" style={{ display: 'inline-block', color: 'var(--accent)', fontSize: '0.45rem', textDecoration: 'underline' }}>
+                            GO TO QUEST BOARD →
+                          </Link>
+                        </div>
+                      </Popup>
+                    </Marker>
+                  </div>
                 );
               })}
         </MapContainer>

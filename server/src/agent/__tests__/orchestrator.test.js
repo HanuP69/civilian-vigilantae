@@ -217,3 +217,16 @@ test('weighted community votes update verification, priority, and voter reputati
   assert.equal(highVoter.trust_score, 0.33);
 });
 
+test('analyzeRootCause analyzes report cluster and diagnoses probable cause', async () => {
+  const { analyzeRootCause } = await import('../../services/rootCauseService.js');
+  const reports = [
+    { title: 'Pipe Leak', description: 'Huge water gusher on Aliganj main road.', address: 'Aliganj', ward: 'Aliganj' },
+    { title: 'Low pressure', description: 'Water pressure dropped completely in Aliganj.', address: 'Aliganj', ward: 'Aliganj' }
+  ];
+
+  const result = await analyzeRootCause('water_leak', reports);
+  assert.ok(result.cause);
+  assert.ok(result.confidence);
+  assert.ok(result.explanation);
+});
+

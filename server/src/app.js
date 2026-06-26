@@ -12,6 +12,8 @@ import verificationRoutes from './routes/verificationRoutes.js';
 import dashboardRoutes    from './routes/dashboardRoutes.js';
 import userRoutes         from './routes/userRoutes.js';
 import sseRoutes          from './routes/sseRoutes.js';
+import missionRoutes      from './routes/missionRoutes.js';
+import copilotRoutes      from './routes/copilotRoutes.js';
 
 const app = express();
 
@@ -75,6 +77,8 @@ app.use('/api/verify',   verificationRoutes);
 app.use('/api/dashboard', dashboardRoutes);
 app.use('/api/users',    userRoutes);
 app.use('/api/events',   sseRoutes);
+app.use('/api/missions', missionRoutes);
+app.use('/api/copilot',  copilotRoutes);
 
 // ---------------------------------------------------------------------------
 // 404 handler

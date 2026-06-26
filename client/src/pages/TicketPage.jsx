@@ -5,6 +5,7 @@ import { CATEGORY_LABELS, CATEGORY_COLORS } from '../utils/constants';
 import { timeAgo, capitalize } from '../utils/formatters';
 import { useToast } from '../hooks/useToast.jsx';
 import AgentTrace from '../components/agent/AgentTrace';
+import { INFRASTRUCTURE_GRAPH } from '../utils/infrastructureGraph';
 
 function TicketPage() {
   const { id } = useParams();
@@ -207,6 +208,85 @@ function TicketPage() {
                 {ticket.verification_explanation || 'Verification assessment is pending.'}
               </p>
             </div>
+
+            {/* Root Cause Diagnosis */}
+            {ticket.root_cause && (
+              <div className="panel rpg-panel" style={{ borderRadius: 0 }}>
+                <h3 className="section-title font-pixel" style={{ fontSize: '0.65rem', color: 'var(--accent)', marginBottom: 'var(--space-3)' }}>
+                  [ 🧠 ROOT CAUSE DIAGNOSIS ]
+                </h3>
+                <div className="flex items-center gap-4" style={{ marginBottom: 'var(--space-2)' }}>
+                  <span className="font-pixel text-sm" style={{ color: 'var(--accent)', display: 'block' }}>
+                    Probable Cause: {ticket.root_cause.cause}
+                  </span>
+                  <span className="badge badge-outline font-pixel" style={{ color: 'var(--accent)', borderRadius: 0, fontSize: '0.45rem', padding: '2px 4px' }}>
+                    Confidence: {ticket.root_cause.confidence}%
+                  </span>
+                </div>
+                <p className="text-secondary text-xs" style={{ lineHeight: 1.6 }}>
+                  {ticket.root_cause.explanation}
+                </p>
+              </div>
+            )}
+
+            {/* Municipal Asset Impact Cascades */}
+            {ticket.category && INFRASTRUCTURE_GRAPH[ticket.category] && (
+              (() => {
+                const graphNode = INFRASTRUCTURE_GRAPH[ticket.category];
+                return (
+                  <div className="panel rpg-panel" style={{ borderRadius: 0 }}>
+                    <h3 className="section-title font-pixel" style={{ fontSize: '0.65rem', color: 'var(--accent)', marginBottom: 'var(--space-4)' }}>
+                      [ 🕸️ INFRASTRUCTURE IMPACT CASCADE ]
+                    </h3>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)', position: 'relative' }}>
+                      {[
+                        { label: 'CIVIC CATEGORY', val: capitalize(ticket.category), icon: graphNode.icon || '📌', color: 'var(--ink-primary)' },
+                        { label: 'MUNICIPAL ASSET', val: graphNode.asset, icon: '🏢', color: 'var(--accent)' },
+                        { label: 'DIRECT IMPACT', val: graphNode.directImpact, icon: '💥', color: 'var(--warning)' },
+                        { label: 'CASCADING RISK', val: graphNode.cascadingRisk, icon: '⚠️', color: 'var(--error)' },
+                        { label: 'VULNERABILITY LEVEL', val: graphNode.vulnerability, icon: '🛡️', color: 'oklch(0.55 0.18 300)' }
+                      ].map((step, idx, arr) => (
+                        <div key={idx} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%' }}>
+                          <div 
+                            className="flex items-center gap-3" 
+                            style={{ 
+                              width: '100%', 
+                              padding: 'var(--space-2) var(--space-3)', 
+                              border: '1px solid var(--border-subtle)', 
+                              background: 'var(--bg-primary)',
+                              boxShadow: 'inset 1px 1px 0 rgba(255,255,255,0.05)',
+                              position: 'relative'
+                            }}
+                          >
+                            <span style={{ fontSize: '1.2rem' }}>{step.icon}</span>
+                            <div>
+                              <span className="font-pixel block text-muted" style={{ fontSize: '0.35rem', letterSpacing: '0.05em' }}>
+                                {step.label}
+                              </span>
+                              <span style={{ fontSize: '0.65rem', fontWeight: 600, color: step.color }}>
+                                {step.val.toUpperCase()}
+                              </span>
+                            </div>
+                          </div>
+                          {idx < arr.length - 1 && (
+                            <div 
+                              className="font-pixel text-muted animate-pulse" 
+                              style={{ 
+                                fontSize: '0.75rem', 
+                                margin: '2px 0',
+                                color: 'var(--accent)'
+                              }}
+                            >
+                              ↓
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                );
+              })()
+            )}
 
             {/* 2. Why This Priority? */}
             <div className="panel rpg-panel" style={{ borderRadius: 0 }}>
