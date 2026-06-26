@@ -9,10 +9,13 @@
 import config from '../config/env.js';
 import { GeminiClient } from './GeminiClient.js';
 import { OllamaClient } from './OllamaClient.js';
-import { MockClient } from './MockClient.js';
 
 /** @type {import('./LLMClient.js').LLMClient|null} */
 let _instance = null;
+
+function getTestOverride() {
+  return globalThis.__SENTINEL_LLM_CLIENT__ || null;
+}
 
 /**
  * Get the singleton LLM client instance.
@@ -22,19 +25,17 @@ let _instance = null;
 export function getLLMClient() {
   if (_instance) return _instance;
 
-  const backend = config.llmBackend;
-  const key = config.geminiApiKey;
-  const isPlaceholder = !key || key === 'your_key' || key.includes('your_') || key.includes('_here');
+  const override = getTestOverride();
+  if (override) return override;
 
-  if (backend === 'ollama') {
-    console.log('[LLM] Using Ollama backend:', config.ollamaModel);
-    _instance = new OllamaClient();
-  } else if (backend === 'mock' || isPlaceholder) {
-    console.log('[LLM] No valid Gemini key — using MockClient for offline demo.');
-    _instance = new MockClient();
-  } else {
+  const backend = config.llmBackend;
+
+  if (backend === 'gemini') {
     console.log('[LLM] Using Gemini backend: gemini-2.0-flash');
     _instance = new GeminiClient();
+  } else {
+    console.log('[LLM] Using Ollama backend:', config.ollamaModel);
+    _instance = new OllamaClient();
   }
 
   return _instance;
@@ -45,4 +46,10 @@ export function getLLMClient() {
  */
 export function resetLLMClient() {
   _instance = null;
+  globalThis.__SENTINEL_LLM_CLIENT__ = null;
+}
+
+export function setTestLLMClient(client) {
+  _instance = client;
+  globalThis.__SENTINEL_LLM_CLIENT__ = client;
 }

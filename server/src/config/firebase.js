@@ -20,7 +20,7 @@ import config from './env.js';
  *
  * @returns {object} A mock Firestore instance.
  */
-function createMockFirestore() {
+export function createMockFirestore() {
   /** @type {Map<string, Map<string, object>>} */
   const store = new Map();
 
@@ -185,7 +185,16 @@ let auth = null;
 /** @type {object|null} */
 let storage = null;
 
-if (config.firebaseProjectId) {
+export function setDb(nextDb) {
+  db = nextDb;
+}
+
+const isTestEnv = 
+  process.env.NODE_ENV === 'test' || 
+  process.execArgv.includes('--test') || 
+  process.argv.some(arg => arg.includes('.test.js') || arg.includes('__tests__'));
+
+if (config.firebaseProjectId && !isTestEnv) {
   // Real Firebase Admin SDK — lazy-imported so devs without credentials
   // never hit a missing-module error.
   try {
@@ -210,7 +219,11 @@ if (config.firebaseProjectId) {
     db = createMockFirestore();
   }
 } else {
-  console.log('[Firebase] No credentials found — using in-memory mock Firestore');
+  if (isTestEnv) {
+    console.log('[Firebase] Test environment detected — using in-memory mock Firestore for tests');
+  } else {
+    console.log('[Firebase] No credentials found — using in-memory mock Firestore');
+  }
   db = createMockFirestore();
 }
 

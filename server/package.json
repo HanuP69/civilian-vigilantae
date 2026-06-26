@@ -8,7 +8,8 @@
     "start": "node server.js",
     "dev": "node --watch server.js",
     "seed": "node src/seed/seedData.js",
-    "test": "node --test src/math/__tests__/*.test.js"
+    "seed:clean": "node src/seed/cleanAndPopulate.js",
+    "test": "node --test src/math/__tests__/*.test.js src/agent/__tests__/*.test.js"
   },
   "dependencies": {
     "@google-cloud/vision": "^4.3.0",

@@ -105,7 +105,7 @@ function SentinelSprite({ scale = 3, flip = false, celebrating = false }) {
         {/* === Arms === */}
         {/* Left arm */}
         <rect x={1 * p} y={5} width={1 * p} height={3 * p} fill={colors.body} />
-        <rect x={0 * p} y={7} width={1 * p} height={1 * p} fill={colors.accentDim} />
+        <rect x={0} y={7} width={1 * p} height={1 * p} fill={colors.accentDim} />
         {/* Right arm */}
         <rect x={10 * p} y={5} width={1 * p} height={3 * p} fill={colors.body} />
         <rect x={11 * p} y={7} width={1 * p} height={1 * p} fill={colors.accentDim} />

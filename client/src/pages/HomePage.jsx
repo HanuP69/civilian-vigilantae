@@ -3,11 +3,9 @@ import { useNavigate, Link } from 'react-router-dom';
 import { fetchTickets, fetchRecurrenceRisk } from '../services/api';
 import { useSSE } from '../hooks/useSSE';
 import { useToast } from '../hooks/useToast.jsx';
-import { CATEGORY_LABELS, CATEGORY_COLORS, WARD_LIST, WARD_CENTERS, wardOf } from '../utils/constants';
+import { CATEGORY_LABELS, CATEGORY_COLORS, WARD_LIST, WARD_CENTERS } from '../utils/constants';
 import { timeAgo, capitalize } from '../utils/formatters';
-import { MapContainer, TileLayer, Marker, Popup, Circle, Tooltip as LeafletTooltip } from 'react-leaflet';
-import 'leaflet/dist/leaflet.css';
-import L from 'leaflet';
+import ConfigurableMap from '../components/map/ConfigurableMap';
 
 const LAYERS = [
   { key: 'reports', label: 'Reports' },
@@ -16,30 +14,7 @@ const LAYERS = [
   { key: 'sla', label: 'SLA' },
 ];
 
-const createMarkerIcon = (priorityScore, isActive, isFresh) => {
-  const color = priorityScore > 70 ? 'var(--marker-critical)' : priorityScore > 40 ? 'var(--marker-warning)' : 'var(--marker-ok)';
-  const scale = isActive ? 1.5 : 1;
-  const pulse = isFresh ? 'animation: marker-pulse 1.5s infinite;' : '';
-  return L.divIcon({
-    className: 'custom-leaflet-marker',
-    html: `<div style="
-      width: 24px; height: 24px;
-      background-color: ${color};
-      border: 2px solid var(--bg-primary);
-      border-radius: 2px;
-      box-shadow: 2px 2px 8px rgba(0,0,0,0.8);
-      transform: scale(${scale});
-      transform-origin: center;
-      transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-      ${pulse}
-    "></div>`,
-    iconSize: [24, 24],
-    iconAnchor: [12, 12]
-  });
-};
 
-const FRESH_MS = 2 * 60 * 1000;
-const isFresh = (iso) => iso && (Date.now() - new Date(iso).getTime()) < FRESH_MS;
 
 const haversineApprox = (a, b) => {
   const R = 6371000;
@@ -58,6 +33,7 @@ function HomePage() {
   const [activeTicketId, setActiveTicketId] = useState(null);
   const [map, setMap] = useState(null);
   const [layer, setLayer] = useState('reports');
+  const mapProvider = import.meta.env.VITE_MAP_PROVIDER || 'maps';
   const { events } = useSSE();
   const { toast } = useToast();
   const navigate = useNavigate();
@@ -125,8 +101,15 @@ function HomePage() {
 
   const handleFilter = (key, value) => setFilters(prev => ({ ...prev, [key]: value }));
   const handleHover = (ticket) => {
-    setActiveTicketId(ticket.id);
-    if (map && ticket.lat && ticket.lng) map.flyTo([ticket.lat, ticket.lng], 15, { duration: 1.2, easeLinearity: 0.25 });
+    setActiveTicketId(ticket?.id || null);
+    if (map && ticket?.lat && ticket?.lng) {
+      if (mapProvider === 'maps') {
+        map.panTo({ lat: Number(ticket.lat), lng: Number(ticket.lng) });
+        map.setZoom(15);
+      } else {
+        map.flyTo([Number(ticket.lat), Number(ticket.lng)], 15, { duration: 1.2, easeLinearity: 0.25 });
+      }
+    }
   };
   const handleCardKey = (e, ticket) => {
     if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); navigate(`/ticket/${ticket.id}`); }
@@ -166,87 +149,11 @@ function HomePage() {
 
   const severityClass = (s) => `badge badge-outline badge-severity-${(s || 'low').toLowerCase()}`;
   const statusClass = (s) => `badge badge-outline badge-status-${(s || 'reported').toLowerCase().replace(/ /g, '-')}`;
+  const urgentTickets = useMemo(() => tickets.filter(t => (t.priority_score || 0) > 70).length, [tickets]);
+  const verifiedCount = useMemo(() => tickets.filter(t => t.status === 'verified').length, [tickets]);
+  const topRisk = useMemo(() => recurrence.filter(r => (r.probability || 0) > 0.5)[0], [recurrence]);
 
-  const renderMapLayer = () => {
-    if (layer === 'reports') {
-      return tickets.filter(t => t.lat && t.lng).map(t => (
-        <Marker key={t.id} position={[t.lat, t.lng]} icon={createMarkerIcon(t.priority_score, activeTicketId === t.id, isFresh(t.created_at))} zIndexOffset={activeTicketId === t.id ? 1000 : 0}>
-          <Popup>
-            <div style={{ fontFamily: 'var(--font-sans)', minWidth: 180 }}>
-              <strong>{t.title || t.ai_title || 'Report'}</strong><br/>
-              <span style={{ color: CATEGORY_COLORS[t.category] || 'var(--ink-muted)', fontSize: '0.75rem' }}>{CATEGORY_LABELS[t.category] || capitalize(t.category)}</span>
-              <div style={{ margin: '6px 0', fontSize: '0.75rem' }}>
-                {t.verification_up > 0 && <span>✓ {t.verification_up} verified · </span>}
-                {t.ward}
-              </div>
-              <Link to={`/ticket/${t.id}`} style={{ display: 'inline-block', marginTop: '4px', fontWeight: 600 }}>View Details →</Link>
-            </div>
-          </Popup>
-        </Marker>
-      ));
-    }
-    if (layer === 'clusters') {
-      return clusterGroups.map((g, i) => (
-        <Circle
-          key={`c-${i}`}
-          center={[g.lat, g.lng]}
-          radius={300}
-          pathOptions={{ color: CATEGORY_COLORS[g.category] || 'var(--accent)', fillColor: CATEGORY_COLORS[g.category] || 'var(--accent)', fillOpacity: 0.15, weight: 1 }}
-        >
-          <LeafletTooltip sticky>
-            <div style={{ fontFamily: 'var(--font-sans)' }}>
-              <strong>{g.count} reports</strong> · {CATEGORY_LABELS[g.category] || capitalize(g.category)}<br/>
-              <span style={{ fontSize: '0.7rem', opacity: 0.7 }}>tracked as 1 cluster (DBSCAN, 500m / 72h)</span>
-            </div>
-          </LeafletTooltip>
-        </Circle>
-      ));
-    }
-    if (layer === 'recurrence') {
-      return recurrence.filter(r => r.probability > 0.3 && WARD_CENTERS[r.ward]).map((r, i) => {
-        const color = r.probability > 0.7 ? 'var(--error)' : r.probability > 0.4 ? 'var(--warning)' : 'var(--success)';
-        return (
-          <Circle
-            key={`r-${i}`}
-            center={WARD_CENTERS[r.ward]}
-            radius={400 + r.probability * 600}
-            pathOptions={{ color, fillColor: color, fillOpacity: 0.2, weight: 2 }}
-          >
-            <LeafletTooltip sticky>
-              <div style={{ fontFamily: 'var(--font-sans)' }}>
-                <strong>{Math.round(r.probability * 100)}% recurrence</strong> · {r.ward}<br/>
-                <span style={{ fontSize: '0.75rem' }}>{CATEGORY_LABELS[r.category] || capitalize(r.category)}</span><br/>
-                <span style={{ fontSize: '0.7rem', opacity: 0.8 }}>{r.recommendedAction || r.recommendation}</span>
-              </div>
-            </LeafletTooltip>
-          </Circle>
-        );
-      });
-    }
-    if (layer === 'sla') {
-      return Object.entries(slaByWard).filter(([w]) => WARD_CENTERS[w]).map(([ward, c]) => {
-        const ratio = c.total > 0 ? c.breached / c.total : 0;
-        const color = ratio > 0.5 ? 'var(--error)' : ratio > 0.25 ? 'var(--warning)' : 'var(--success)';
-        return (
-          <Circle
-            key={`s-${ward}`}
-            center={WARD_CENTERS[ward]}
-            radius={500}
-            pathOptions={{ color, fillColor: color, fillOpacity: 0.18, weight: 2, dashArray: '4 4' }}
-          >
-            <LeafletTooltip sticky>
-              <div style={{ fontFamily: 'var(--font-sans)' }}>
-                <strong>{ward}</strong><br/>
-                <span style={{ color }}>{c.breached}</span> / {c.total} tickets past SLA<br/>
-                <span style={{ fontSize: '0.7rem', opacity: 0.7 }}>{Math.round(ratio * 100)}% breach rate</span>
-              </div>
-            </LeafletTooltip>
-          </Circle>
-        );
-      });
-    }
-    return null;
-  };
+
 
   const legendItems = () => {
     if (layer === 'reports') return [
@@ -328,17 +235,70 @@ function HomePage() {
         </div>
       </section>
 
+      <div className="hero-panel animate-fade-up stagger-2" style={{ marginBottom: 'var(--space-6)' }}>
+        <div className="hero-panel-row">
+          <span className="info-pill">⚡ AI triage in seconds</span>
+          <span className="info-pill">🧭 Auto-deduped by location and time</span>
+          <span className="info-pill">📈 Live ward risk signals</span>
+        </div>
+        <div className="flex items-center justify-between" style={{ gap: 'var(--space-4)', flexWrap: 'wrap' }}>
+          <div>
+            <h3 className="section-title" style={{ marginBottom: 'var(--space-2)' }}>A faster path from report to action</h3>
+            <p className="text-secondary">Citizens can submit issues in seconds, and the platform turns them into visible, prioritized civic work.</p>
+          </div>
+          <div className="flex gap-3" style={{ flexWrap: 'wrap' }}>
+            <div className="summary-card" style={{ minWidth: 140 }}>
+              <div className="font-serif" style={{ fontSize: '1.35rem' }}>{urgentTickets}</div>
+              <div className="text-xs text-muted">high urgency</div>
+            </div>
+            <div className="summary-card" style={{ minWidth: 140 }}>
+              <div className="font-serif" style={{ fontSize: '1.35rem' }}>{verifiedCount}</div>
+              <div className="text-xs text-muted">verified issues</div>
+            </div>
+            <div className="summary-card" style={{ minWidth: 180 }}>
+              <div className="font-serif" style={{ fontSize: '1.1rem' }}>{topRisk ? `${topRisk.ward}` : '—'}</div>
+              <div className="text-xs text-muted">{topRisk ? `${Math.round((topRisk.probability || 0) * 100)}% recurrence risk` : 'no major hotspot'}</div>
+            </div>
+          </div>
+        </div>
+        <div className="how-it-works-grid">
+          <div className="how-it-card">
+            <h4>1. Report</h4>
+            <p className="text-secondary">Upload media, describe the issue, and confirm the location in a guided flow.</p>
+          </div>
+          <div className="how-it-card">
+            <h4>2. Understand</h4>
+            <p className="text-secondary">The agent classifies, deduplicates, and prioritizes the report automatically.</p>
+          </div>
+          <div className="how-it-card">
+            <h4>3. Act</h4>
+            <p className="text-secondary">Track status, verify community impact, and spot wards that need attention.</p>
+          </div>
+        </div>
+      </div>
+
       <div className="animate-fade-up stagger-2 home-grid">
         {/* LEFT: Map full height */}
         <div className="home-map-col">
           <div className="map-wrapper" style={{ height: '100%', minHeight: 520 }}>
-            <MapContainer ref={setMap} center={[26.8467, 80.9462]} zoom={12} style={{ height: '100%', width: '100%' }}>
-              <TileLayer
-                attribution='&copy; OpenStreetMap contributors'
-                url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png"
-              />
-              {renderMapLayer()}
-            </MapContainer>
+            <ConfigurableMap
+              provider={mapProvider}
+              center={[26.8467, 80.9462]}
+              zoom={12}
+              tickets={tickets}
+              clusterGroups={clusterGroups}
+              recurrence={recurrence}
+              slaByWard={slaByWard}
+              layer={layer}
+              activeTicketId={activeTicketId}
+              onMarkerHover={setActiveTicketId}
+              onMarkerClick={(ticket) => navigate(`/ticket/${ticket.id}`)}
+              onMapReady={setMap}
+              wardCenters={WARD_CENTERS}
+              categoryColors={CATEGORY_COLORS}
+              categoryLabels={CATEGORY_LABELS}
+              capitalize={capitalize}
+            />
             <div className="layer-toggle" role="tablist" aria-label="Map layers">
               {LAYERS.map(l => (
                 <button
@@ -423,7 +383,7 @@ function HomePage() {
                   onClick={() => navigate(`/ticket/${ticket.id}`)}
                   onKeyDown={(e) => handleCardKey(e, ticket)}
                   style={{
-                    borderLeft: `3px solid ${ticket.priority_score > 70 ? 'var(--error)' : ticket.priority_score > 40 ? 'var(--warning)' : 'var(--border)'}`,
+                    borderColor: ticket.priority_score > 70 ? 'var(--error)' : ticket.priority_score > 40 ? 'var(--warning)' : 'var(--border)',
                     background: activeTicketId === ticket.id ? 'var(--bg-elevated)' : 'var(--bg-secondary)',
                   }}
                   onMouseEnter={() => handleHover(ticket)}

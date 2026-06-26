@@ -62,7 +62,8 @@ export const toolHandlers = {
   async find_cluster({ lat, lng, category, timestamp }) {
     const ticketsSnap = await db.collection('tickets').get();
     const recentTickets = [];
-    const now = new Date(timestamp);
+    const parsedTimestamp = timestamp ? new Date(timestamp) : new Date();
+    const now = Number.isNaN(parsedTimestamp.getTime()) ? new Date() : parsedTimestamp;
     const windowMs = 72 * 60 * 60 * 1000;
 
     ticketsSnap.forEach(doc => {

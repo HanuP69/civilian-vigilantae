@@ -1,0 +1,62 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-06-26T16:32:06Z",
+  "title": "Design System: Sentinel Civic",
+  "extensions": {
+    "colorMeta": {
+      "primary": { "role": "primary", "displayName": "Command Amber Gold", "canonical": "oklch(0.75 0.12 85)", "tonalRamp": ["#362b16", "#5a4521", "#82632b", "#ac8236", "#c9a35a", "#d9bd80", "#ebd8aa", "#f7f1d4"] },
+      "bg-primary": { "role": "neutral", "displayName": "Midnight Base", "canonical": "oklch(0.18 0.01 260)", "tonalRamp": ["#0b0b0e", "#101115", "#15161d", "#1c1e27", "#242732", "#2d313e", "#3a3f50", "#4b5166"] }
+    },
+    "typographyMeta": {
+      "display": { "displayName": "Display Heading", "purpose": "Main KPIs and title elements." },
+      "body": { "displayName": "Body Sans", "purpose": "Prose, controls, labels, and descriptions." }
+    },
+    "shadows": [
+      { "name": "critical-glow", "value": "0 0 12px rgba(239, 68, 68, 0.15)", "purpose": "Luminous crimson warning glow." }
+    ],
+    "motion": [
+      { "name": "transition-base", "value": "200ms ease-out", "purpose": "Default duration and easing for standard layout interactive states." }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "Standard call to action button for submitting reports or confirmations.",
+      "html": "<button class=\"ds-btn-primary\">Take Action</button>",
+      "css": ".ds-btn-primary { background: #c9a35a; color: #000; padding: 10px 20px; font-family: sans-serif; font-size: 0.9rem; font-weight: 600; border: none; border-radius: 10px; cursor: pointer; transition: transform 150ms ease-out, background 150ms ease-out; } .ds-btn-primary:hover { background: #d9bd80; transform: translateY(-2px); }"
+    },
+    {
+      "name": "Command Card",
+      "kind": "card",
+      "refersTo": "card",
+      "description": "Base container for stats and charts.",
+      "html": "<div class=\"ds-card\"><h3 class=\"ds-card-title\">Active Telemetry</h3><p class=\"ds-card-body\">Real-time status tracking.</p></div>",
+      "css": ".ds-card { background: #191a21; border: 1px solid #303030; border-radius: 14px; padding: 20px; color: #f1f2f4; } .ds-card-title { font-family: serif; font-size: 1.25rem; font-weight: 500; margin-bottom: 12px; } .ds-card-body { font-family: sans-serif; font-size: 0.9rem; color: #d9dbe0; }"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Hyperlocal Tactical Command",
+    "overview": "This system represents a high-fidelity civic telemetry dashboard for municipal monitoring and citizen action in Lucknow. The design is inspired by modern operations centers, conveying real-time responsiveness and civic duty.",
+    "keyCharacteristics": [
+      "Operations Density",
+      "Micro-Interactive feedback",
+      "Visual Sizing Stability"
+    ],
+    "rules": [
+      { "name": "The Accented Rarity Rule", "body": "Accent gold is used on no more than 10% of any view. Its visual prominence is what drives user attention.", "section": "colors" }
+    ],
+    "dos": [
+      "Do use absolute overlays for explanations to prevent Chart.js containers from resizing permanently.",
+      "Do format math details using the <Latex> KaTeX renderer with proper block notation.",
+      "Do color code telemetry elements strictly based on priority and risk scoring indexes."
+    ],
+    "donts": [
+      "Don't use side-stripe borders of high thickness (>1px) as alert indicators on cards.",
+      "Don't use gradient text on headers.",
+      "Don't apply card shadows with blurs exceeding 16px.",
+      "Don't overflow text outside of fixed-height grid elements."
+    ]
+  }
+}

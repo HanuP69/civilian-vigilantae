@@ -72,10 +72,10 @@ function seasonalWeight(month, category) {
 export function generateTickets(count = 800) {
   const tickets = [];
   const now = new Date();
-  const sixMonthsAgo = new Date(now.getTime() - 180 * 24 * 60 * 60 * 1000);
+  const seedStart = new Date(now.getTime() - 12 * 24 * 60 * 60 * 1000);
 
   for (let i = 0; i < count; i++) {
-    const createdAt = new Date(sixMonthsAgo.getTime() + Math.random() * (now.getTime() - sixMonthsAgo.getTime()));
+    const createdAt = new Date(seedStart.getTime() + Math.random() * (now.getTime() - seedStart.getTime()));
     const month = createdAt.getMonth();
     let category;
     let attempts = 0;

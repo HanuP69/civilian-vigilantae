@@ -15,8 +15,12 @@ import sseRoutes          from './routes/sseRoutes.js';
 
 const app = express();
 
-loadSeedData().then(() => {
-  console.log('[Boot] Seed data loaded into mock Firestore');
+loadSeedData().then((result) => {
+  if (result) {
+    console.log('[Boot] Seed data loaded');
+  } else {
+    console.log('[Boot] Seed data unavailable; continuing with runtime state');
+  }
   startScheduler();
 }).catch(err => console.warn('[Boot] Seed load skipped:', err.message));
 

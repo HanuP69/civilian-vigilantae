@@ -65,3 +65,60 @@ export async function fetchLeaderboard() {
   const res = await fetch(`${API}/users/leaderboard`);
   return handleResponse(res);
 }
+
+export async function apiRegister(email, password, displayName) {
+  const res = await fetch(`${API}/users/register`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email, password, display_name: displayName })
+  });
+  return handleResponse(res);
+}
+
+export async function apiLogin(email, password) {
+  const res = await fetch(`${API}/users/login`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email, password })
+  });
+  return handleResponse(res);
+}
+
+export async function apiClaimQuest(questId) {
+  const token = localStorage.getItem('userId');
+  const res = await fetch(`${API}/users/quests/claim`, {
+    method: 'POST',
+    headers: { 
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${token}`
+    },
+    body: JSON.stringify({ quest_id: questId })
+  });
+  return handleResponse(res);
+}
+
+export async function apiBuyShopItem(itemId) {
+  const token = localStorage.getItem('userId');
+  const res = await fetch(`${API}/users/shop/buy`, {
+    method: 'POST',
+    headers: { 
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${token}`
+    },
+    body: JSON.stringify({ item_id: itemId })
+  });
+  return handleResponse(res);
+}
+
+export async function apiEquipAvatar(avatarValue) {
+  const token = localStorage.getItem('userId');
+  const res = await fetch(`${API}/users/shop/equip`, {
+    method: 'POST',
+    headers: { 
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${token}`
+    },
+    body: JSON.stringify({ avatar_value: avatarValue })
+  });
+  return handleResponse(res);
+}

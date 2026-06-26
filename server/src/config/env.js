@@ -16,6 +16,15 @@ import 'dotenv/config';
  * @property {string}  ollamaModel        - Default Ollama model name
  */
 
+const normalizePrivateKey = (value = '') => {
+  if (!value) return '';
+  return value
+    .trim()
+    .replace(/^['"]|['"]$/g, '')
+    .replace(/\\r/g, '\r')
+    .replace(/\\n/g, '\n');
+};
+
 /** @type {AppConfig} */
 const config = Object.freeze({
   // Server
@@ -24,7 +33,7 @@ const config = Object.freeze({
   clientUrl:            process.env.CLIENT_URL           || 'http://localhost:5173',
 
   // LLM
-  llmBackend:           process.env.LLM_BACKEND          || 'gemini',
+  llmBackend:           process.env.LLM_BACKEND          || 'ollama',
 
   // Gemini
   geminiApiKey:         process.env.GEMINI_API_KEY        || '',
@@ -35,7 +44,7 @@ const config = Object.freeze({
   // Firebase
   firebaseProjectId:    process.env.FIREBASE_PROJECT_ID       || '',
   firebaseClientEmail:  process.env.FIREBASE_CLIENT_EMAIL     || '',
-  firebasePrivateKey:   (process.env.FIREBASE_PRIVATE_KEY || '').replace(/\\n/g, '\n'),
+  firebasePrivateKey:   normalizePrivateKey(process.env.FIREBASE_PRIVATE_KEY),
   firebaseStorageBucket: process.env.FIREBASE_STORAGE_BUCKET  || '',
 
   // Ollama

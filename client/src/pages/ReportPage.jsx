@@ -87,26 +87,19 @@ function ReportPage() {
         const { latitude, longitude } = pos.coords;
         setLat(latitude);
         setLng(longitude);
-        // Reverse-geocode using Nominatim (no API key needed)
         try {
+          const mapsKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
           const res = await fetch(
-            `https://nominatim.openstreetmap.org/reverse?lat=${latitude}&lon=${longitude}&format=json&addressdetails=1`,
+            `https://maps.googleapis.com/maps/api/geocode/json?latlng=${latitude},${longitude}&key=${mapsKey}`,
             { headers: { 'Accept-Language': 'en' } }
           );
           if (res.ok) {
             const data = await res.json();
-            // Build a readable address: road + suburb/neighbourhood + city
-            const a = data.address || {};
-            const parts = [
-              a.road || a.pedestrian || a.footway,
-              a.suburb || a.neighbourhood || a.quarter,
-              a.city || a.town || a.village || a.county,
-            ].filter(Boolean);
-            const readable = parts.length > 0 ? parts.join(', ') : data.display_name?.split(',').slice(0, 3).join(',').trim();
+            const readable = data.results?.[0]?.formatted_address || '';
             if (readable) setAddress(readable);
           }
         } catch {
-          // Reverse geocode failed — coords are still set, address box stays empty
+          setAddress('Location captured');
         }
         setDetecting(false);
       },
@@ -143,7 +136,7 @@ function ReportPage() {
 
       recorder.start();
       setRecording(true);
-    } catch (err) {
+    } catch {
       toast('Microphone access denied or unavailable', 'error');
     }
   };
@@ -170,7 +163,8 @@ function ReportPage() {
 
   const handleSubmit = async () => {
     setSubmitting(true);
-    // Generate a report ID immediately so the reveal overlay opens NOW
+    setTraceSteps([]);
+    setResult(null);
     const reportId = `report-${Date.now()}`;
     setActiveReportId(reportId);
 
@@ -248,6 +242,17 @@ function ReportPage() {
         <h2 className="font-serif animate-reveal" style={{ fontSize: 'clamp(2rem, 5vw, 3rem)', marginBottom: 'var(--space-3)' }}>Report an Issue</h2>
         <p className="text-secondary font-sans animate-fade-up stagger-1" style={{ fontSize: '1.125rem' }}>Help us improve the city by reporting infrastructure or civic concerns.</p>
       </header>
+
+      <div className="hero-panel animate-fade-up stagger-2" style={{ marginBottom: 'var(--space-6)' }}>
+        <div className="hero-panel-row">
+          <span className="info-pill">🤖 AI classifies your issue</span>
+          <span className="info-pill">🧠 Detects duplicates</span>
+          <span className="info-pill">📍 Prioritizes by ward and urgency</span>
+        </div>
+        <p className="text-secondary" style={{ marginTop: 'var(--space-2)' }}>
+          Report a civic issue in minutes. The system understands the problem, checks for similar reports, and helps it reach the right people faster.
+        </p>
+      </div>
 
       <div className="report-step-rail animate-fade-up stagger-2">
         {STEPS.map((s, i) => (

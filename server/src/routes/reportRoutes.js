@@ -7,8 +7,7 @@ import { awardXP } from '../services/userService.js';
 import { requireAuth } from '../middleware/authMiddleware.js';
 import rateLimit from 'express-rate-limit';
 import { storage } from '../config/firebase.js';
-import fs from 'fs';
-import path from 'path';
+import { storeMediaFile } from '../services/mediaUploadService.js';
 
 const router = Router();
 const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 100 * 1024 * 1024 } });
@@ -37,22 +36,10 @@ router.post('/', requireAuth, reportLimiter, upload.single('media'), async (req,
       mediaMimeType = req.file.mimetype;
       mediaType = req.file.mimetype.startsWith('video') ? 'video' : req.file.mimetype.startsWith('audio') ? 'audio' : 'image';
 
-      const ext = req.file.originalname?.split('.').pop() || 'bin';
-      const filename = `${Date.now()}_${Math.random().toString(36).substr(2, 5)}.${ext}`;
-
-      let fileUrl = '';
-      if (storage) {
-        const file = storage.file(`reports/${filename}`);
-        await file.save(req.file.buffer, { contentType: req.file.mimetype });
-        await file.makePublic();
-        fileUrl = `https://storage.googleapis.com/${storage.name}/reports/${filename}`;
-      } else {
-        const uploadDir = path.join(process.cwd(), 'uploads');
-        if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir, { recursive: true });
-        fs.writeFileSync(path.join(uploadDir, filename), req.file.buffer);
-        fileUrl = `/uploads/${filename}`;
-      }
-      mediaUrls = [fileUrl];
+      const uploadResult = await storeMediaFile(req.file.buffer, req.file.mimetype, req.file.originalname, {
+        storageClient: storage,
+      });
+      mediaUrls = [uploadResult.url];
 
       const classification = await classifyMedia(base64, req.file.mimetype, text);
       classificationResult = classification.classificationResult;

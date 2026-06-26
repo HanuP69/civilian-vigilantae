@@ -87,14 +87,11 @@ function AgentTrace({ trace = [] }) {
               onClick={() => toggleExpand(idx)}
               onKeyDown={(e) => handleKey(e, idx)}
               style={{
-                borderLeft: `4px solid ${isError ? 'var(--error)' : color}`,
+                border: `1px solid ${isError ? 'var(--error)' : 'var(--border)'}`,
                 padding: 'var(--space-3) var(--space-4)',
                 cursor: 'pointer',
                 background: 'var(--bg-secondary)',
-                borderRadius: '0 8px 8px 0',
-                borderTop: '1px solid var(--border)',
-                borderRight: '1px solid var(--border)',
-                borderBottom: '1px solid var(--border)',
+                borderRadius: 'var(--radius-md)',
               }}
             >
               <div className="flex items-center justify-between">

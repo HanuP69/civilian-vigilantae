@@ -1,5 +1,15 @@
 import { db } from '../config/firebase.js';
 
+export async function writeSeedDoc(collectionName, id, data) {
+  try {
+    await db.collection(collectionName).doc(id).set(data);
+    return true;
+  } catch (err) {
+    console.error(`[Seed] Firestore write failed for ${collectionName}/${id}:`, err?.code, err?.message);
+    throw err;
+  }
+}
+
 export async function getAllTickets(filters = {}) {
   let query = db.collection('tickets');
   
@@ -80,9 +90,9 @@ export async function loadSeedData() {
     const seedPath = join(__dirname, '..', 'seed', 'seedOutput.json');
     const data = JSON.parse(readFileSync(seedPath, 'utf-8'));
 
-    for (const ticket of data.tickets) await db.collection('tickets').doc(ticket.id).set(ticket);
-    for (const user of data.users) await db.collection('users').doc(user.uid).set(user);
-    for (const dept of data.departments) await db.collection('departments').doc(dept.id).set(dept);
+    for (const ticket of data.tickets) await writeSeedDoc('tickets', ticket.id, ticket);
+    for (const user of data.users) await writeSeedDoc('users', user.uid, user);
+    for (const dept of data.departments) await writeSeedDoc('departments', dept.id, dept);
 
     console.log(`[Seed] Loaded ${data.tickets.length} tickets, ${data.users.length} users, ${data.departments.length} departments`);
     return data;

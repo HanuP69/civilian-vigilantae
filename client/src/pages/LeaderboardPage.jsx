@@ -20,13 +20,23 @@ const getBadgeDisplay = (badge) => {
 
 const Avatar = ({ seed, name }) => {
   const [error, setError] = useState(false);
+  const avatarStyle = {
+    width: 48,
+    height: 48,
+    borderRadius: '50%',
+    border: '2px solid var(--border)',
+    background: 'var(--bg-surface)',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    boxShadow: 'var(--shadow-sm)',
+    flexShrink: 0
+  };
+
   if (error) {
     const initial = (name || '?').charAt(0).toUpperCase();
     return (
-      <div
-        className="pixel-avatar flex items-center justify-center"
-        style={{ width: 48, height: 48, background: 'var(--bg-surface)', color: 'var(--accent)', fontWeight: 600, fontSize: '1.25rem' }}
-      >
+      <div style={{ ...avatarStyle, color: 'var(--accent)', fontWeight: 600, fontSize: '1.25rem' }}>
         {initial}
       </div>
     );
@@ -37,8 +47,7 @@ const Avatar = ({ seed, name }) => {
       alt={name}
       loading="lazy"
       onError={() => setError(true)}
-      className="pixel-avatar"
-      style={{ width: 48, height: 48, backgroundColor: 'var(--bg-surface)' }}
+      style={avatarStyle}
     />
   );
 };
@@ -65,7 +74,7 @@ function LeaderboardPage() {
       <div className="flex flex-col gap-4" aria-busy="true" aria-label="Loading leaderboard">
         <div className="skeleton" style={{ height: 32, width: 200 }} />
         {[1, 2, 3, 4, 5].map(i => (
-          <div key={i} className="skeleton pixel-border" style={{ height: 72 }} />
+          <div key={i} className="skeleton" style={{ height: 72, borderRadius: 'var(--radius-md)' }} />
         ))}
       </div>
     );
@@ -88,7 +97,7 @@ function LeaderboardPage() {
     <div style={{ maxWidth: 800, margin: '0 auto' }} className="flex flex-col gap-6">
       <div className="flex items-center justify-between">
         <h2>Top Reporters</h2>
-        <span className="font-pixel text-xs" style={{ color: 'var(--accent)' }}>XP Leaderboard</span>
+        <span className="font-mono text-xs" style={{ color: 'var(--accent)', letterSpacing: '0.05em', fontWeight: 600 }}>XP Leaderboard</span>
       </div>
 
       <motion.div
@@ -112,23 +121,25 @@ function LeaderboardPage() {
             <motion.div
               key={user.id || user.uid || i}
               variants={itemAnim}
-              className="card pixel-border flex items-center gap-4"
+              className="card flex items-center gap-4"
               style={{
                 padding: 'var(--space-3) var(--space-4)',
                 background: rank <= 3 ? 'var(--bg-elevated)' : 'var(--bg-secondary)',
-                borderColor: rank <= 3 ? rankColor : 'var(--border)'
+                borderColor: rank <= 3 ? rankColor : 'var(--border)',
+                borderRadius: 'var(--radius-md)'
               }}
             >
               <div
-                className="font-pixel"
+                className="font-mono"
                 style={{
                   fontSize: '1.25rem',
+                  fontWeight: 700,
                   color: rankColor,
                   minWidth: '40px',
                   textAlign: 'center'
                 }}
               >
-                {rank}
+                #{rank}
               </div>
 
               <Avatar seed={name} name={name} />
@@ -154,7 +165,7 @@ function LeaderboardPage() {
               </div>
 
               <div className="flex flex-col items-end gap-1">
-                <span className="font-pixel" style={{ color: 'var(--accent)', fontSize: '1rem' }}>
+                <span className="font-mono" style={{ color: 'var(--accent)', fontSize: '0.95rem', fontWeight: 700 }}>
                   {user.xp ?? 0} XP
                 </span>
                 {badges.length > 0 && (
@@ -175,8 +186,8 @@ function LeaderboardPage() {
         })}
 
         {users.length === 0 && (
-          <div className="card pixel-border" style={{ textAlign: 'center', padding: 'var(--space-8)' }}>
-            <span className="font-pixel text-muted text-sm">NO DATA DETECTED</span>
+          <div className="card" style={{ textAlign: 'center', padding: 'var(--space-8)', borderRadius: 'var(--radius-md)' }}>
+            <span className="font-mono text-muted text-sm">NO DATA DETECTED</span>
           </div>
         )}
       </motion.div>
