@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { BrowserRouter, Routes, Route, NavLink, Link, useNavigate } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, NavLink, Link, useNavigate, Navigate, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useSSE } from './hooks/useSSE';
 import { ToastProvider } from './hooks/useToast.jsx';
@@ -29,6 +29,59 @@ function NotFoundPage() {
   );
 }
 
+function ProtectedRoute({ children }) {
+  const { isAuthenticated, loading } = useAuth();
+  const location = useLocation();
+
+  if (loading) {
+    return (
+      <div style={{
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        minHeight: '60vh',
+        color: 'var(--accent)',
+        fontFamily: 'var(--font-pixel)',
+        fontSize: '1rem'
+      }}>
+        LOADING HUD CONSOLE...
+      </div>
+    );
+  }
+
+  if (!isAuthenticated) {
+    return <Navigate to="/login" state={{ from: location }} replace />;
+  }
+
+  return children;
+}
+
+function PublicRoute({ children }) {
+  const { isAuthenticated, loading } = useAuth();
+
+  if (loading) {
+    return (
+      <div style={{
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        minHeight: '60vh',
+        color: 'var(--accent)',
+        fontFamily: 'var(--font-pixel)',
+        fontSize: '1rem'
+      }}>
+        LOADING HUD CONSOLE...
+      </div>
+    );
+  }
+
+  if (isAuthenticated) {
+    return <Navigate to="/" replace />;
+  }
+
+  return children;
+}
+
 function Navbar({ isConnected }) {
   const { isAuthenticated, user, logout } = useAuth();
   const [isOpen, setIsOpen] = useState(false);
@@ -48,18 +101,18 @@ function Navbar({ isConnected }) {
   };
 
   const slots = [
-    { name: 'Map', path: '/', icon: '🗺️', label: 'MAP REALM', desc: 'Browse live anomalies' },
-    { name: 'Missions', path: '/missions', icon: '🧭', label: 'QUESTS', desc: 'Citizen sweeps & rewards' },
-    { name: 'Ledger', path: '/dashboard', icon: '📊', label: 'OPERATIONS', desc: 'SLA threat forecasts' },
-    { name: 'Leaders', path: '/leaderboard', icon: '🏆', label: 'CHAMPIONS', desc: 'Hero XP rankings' },
+    { name: 'Map', path: '/', icon: '🗺️', label: 'COMMUNITY MAP', desc: 'Browse active community issues' },
+    { name: 'Missions', path: '/missions', icon: '🧭', label: 'MISSIONS', desc: 'Verify issues & earn rewards' },
+    { name: 'Ledger', path: '/dashboard', icon: '📊', label: 'CITY DASHBOARD', desc: 'SLA & issue statistics' },
+    { name: 'Leaders', path: '/leaderboard', icon: '🏆', label: 'HERO LEAGUE', desc: 'Citizen contribution rankings' },
     { 
       name: 'Profile', 
       path: isAuthenticated ? '/profile' : '/login', 
       icon: '👤', 
-      label: 'CHARACTER', 
-      desc: isAuthenticated ? 'Equipment & Quests' : 'Authenticate console' 
+      label: 'HERO DASHBOARD', 
+      desc: isAuthenticated ? 'Your impact & achievements' : 'Authenticate console' 
     },
-    { name: 'Report', path: '/report', icon: '⚔️', label: 'REPORT ISSUE', desc: 'Log new anomaly' },
+    { name: 'Report', path: '/report', icon: '📢', label: 'REPORT ISSUE', desc: 'Log new community issue' },
     {
       name: isAuthenticated ? 'Sign Out' : 'Sign In',
       path: isAuthenticated ? '/logout' : '/login',
@@ -132,18 +185,18 @@ function Navbar({ isConnected }) {
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              background: isOpen ? 'var(--bg-surface)' : 'radial-gradient(circle, rgba(255,215,0,0.25) 0%, rgba(0,0,0,0) 70%)',
+              background: isOpen ? 'var(--bg-surface)' : 'radial-gradient(circle, rgba(99,102,241,0.25) 0%, rgba(0,0,0,0) 70%)',
               borderRadius: isOpen ? '0' : '50%',
               border: isOpen ? '2px solid var(--border)' : 'none',
               boxShadow: isOpen ? '4px 4px 0 rgba(0,0,0,0.6)' : 'none'
             }}>
               <span style={{ 
                 fontSize: isOpen ? '1.5rem' : '2.2rem', 
-                filter: isOpen ? 'none' : 'drop-shadow(0 0 10px rgba(255,215,0,0.9))',
+                filter: isOpen ? 'none' : 'drop-shadow(0 0 10px rgba(99,102,241,0.9))',
                 transform: isOpen ? 'none' : 'rotate(-10deg)',
                 color: 'var(--ink-primary)'
               }}>
-                {isOpen ? '✕' : '🎒'}
+                {isOpen ? '✕' : '🛡️'}
               </span>
               
               {/* Notification Badge to intrigue user */}
@@ -173,12 +226,12 @@ function Navbar({ isConnected }) {
             
             {!isOpen && (
               <span className="font-pixel" style={{ 
-                fontSize: '0.45rem', 
+                fontSize: '9px', 
                 color: 'var(--accent)', 
                 textShadow: '1px 1px 0 #000, -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000',
                 letterSpacing: '1px'
               }}>
-                INVENTORY
+                HERO HUD
               </span>
             )}
           </motion.div>
@@ -267,26 +320,26 @@ function Navbar({ isConnected }) {
               >
                 {hoveredSlot ? (
                   <div style={{ animation: 'fadeIn 0.15s ease-out' }}>
-                    <div className="font-pixel" style={{ fontSize: '0.45rem', color: 'var(--accent)', fontWeight: 800, marginBottom: '4px' }}>
+                    <div className="font-pixel" style={{ fontSize: '9px', color: 'var(--accent)', fontWeight: 800, marginBottom: '4px' }}>
                       {hoveredSlot.label}
                     </div>
-                    <div style={{ fontSize: '0.55rem', color: 'var(--ink-muted)', lineHeight: 1.2 }}>
+                    <div style={{ fontSize: '10px', color: 'var(--ink-muted)', lineHeight: 1.2 }}>
                       {hoveredSlot.desc}
                     </div>
                   </div>
                 ) : (
                   <div>
-                    <div className="font-pixel" style={{ fontSize: '0.45rem', color: 'var(--accent)', fontWeight: 800, marginBottom: '2px' }}>
+                    <div className="font-pixel" style={{ fontSize: '9px', color: 'var(--accent)', fontWeight: 800, marginBottom: '2px' }}>
                       HUD STATUS
                     </div>
                     {isAuthenticated && (
-                      <div className="font-pixel" style={{ fontSize: '0.4rem', color: 'var(--ink-primary)', marginBottom: '2px' }}>
+                      <div className="font-pixel" style={{ fontSize: '9px', color: 'var(--ink-primary)', marginBottom: '2px' }}>
                         LVL {user?.level || 1}
                       </div>
                     )}
-                    <div className="flex items-center justify-center gap-1.5" style={{ fontSize: '0.55rem', color: 'var(--ink-secondary)' }}>
+                    <div className="flex items-center justify-center gap-1.5" style={{ fontSize: '10px', color: 'var(--ink-secondary)' }}>
                       <span style={liveDotStyle} />
-                      <span style={{ fontSize: '0.5rem', fontFamily: 'var(--font-mono)' }}>{isConnected ? 'LIVE' : 'OFFLINE'}</span>
+                      <span style={{ fontSize: '10px', fontFamily: 'var(--font-mono)' }}>{isConnected ? 'LIVE' : 'OFFLINE'}</span>
                     </div>
                   </div>
                 )}
@@ -371,16 +424,16 @@ function AppContent() {
 
       <main className="app-main animate-fade-up stagger-1" style={{ paddingTop: '80px', position: 'relative', zIndex: 1 }}>
         <Routes>
-          <Route path="/" element={<HomePage />} />
-          <Route path="/report" element={<ReportPage />} />
-          <Route path="/ticket/:id" element={<TicketPage />} />
-          <Route path="/missions" element={<MissionsPage />} />
-          <Route path="/dashboard" element={<DashboardPage />} />
-          <Route path="/leaderboard" element={<LeaderboardPage />} />
-          <Route path="/login" element={<LoginPage />} />
-          <Route path="/register" element={<RegisterPage />} />
-          <Route path="/profile" element={<ProfilePage />} />
-          <Route path="*" element={<NotFoundPage />} />
+          <Route path="/" element={<ProtectedRoute><HomePage /></ProtectedRoute>} />
+          <Route path="/report" element={<ProtectedRoute><ReportPage /></ProtectedRoute>} />
+          <Route path="/ticket/:id" element={<ProtectedRoute><TicketPage /></ProtectedRoute>} />
+          <Route path="/missions" element={<ProtectedRoute><MissionsPage /></ProtectedRoute>} />
+          <Route path="/dashboard" element={<ProtectedRoute><DashboardPage /></ProtectedRoute>} />
+          <Route path="/leaderboard" element={<ProtectedRoute><LeaderboardPage /></ProtectedRoute>} />
+          <Route path="/login" element={<PublicRoute><LoginPage /></PublicRoute>} />
+          <Route path="/register" element={<PublicRoute><RegisterPage /></PublicRoute>} />
+          <Route path="/profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
+          <Route path="*" element={<ProtectedRoute><NotFoundPage /></ProtectedRoute>} />
         </Routes>
       </main>
     </div>

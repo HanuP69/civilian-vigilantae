@@ -11,15 +11,16 @@ Citizens of Lucknow reporting hyperlocal civic issues (Roads, Water, Electricity
 To bridge the gap between citizen complaints and civic action through real-time mapping, gamification, and predictive analytics. Success is a highly active citizen reporter base and rapid, data-backed resolution times.
 
 ## Brand Personality
-High-Tech, Proactive, Community-First. High-fidelity dark operations command center.
+Community-First, AI-Assisted, Active, Collaborative. A high-fidelity, vibrant community action hub.
 
 ## Anti-references
-Generic corporate SaaS layouts, dry administrative tables, flat gray-on-gray dashboard panels.
+RPG-heavy guild designs, dry administrative spreadsheets, low-contrast dark layouts where text is unreadable, overly gamified apps that lose professional civic utility.
 
 ## Design Principles
-- **Command-Center Urgency**: Make high-priority alerts and critical trends pop with luminous glows and clear severity coloring.
-- **Civic Gamification**: Highlight hero points (XP) and rank boards to foster a pride-in-participation loop.
-- **Immediate Data Transparency**: Make advanced predictive algorithms (Weibull models) and statistics understandable and visually clear at a glance.
+- **Community-First Clarity**: Make active issues, verifications, and hotspot maps immediately accessible with vibrant, legible indicators.
+- **Civic Pride**: Highlight personal impact statistics (issues resolved, neighbors helped) and community ranks to foster pride and participation.
+- **AI-Assisted Insights**: Explain automated verification consensus clearly to ensure trust without overwhelming users with complex technical jargon.
 
 ## Accessibility & Inclusion
-Maintain high contrast ratios on dark surfaces (minimum WCAG AA 4.5:1), handle reduced motion preferences gracefully, and use clear typography for readability under ambient outdoor light.
+Maintain high contrast ratios on dark surfaces (minimum WCAG AA 4.5:1), ensuring all text (especially labels on colored backgrounds) is highly readable. Handle reduced motion preferences gracefully, and use clear typography for readability under ambient outdoor light.
+

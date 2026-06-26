@@ -102,11 +102,19 @@ function LeaderboardPage() {
     show: { opacity: 1, y: 0, transition: { type: "spring", stiffness: 300, damping: 24 } }
   };
 
+  const getRankTitle = (rank) => {
+    if (rank <= 3) return "City Champion 🏆";
+    if (rank <= 10) return "Community Hero ⚡";
+    if (rank <= 20) return "Guardian 🛡️";
+    if (rank <= 50) return "Investigator 🔍";
+    return "Scout 🧭";
+  };
+
   return (
-    <div style={{ maxWidth: 800, margin: '0 auto' }} className="flex flex-col gap-6">
+    <div style={{ maxWidth: 1200, margin: '0 auto' }} className="flex flex-col gap-6">
       <div className="flex items-center justify-between">
-        <h2>Top Reporters</h2>
-        <span className="font-mono text-xs" style={{ color: 'var(--accent)', letterSpacing: '0.05em', fontWeight: 600 }}>XP Leaderboard</span>
+        <h2 className="font-serif">Hero League Rankings</h2>
+        <span className="font-mono text-xs" style={{ color: 'var(--accent)', letterSpacing: '0.05em', fontWeight: 600 }}>Citizen contribution rankings</span>
       </div>
 
       <motion.div
@@ -125,6 +133,13 @@ function LeaderboardPage() {
           if (rank === 1) rankColor = 'var(--rank-gold)';
           if (rank === 2) rankColor = 'var(--rank-silver)';
           if (rank === 3) rankColor = 'var(--rank-bronze)';
+
+          // Accuracy & Trust calculation
+          const accuracyRate = user.verifications_made > 0 
+            ? Math.round(((user.accurate_verifications || 0) / user.verifications_made) * 100) 
+            : 100;
+          
+          const trustScore = Math.min(100, Math.max(50, Math.round(50 + (user.reports || 0) * 3 + (user.accurate_verifications || 0) * 2 - ((user.verifications_made || 0) - (user.accurate_verifications || 0)) * 4)));
 
           return (
             <motion.div
@@ -152,11 +167,27 @@ function LeaderboardPage() {
               <Avatar photoUrl={user.photo_url} name={name} />
 
               <div className="flex flex-col flex-1 gap-1" style={{ minWidth: 0 }}>
-                <span className="font-medium truncate" style={{ color: 'var(--ink-primary)', fontSize: '1.1rem' }}>
-                  {name}
-                </span>
-                <div className="flex items-center gap-3">
-                  <div className="xp-bar" style={{ flex: 1, maxWidth: 200 }}>
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span className="font-medium truncate" style={{ color: 'var(--ink-primary)', fontSize: '1.1rem' }}>
+                    {name}
+                  </span>
+                  <span 
+                    className="font-pixel" 
+                    style={{ 
+                      fontSize: '8px', 
+                      background: 'var(--accent-muted)', 
+                      color: 'var(--accent)', 
+                      padding: '2px 6px',
+                      border: '1px solid var(--accent)',
+                      display: 'inline-block'
+                    }}
+                  >
+                    {getRankTitle(rank)}
+                  </span>
+                </div>
+                
+                <div className="flex items-center gap-3 flex-wrap">
+                  <div className="xp-bar" style={{ flex: 1, maxWidth: 200, minWidth: 100 }}>
                     <div
                       className="xp-bar-fill"
                       style={{
@@ -166,7 +197,16 @@ function LeaderboardPage() {
                     />
                   </div>
                   <span className="text-xs text-muted" style={{ whiteSpace: 'nowrap' }}>
-                    {user.reports ?? user.reports_submitted ?? 0} Reports
+                    {user.reports ?? user.reports_submitted ?? 0} Reported
+                  </span>
+                  <span className="text-xs text-muted" style={{ whiteSpace: 'nowrap' }}>
+                    · {user.verifications_made ?? 0} Verified
+                  </span>
+                  <span className="text-xs" style={{ whiteSpace: 'nowrap', color: accuracyRate >= 70 ? 'var(--success)' : 'var(--warning)', fontWeight: 600 }}>
+                    · Accuracy: {accuracyRate}%
+                  </span>
+                  <span className="text-xs" style={{ whiteSpace: 'nowrap', color: 'var(--accent)', fontWeight: 600 }}>
+                    · Trust: {trustScore}%
                   </span>
                 </div>
               </div>
@@ -193,7 +233,7 @@ function LeaderboardPage() {
         })}
 
         {users.length === 0 && (
-          <div className="card" style={{ textAlign: 'center', padding: 'var(--space-8)', borderRadius: 'var(--radius-md)' }}>
+          <div className="card" style={{ textAlign: 'center', padding: 'var(--space-8)', borderRadius: 0 }}>
             <span className="font-mono text-muted text-sm">NO DATA DETECTED</span>
           </div>
         )}

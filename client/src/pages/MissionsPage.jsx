@@ -37,8 +37,8 @@ function MissionsPage() {
 
   if (loading) {
     return (
-      <div className="flex flex-col gap-5" aria-busy="true" aria-label="Loading missions" style={{ maxWidth: 800, margin: '0 auto' }}>
-        <h2 className="font-pixel" style={{ fontSize: '0.9rem', color: 'var(--accent)' }}>🧭 Guild Investigations Board</h2>
+      <div className="flex flex-col gap-5" aria-busy="true" aria-label="Loading missions" style={{ maxWidth: 1200, margin: '0 auto' }}>
+        <h2 className="font-pixel" style={{ fontSize: '0.9rem', color: 'var(--accent)' }}>🧭 Community Missions Board</h2>
         {[1, 2, 3].map(i => (
           <div key={i} className="skeleton" style={{ height: 140, borderRadius: 0 }} />
         ))}
@@ -49,22 +49,22 @@ function MissionsPage() {
   return (
     <motion.div 
       className="flex flex-col gap-6" 
-      style={{ maxWidth: 900, margin: '0 auto', paddingBottom: 'var(--space-10)' }}
+      style={{ maxWidth: 1200, margin: '0 auto', paddingBottom: 'var(--space-10)' }}
       variants={containerAnim}
       initial="hidden"
       animate="show"
     >
       <div className="flex items-center justify-between" style={{ borderBottom: '1px solid var(--border-subtle)', paddingBottom: 'var(--space-4)' }}>
         <div>
-          <h2 className="font-pixel" style={{ fontSize: '0.9rem', color: 'var(--accent)' }}>🧭 Active Investigation Missions</h2>
-          <span className="font-pixel text-muted" style={{ fontSize: '0.45rem', marginTop: '4px', display: 'block' }}>CITIZEN SENSORS DIRECTIVE · COLLECTIVE CONSENSUS</span>
+          <h2 className="font-pixel" style={{ fontSize: '15px', color: 'var(--accent)' }}>🧭 Active Community Missions</h2>
+          <span className="font-pixel text-muted" style={{ fontSize: '10px', marginTop: '4px', display: 'block' }}>COMMUNITY VERIFICATION · COLLECTIVE CONSENSUS</span>
         </div>
-        <span className="font-pixel text-muted" style={{ fontSize: '0.45rem' }}>{missions.filter(m => m.status === 'active').length} SWEEPS ACTIVE</span>
+        <span className="font-pixel text-muted" style={{ fontSize: '10px' }}>{missions.filter(m => m.status === 'active').length} MISSIONS ACTIVE</span>
       </div>
 
       {missions.length === 0 ? (
         <div className="card rpg-panel text-center" style={{ padding: 'var(--space-8)', borderRadius: 0 }}>
-          <p className="font-pixel" style={{ fontSize: '0.65rem', color: 'var(--ink-muted)' }}>NO CAMPAIGN DIRECTIVES ACTIVE AT THIS TIME.</p>
+          <p className="font-pixel" style={{ fontSize: '0.65rem', color: 'var(--ink-muted)' }}>NO ACTIVE MISSIONS AT THIS TIME.</p>
         </div>
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
@@ -86,11 +86,11 @@ function MissionsPage() {
                 <div className="flex justify-between items-start" style={{ flexWrap: 'wrap', gap: 'var(--space-4)' }}>
                   <div style={{ flex: 1, minWidth: '280px' }}>
                     <div className="flex items-center gap-3" style={{ marginBottom: 'var(--space-2)' }}>
-                      <h3 className="font-pixel" style={{ fontSize: '0.65rem', margin: 0, color: isCompleted ? 'var(--success)' : 'var(--ink-primary)' }}>
+                      <h3 className="font-pixel" style={{ fontSize: '12px', margin: 0, color: isCompleted ? 'var(--success)' : 'var(--ink-primary)' }}>
                         {mission.title}
                       </h3>
                       <span className="badge font-pixel" style={{ 
-                        fontSize: '0.35rem', 
+                        fontSize: '9px', 
                         background: mission.type === 'hotspot_prediction' ? 'oklch(0.25 0.06 85 / 0.3)' : 'oklch(0.25 0.05 260 / 0.3)',
                         color: mission.type === 'hotspot_prediction' ? 'var(--warning)' : 'var(--accent)',
                         borderRadius: 0,
@@ -127,12 +127,12 @@ function MissionsPage() {
                   <div className="flex flex-col items-end gap-3" style={{ minWidth: '160px' }}>
                     <div className="flex gap-2">
                       <div className="summary-card text-center" style={{ padding: '6px 12px', minWidth: '70px', borderRadius: 0 }}>
-                        <div className="font-pixel" style={{ fontSize: '0.55rem', color: 'var(--success)' }}>+{mission.xp_reward}</div>
-                        <div className="font-pixel text-muted" style={{ fontSize: '0.35rem', marginTop: '2px' }}>XP</div>
+                        <div className="font-pixel" style={{ fontSize: '11px', color: 'var(--success)' }}>+{mission.xp_reward}</div>
+                        <div className="font-pixel text-muted" style={{ fontSize: '9px', marginTop: '2px' }}>XP</div>
                       </div>
                       <div className="summary-card text-center" style={{ padding: '6px 12px', minWidth: '70px', borderRadius: 0 }}>
-                        <div className="font-pixel" style={{ fontSize: '0.55rem', color: 'var(--accent)' }}>{mission.gold_reward}</div>
-                        <div className="font-pixel text-muted" style={{ fontSize: '0.35rem', marginTop: '2px' }}>GOLD</div>
+                        <div className="font-pixel" style={{ fontSize: '11px', color: 'var(--accent)' }}>{mission.gold_reward}</div>
+                        <div className="font-pixel text-muted" style={{ fontSize: '9px', marginTop: '2px' }}>GOLD</div>
                       </div>
                     </div>
 
@@ -140,14 +140,14 @@ function MissionsPage() {
                       <div 
                         className="font-pixel text-success" 
                         style={{ 
-                          fontSize: '0.55rem', 
+                          fontSize: '11px', 
                           border: '2px double var(--success)', 
                           padding: '6px 12px', 
                           background: 'oklch(0.65 0.16 155 / 0.08)',
                           letterSpacing: '1px'
                         }}
                       >
-                        ✓ QUEST PURGED
+                        ✓ MISSION COMPLETED
                       </div>
                     ) : (
                       <button 
@@ -160,7 +160,7 @@ function MissionsPage() {
                         }}
                         onClick={() => handleDepart(mission)}
                       >
-                        🧭 TRAVEL TO SECTOR
+                        🧭 FIND ON MAP
                       </button>
                     )}
                   </div>

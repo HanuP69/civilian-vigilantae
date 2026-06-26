@@ -338,6 +338,8 @@ export async function getLeaderboard(limit = 20) {
     badges: u.badges || [],
     reports: u.reports_submitted || 0,
     photo_url: u.photo_url,
+    verifications_made: u.verifications_made || 0,
+    accurate_verifications: u.accurate_verifications || 0,
   }));
 }
 

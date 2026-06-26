@@ -86,50 +86,50 @@ function TicketPage() {
   const statusClass = `badge badge-outline badge-status-${(ticket.status || 'reported').toLowerCase().replace(/ /g, '-')}`;
 
   return (
-    <div className="ticket-page-container animate-fade-up" style={{ maxWidth: 900, margin: '0 auto', paddingBottom: 'var(--space-10)' }}>
+    <div className="ticket-page-container animate-fade-up" style={{ maxWidth: 1200, margin: '0 auto', paddingBottom: 'var(--space-10)' }}>
       <header style={{ marginBottom: 'var(--space-8)', borderBottom: '1px solid var(--accent-muted)', paddingBottom: 'var(--space-6)' }}>
         <div className="flex items-center gap-3" style={{ marginBottom: 'var(--space-4)', flexWrap: 'wrap' }}>
-          <span className={`${statusClass} font-pixel`} style={{ borderRadius: 0, fontSize: '0.45rem', padding: '2px 4px' }}>{capitalize(ticket.status)}</span>
-          <span className={`${severityClass} font-pixel`} style={{ borderRadius: 0, fontSize: '0.45rem', padding: '2px 4px' }}>{capitalize(ticket.severity)}</span>
+          <span className={`${statusClass} font-pixel`} style={{ borderRadius: 0, fontSize: '10px', padding: '2px 4px' }}>{capitalize(ticket.status)}</span>
+          <span className={`${severityClass} font-pixel`} style={{ borderRadius: 0, fontSize: '10px', padding: '2px 4px' }}>{capitalize(ticket.severity)}</span>
           {ticket.category && (
             <span
               className="badge badge-outline font-pixel"
-              style={{ color: CATEGORY_COLORS[ticket.category] || 'var(--ink-muted)', borderRadius: 0, fontSize: '0.45rem', padding: '2px 4px' }}
+              style={{ color: CATEGORY_COLORS[ticket.category] || 'var(--ink-muted)', borderRadius: 0, fontSize: '10px', padding: '2px 4px' }}
             >
               {CATEGORY_LABELS[ticket.category]?.toUpperCase() || capitalize(ticket.category).toUpperCase()}
             </span>
           )}
         </div>
         <h1 className="font-serif animate-reveal" style={{ fontSize: 'clamp(2rem, 5vw, 3.5rem)', lineHeight: 1.1, marginBottom: 'var(--space-5)', color: 'var(--ink-primary)', fontWeight: 600 }}>
-          {ticket.title || ticket.ai_title || 'Untitled Quest'}
+          {ticket.title || ticket.ai_title || 'Untitled Issue'}
         </h1>
 
         <div className="flex gap-6 text-sm text-secondary animate-fade-up stagger-1" style={{ flexWrap: 'wrap', rowGap: 'var(--space-3)' }}>
           <div className="flex flex-col gap-1">
-            <span className="text-muted font-pixel" style={{ fontSize: '0.45rem', letterSpacing: '0.1em' }}>QUEST DISPATCHED</span>
+            <span className="text-muted font-pixel" style={{ fontSize: '10px', letterSpacing: '0.1em' }}>REPORTED DATE</span>
             <span>{ticket.created_at ? timeAgo(ticket.created_at) : '—'}</span>
           </div>
           {ticket.ward && (
             <div className="flex flex-col gap-1">
-              <span className="text-muted font-pixel" style={{ fontSize: '0.45rem', letterSpacing: '0.1em' }}>WARD REALM</span>
+              <span className="text-muted font-pixel" style={{ fontSize: '10px', letterSpacing: '0.1em' }}>WARD LOCATION</span>
               <span>{ticket.ward.toUpperCase()}</span>
             </div>
           )}
           {ticket.address && !ticket.address.toLowerCase().startsWith(ticket.ward?.toLowerCase()) && (
             <div className="flex flex-col gap-1">
-              <span className="text-muted font-pixel" style={{ fontSize: '0.45rem', letterSpacing: '0.1em' }}>COORDINATES</span>
+              <span className="text-muted font-pixel" style={{ fontSize: '10px', letterSpacing: '0.1em' }}>COORDINATES</span>
               <span>{ticket.address}</span>
             </div>
           )}
           {ticket.department && (
             <div className="flex flex-col gap-1">
-              <span className="text-muted font-pixel" style={{ fontSize: '0.45rem', letterSpacing: '0.1em' }}>ASSIGNED GUILD</span>
+              <span className="text-muted font-pixel" style={{ fontSize: '10px', letterSpacing: '0.1em' }}>ASSIGNED DEPARTMENT</span>
               <span>{ticket.department.toUpperCase()}</span>
             </div>
           )}
           {ticket.reporter_name && (
             <div className="flex flex-col gap-1">
-              <span className="text-muted font-pixel" style={{ fontSize: '0.45rem', letterSpacing: '0.1em' }}>REPORTER HERO</span>
+              <span className="text-muted font-pixel" style={{ fontSize: '10px', letterSpacing: '0.1em' }}>SUBMITTED BY</span>
               <span>{ticket.reporter_name.toUpperCase()}</span>
             </div>
           )}
@@ -140,9 +140,9 @@ function TicketPage() {
 
         <div className="flex flex-col gap-8">
           <section>
-            <h3 className="section-title font-pixel" style={{ fontSize: '0.65rem', color: 'var(--accent)' }}>[ 📜 QUEST LOG DETAIL ]</h3>
+            <h3 className="section-title font-pixel" style={{ fontSize: '0.65rem', color: 'var(--accent)' }}>[ 📜 ISSUE DESCRIPTION ]</h3>
             <p className="text-secondary" style={{ fontSize: '1.125rem', lineHeight: 1.8, fontWeight: 300 }}>
-              {ticket.description || ticket.raw_text || 'No description provided for this quest.'}
+              {ticket.description || ticket.raw_text || 'No description provided for this issue.'}
             </p>
           </section>
 
@@ -191,18 +191,21 @@ function TicketPage() {
           {/* Phase 6: UI Explainability Panels */}
           <div className="flex flex-col gap-6" style={{ marginTop: 'var(--space-6)', paddingTop: 'var(--space-6)', borderTop: '1px solid var(--border-subtle)' }}>
             
-            {/* 1. Why Verified? */}
+            {/* 1. Verification Consensus Outcome */}
             <div className="panel rpg-panel" style={{ borderRadius: 0 }}>
               <h3 className="section-title font-pixel" style={{ fontSize: '0.65rem', color: 'var(--success)', marginBottom: 'var(--space-3)' }}>
-                [ 🔍 WHY VERIFIED? ]
+                [ ✅ VERIFICATION CONSENSUS OUTCOME ]
               </h3>
               <div className="flex items-center gap-4" style={{ marginBottom: 'var(--space-2)' }}>
                 <span className="font-pixel" style={{ fontSize: '1.25rem', color: 'var(--success)', lineHeight: 1 }}>
                   {ticket.verification_score != null ? `${ticket.verification_score}%` : 'N/A'}
                 </span>
-                <span className="badge badge-outline font-pixel" style={{ color: 'var(--success)', borderRadius: 0, fontSize: '0.45rem', padding: '2px 4px' }}>
+                <span className="badge badge-outline font-pixel" style={{ color: 'var(--success)', borderRadius: 0, fontSize: '10px', padding: '2px 4px' }}>
                   {ticket.status?.toUpperCase()}
                 </span>
+              </div>
+              <div style={{ padding: '8px 12px', background: 'var(--bg-primary)', borderLeft: '3px solid var(--success)', marginBottom: '10px', fontSize: '0.8rem', color: 'var(--ink-secondary)' }}>
+                <strong>Consensus:</strong> Verified with {ticket.verification_score || 0}% confidence, based on: AI analysis, citizen votes, and nearby duplication check.
               </div>
               <p className="text-secondary text-xs" style={{ lineHeight: 1.6 }}>
                 {ticket.verification_explanation || 'Verification assessment is pending.'}
@@ -219,7 +222,7 @@ function TicketPage() {
                   <span className="font-pixel text-sm" style={{ color: 'var(--accent)', display: 'block' }}>
                     Probable Cause: {ticket.root_cause.cause}
                   </span>
-                  <span className="badge badge-outline font-pixel" style={{ color: 'var(--accent)', borderRadius: 0, fontSize: '0.45rem', padding: '2px 4px' }}>
+                  <span className="badge badge-outline font-pixel" style={{ color: 'var(--accent)', borderRadius: 0, fontSize: '10px', padding: '2px 4px' }}>
                     Confidence: {ticket.root_cause.confidence}%
                   </span>
                 </div>
@@ -360,7 +363,7 @@ function TicketPage() {
             {ticket.dispatch_plan && (
               <div className="panel rpg-panel" style={{ borderRadius: 0 }}>
                 <h3 className="section-title font-pixel" style={{ fontSize: '0.65rem', color: 'var(--success)', marginBottom: 'var(--space-3)' }}>
-                  [ ⚔️ OPERATION DISPATCH PLAN ]
+                  [ 📋 RESPONSE PLAN ]
                 </h3>
                 <p className="text-secondary text-xs" style={{ lineHeight: 1.6, marginBottom: 'var(--space-4)' }}>
                   {ticket.dispatch_plan.explanation}
@@ -368,7 +371,7 @@ function TicketPage() {
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: 'var(--space-3)' }}>
                   <div style={{ padding: 'var(--space-2)', border: '1px solid var(--border-subtle)', background: 'var(--bg-primary)' }}>
                     <span className="font-pixel block text-muted" style={{ fontSize: '0.35rem' }}>CREW SIZE</span>
-                    <span className="font-pixel text-sm" style={{ color: 'var(--accent)' }}>{ticket.dispatch_plan.crew_size} Rangers</span>
+                    <span className="font-pixel text-sm" style={{ color: 'var(--accent)' }}>{ticket.dispatch_plan.crew_size} Staff</span>
                   </div>
                   <div style={{ padding: 'var(--space-2)', border: '1px solid var(--border-subtle)', background: 'var(--bg-primary)' }}>
                     <span className="font-pixel block text-muted" style={{ fontSize: '0.35rem' }}>ESTIMATED COST</span>
@@ -389,14 +392,14 @@ function TicketPage() {
 
           {ticket.agent_trace && ticket.agent_trace.length > 0 && (
             <section style={{ marginTop: 'var(--space-6)', paddingTop: 'var(--space-6)', borderTop: '1px solid var(--border-subtle)' }}>
-              <h3 className="section-title font-pixel" style={{ fontSize: '0.65rem', color: 'var(--accent)' }}>[ 🧠 MULTI-AGENT INVESTIGATION ]</h3>
+              <h3 className="section-title font-pixel" style={{ fontSize: '0.65rem', color: 'var(--accent)' }}>[ 🧠 AI EXPLAINABILITY PROCESS ]</h3>
               <AgentTrace trace={ticket.agent_trace} />
             </section>
           )}
 
           {(ticket.related_tickets || ticket.related_info) && (
             <section style={{ marginTop: 'var(--space-4)' }}>
-              <h3 className="section-title font-pixel" style={{ fontSize: '0.65rem', color: 'var(--accent)' }}>[ 🔗 CONTEXTUAL ANOMALIES ]</h3>
+              <h3 className="section-title font-pixel" style={{ fontSize: '0.65rem', color: 'var(--accent)' }}>[ 🔗 RELATED ISSUES ]</h3>
               {ticket.related_info && (
                 <p className="text-secondary" style={{ fontStyle: 'italic', marginBottom: 'var(--space-4)' }}>{ticket.related_info}</p>
               )}
@@ -418,12 +421,12 @@ function TicketPage() {
 
           {ticket.priority_score != null && !isNaN(ticket.priority_score) && (
             <div className="panel rpg-panel" style={{ borderColor: 'var(--accent-muted)', borderRadius: 0 }}>
-              <h4 className="label font-pixel" style={{ fontSize: '0.45rem', marginBottom: 'var(--space-2)' }}>THREAT RATING</h4>
+              <h4 className="label font-pixel" style={{ fontSize: '10px', marginBottom: 'var(--space-2)' }}>PRIORITY RATING</h4>
               <div className="flex items-end justify-between" style={{ marginBottom: 'var(--space-3)' }}>
                 <span className="font-pixel" style={{ fontSize: '1.25rem', lineHeight: 1, color: ticket.priority_score > 70 ? 'var(--error)' : 'var(--accent)' }}>
                   {Math.round(ticket.priority_score)}
                 </span>
-                <span className="font-pixel text-secondary" style={{ fontSize: '0.45rem', paddingBottom: '4px' }}>
+                <span className="font-pixel text-secondary" style={{ fontSize: '10px', paddingBottom: '4px' }}>
                   {ticket.priority_score > 70 ? '🔴 CRITICAL' : ticket.priority_score > 40 ? '🟡 MODERATE' : '🟢 LOW'}
                 </span>
               </div>
@@ -442,14 +445,14 @@ function TicketPage() {
 
           {slaDeadline && (
             <div className="panel rpg-panel" style={{ borderRadius: 0 }}>
-              <h4 className="label font-pixel" style={{ fontSize: '0.45rem', marginBottom: 'var(--space-3)' }}>TIME-LIMIT DEADLINE</h4>
+              <h4 className="label font-pixel" style={{ fontSize: '10px', marginBottom: 'var(--space-3)' }}>RESOLUTION DEADLINE</h4>
               <div className="font-mono text-sm text-primary" style={{ marginBottom: 'var(--space-3)' }}>{slaDeadline.toLocaleString()}</div>
               {slaRemaining != null && slaRemaining > 0 ? (
-                <span className="badge badge-outline font-pixel" style={{ color: 'var(--accent)', borderRadius: 0, fontSize: '0.45rem', padding: '2px 4px' }}>
+                <span className="badge badge-outline font-pixel" style={{ color: 'var(--accent)', borderRadius: 0, fontSize: '10px', padding: '2px 4px' }}>
                   {slaHours}H {slaMinutes}M REMAINING
                 </span>
               ) : (
-                <span className="badge badge-outline font-pixel" style={{ color: 'var(--error)', borderRadius: 0, fontSize: '0.45rem', padding: '2px 4px' }}>
+                <span className="badge badge-outline font-pixel" style={{ color: 'var(--error)', borderRadius: 0, fontSize: '10px', padding: '2px 4px' }}>
                   OVERDUE
                 </span>
               )}
@@ -457,7 +460,7 @@ function TicketPage() {
           )}
 
           <div className="panel rpg-panel" style={{ borderRadius: 0 }}>
-            <h4 className="label font-pixel" style={{ fontSize: '0.45rem', marginBottom: 'var(--space-4)' }}>COMMUNITY CONSENSUS</h4>
+            <h4 className="label font-pixel" style={{ fontSize: '10px', marginBottom: 'var(--space-4)' }}>COMMUNITY CONSENSUS</h4>
             <div className="flex flex-col gap-3">
               <button
                 className="verify-btn verify-btn-up flex justify-between font-pixel"
@@ -465,7 +468,7 @@ function TicketPage() {
                 onClick={() => handleVote('still_issue')}
                 disabled={voting}
               >
-                <span>⚠️ STILL AN ANOMALY</span>
+                <span>⚠️ STILL UNRESOLVED</span>
                 {ticket.verification_up != null && <span style={{ opacity: 0.8 }}>{ticket.verification_up}</span>}
               </button>
               <button
@@ -474,7 +477,7 @@ function TicketPage() {
                 onClick={() => handleVote('looks_resolved')}
                 disabled={voting}
               >
-                <span>⚔️ MARK AS PURGED</span>
+                <span>✅ MARK AS RESOLVED</span>
                 {ticket.verification_down != null && <span style={{ opacity: 0.8 }}>{ticket.verification_down}</span>}
               </button>
             </div>

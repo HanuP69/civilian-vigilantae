@@ -36,9 +36,11 @@ function getMarkerColor(priorityScore) {
   return '#10b981';
 }
 
-function createLeafletIcon(priorityScore, isActive) {
+function createLeafletIcon(priorityScore, isActive, isVerified, isSla) {
   const color = getMarkerColor(priorityScore);
   const activeClass = isActive ? 'active' : '';
+  const glowClass = isVerified ? 'leaflet-verified-glow' : '';
+  const slaClass = isSla ? 'leaflet-sla-pulse' : '';
   const svg = `
     <svg width="32" height="40" viewBox="0 0 32 40" xmlns="http://www.w3.org/2000/svg">
       <path d="M6 2h20v4h4v12h-4v8h-4v4h-4v8h-4v-8h-4v-4h-4v-8H2V6h4V2z" fill="#000000" />
@@ -49,7 +51,7 @@ function createLeafletIcon(priorityScore, isActive) {
     </svg>
   `;
   return L.divIcon({
-    className: 'custom-leaflet-marker-wrapper',
+    className: `custom-leaflet-marker-wrapper ${glowClass} ${slaClass}`,
     html: `
       <div class="rpg-quest-pin-container ${activeClass}">
         <div class="rpg-quest-pin-shadow"></div>
@@ -424,7 +426,12 @@ function ConfigurableMap({
                 <Marker
                   key={`${ticket.id}-${activeTicketId === ticket.id}`}
                   position={[Number(ticket.lat), Number(ticket.lng)]}
-                  icon={createLeafletIcon(ticket.priority_score, activeTicketId === ticket.id)}
+                  icon={createLeafletIcon(
+                    ticket.priority_score,
+                    activeTicketId === ticket.id,
+                    ticket.status === 'verified',
+                    layer === 'sla' || (ticket.status !== 'resolved' && (ticket.sla_risk_score > 50 || (ticket.sla_deadline && new Date(ticket.sla_deadline).getTime() < Date.now())))
+                  )}
                   eventHandlers={{
                     click: () => onMarkerClick(ticket),
                     mouseover: () => onMarkerHover(ticket),
@@ -433,7 +440,7 @@ function ConfigurableMap({
                 >
                   <Popup>
                     <div className="font-sans" style={{ minWidth: 180, padding: '4px', lineHeight: 1.4 }}>
-                      <strong style={{ fontSize: '13px', color: 'var(--ink-primary)', display: 'block', marginBottom: '4px', fontWeight: 600 }}>{ticket.title || ticket.ai_title || 'Untitled Quest'}</strong>
+                      <strong style={{ fontSize: '13px', color: 'var(--ink-primary)', display: 'block', marginBottom: '4px', fontWeight: 600 }}>{ticket.title || ticket.ai_title || 'Untitled Issue'}</strong>
                       <span style={{ color: categoryColors[ticket.category] || 'var(--ink-muted)', fontSize: '10px', display: 'block', marginBottom: '6px', fontWeight: 700, textTransform: 'uppercase' }}>
                         {categoryLabels[ticket.category]?.toUpperCase() || capitalize(ticket.category).toUpperCase()}
                       </span>
@@ -446,7 +453,7 @@ function ConfigurableMap({
                         </div>
                       )}
                       <Link to={`/ticket/${ticket.id}`} style={{ display: 'inline-block', color: 'var(--accent)', fontSize: '11px', textDecoration: 'underline', fontWeight: 600 }}>
-                        ENTER QUEST →
+                        VIEW DETAILS →
                       </Link>
                     </div>
                   </Popup>
@@ -460,6 +467,7 @@ function ConfigurableMap({
                 center={[Number(group.lat), Number(group.lng)]}
                 radius={300}
                 pathOptions={{
+                  className: 'leaflet-cluster-pulse',
                   color: categoryColors[group.category] || '#2563eb',
                   fillColor: categoryColors[group.category] || '#2563eb',
                   fillOpacity: 0.15,
@@ -479,7 +487,7 @@ function ConfigurableMap({
             recurrence
               .filter((item) => item.probability > 0.3 && wardCenters[item.ward])
               .map((item, index) => {
-                const color = item.probability > 0.7 ? '#ef4444' : item.probability > 0.4 ? '#f59e0b' : '#10b981';
+                const color = '#d946ef';
                 const centerCoord = wardCenters[item.ward];
                 return (
                   <Circle
@@ -487,6 +495,7 @@ function ConfigurableMap({
                     center={[centerCoord.lat, centerCoord.lng]}
                     radius={400 + item.probability * 600}
                     pathOptions={{
+                      className: 'leaflet-hotspot-pulse',
                       color,
                       fillColor: color,
                       fillOpacity: 0.2,
@@ -548,7 +557,7 @@ function ConfigurableMap({
                             PROGRESS: {mission.current_confirmations} / {mission.target_confirmations}
                           </div>
                           <Link to="/missions" style={{ display: 'inline-block', color: 'var(--accent)', fontSize: '11px', textDecoration: 'underline', fontWeight: 600 }}>
-                            GO TO QUEST BOARD →
+                            GO TO MISSION BOARD →
                           </Link>
                         </div>
                       </Popup>

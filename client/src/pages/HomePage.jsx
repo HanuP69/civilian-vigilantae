@@ -8,11 +8,11 @@ import { timeAgo, capitalize } from '../utils/formatters';
 import ConfigurableMap from '../components/map/ConfigurableMap';
 
 const LAYERS = [
-  { key: 'reports', label: 'ACTIVE QUESTS' },
-  { key: 'verified', label: 'VERIFIED QUESTS' },
-  { key: 'clusters', label: 'THREAT SWARMS' },
-  { key: 'sla', label: 'SLA RISK' },
-  { key: 'recurrence', label: 'PREDICTED HOTSPOTS' },
+  { key: 'reports', label: 'ACTIVE ISSUES' },
+  { key: 'verified', label: 'VERIFIED ISSUES' },
+  { key: 'clusters', label: 'ISSUE CLUSTERS' },
+  { key: 'sla', label: 'SLA BREACH RISK' },
+  { key: 'recurrence', label: 'COMMUNITY HOTSPOTS' },
 ];
 
 
@@ -42,6 +42,7 @@ function HomePage() {
   const navigate = useNavigate();
 
   const feedRef = useRef(null);
+  const insightsRef = useRef(null);
   const scrollFeed = (direction) => {
     if (feedRef.current) {
       const scrollAmount = 180;
@@ -170,9 +171,28 @@ function HomePage() {
 
   const severityClass = (s) => `badge badge-outline badge-severity-${(s || 'low').toLowerCase()}`;
   const statusClass = (s) => `badge badge-outline badge-status-${(s || 'reported').toLowerCase().replace(/ /g, '-')}`;
-  const urgentTickets = useMemo(() => tickets.filter(t => (t.priority_score || 0) > 70).length, [tickets]);
+  const activeIssues = useMemo(() => tickets.filter(t => t.status !== 'resolved'), [tickets]);
+  const resolvedCount = useMemo(() => tickets.filter(t => t.status === 'resolved').length, [tickets]);
+  const activeCount = useMemo(() => activeIssues.length, [activeIssues]);
+  const criticalCount = useMemo(() => activeIssues.filter(t => t.priority_score > 70).length, [activeIssues]);
+  const slaBreachCount = useMemo(() => {
+    const now = Date.now();
+    return activeIssues.filter(t => t.sla_deadline && new Date(t.sla_deadline).getTime() < now).length;
+  }, [activeIssues]);
+
+  const communityHealthIndex = useMemo(() => {
+    if (tickets.length === 0) return 100;
+    const activePenalty = activeCount * 1.5;
+    const criticalPenalty = criticalCount * 3.0;
+    const slaPenalty = slaBreachCount * 5.0;
+    const rawIndex = 100 - (activePenalty + criticalPenalty + slaPenalty);
+    return Math.max(10, Math.min(100, Math.round(rawIndex)));
+  }, [tickets.length, activeCount, criticalCount, slaBreachCount]);
+
+  const urgentTickets = criticalCount;
   const verifiedCount = useMemo(() => tickets.filter(t => t.status === 'verified').length, [tickets]);
   const topRisk = useMemo(() => recurrence.filter(r => (r.probability || 0) > 0.5)[0], [recurrence]);
+  const hotspotCount = useMemo(() => recurrence.filter(r => (r.probability || 0) > 0.4).length, [recurrence]);
 
 
 
@@ -223,7 +243,7 @@ function HomePage() {
               border: '1px solid var(--accent-muted)',
               borderRadius: 0,
             }}>
-              LIVE · LUCKNOW REALM
+              LIVE · LUCKNOW COMMUNITY WATCH
             </span>
             <span style={{
               width: 6, height: 6, borderRadius: '50%',
@@ -234,8 +254,8 @@ function HomePage() {
             }} />
           </div>
           <h1 className="animate-reveal hero-heading" style={{ fontStyle: 'normal', letterSpacing: '-0.03em', fontFamily: 'var(--font-serif)' }}>
-            Lucknow Realm Incidents,<br />
-            <span style={{ color: 'var(--accent)', fontStyle: 'italic' }}>resolved by active sentinels.</span>
+            Lucknow Community Issues Watch,<br />
+            <span style={{ color: 'var(--accent)', fontStyle: 'italic' }}>monitored & resolved by active citizens.</span>
           </h1>
         </div>
         <div className="animate-fade-up stagger-2" style={{ textAlign: 'right' }}>
@@ -246,108 +266,107 @@ function HomePage() {
             fontFamily: 'var(--font-pixel)',
             fontSize: '0.65rem',
           }}>
-            ⚔️ SUBMIT NEW QUEST
+            📢 REPORT NEW ISSUE
           </Link>
           <p className="font-pixel text-muted" style={{ fontSize: '0.625rem', marginTop: 'var(--space-2)' }}>
-            {tickets.length > 0 ? `${tickets.length} ACTIVE INCIDENTS` : 'BE THE FIRST TO DEPLOY'}
+            {tickets.length > 0 ? `${tickets.length} ACTIVE ISSUES` : 'BE THE FIRST TO HELP'}
           </p>
         </div>
       </section>
 
-      <div className="hero-panel animate-fade-up stagger-2 pixel-border" style={{ marginBottom: 'var(--space-6)', borderRadius: 0 }}>
-        <div className="hero-panel-row">
-          <span className="info-pill font-pixel" style={{ fontSize: '0.625rem', borderRadius: 0 }}>⚡ AUTOMATIC QUEST TRIAGE</span>
-          <span className="info-pill font-pixel" style={{ fontSize: '0.625rem', borderRadius: 0 }}>🧭 GEOSPATIAL DEDUPLICATION</span>
-          <span className="info-pill font-pixel" style={{ fontSize: '0.625rem', borderRadius: 0 }}>📈 LIVE SPAWN RISK DETECTOR</span>
+      {/* Section 1: Community Health KPI Header */}
+      <div className="kpi-grid animate-fade-up stagger-2">
+        <div className="summary-card pixel-border" style={{ borderRadius: 0, background: 'var(--bg-secondary)', padding: '16px' }}>
+          <div className="font-pixel text-muted" style={{ fontSize: '0.625rem', marginBottom: '8px' }}>COMMUNITY HEALTH</div>
+          <div className="font-serif" style={{ fontSize: '1.75rem', fontWeight: 'bold', color: communityHealthIndex > 80 ? 'var(--success)' : communityHealthIndex > 50 ? 'var(--warning)' : 'var(--error)' }}>
+            {communityHealthIndex}%
+          </div>
+          <p style={{ fontSize: '0.75rem', color: 'var(--ink-muted)', marginTop: '4px' }}>
+            {communityHealthIndex > 80 ? '🟢 Stable condition' : communityHealthIndex > 50 ? '🟡 Active warnings' : '🔴 Critical backlog'}
+          </p>
         </div>
-        <div className="flex items-center justify-between" style={{ gap: 'var(--space-4)', flexWrap: 'wrap' }}>
-          <div>
-            <h3 className="section-title font-pixel" style={{ fontSize: '0.7rem', marginBottom: 'var(--space-2)' }}>RAPID GUILD DISPATCH AND RESOLUTION</h3>
-            <p className="text-secondary">Sentinels log anomalies across the Lucknow realm, automatically generating categorized, prioritized quest orders for the local guilds.</p>
+        <div className="summary-card pixel-border" style={{ borderRadius: 0, background: 'var(--bg-secondary)', padding: '16px' }}>
+          <div className="font-pixel text-muted" style={{ fontSize: '0.625rem', marginBottom: '8px' }}>ACTIVE ISSUES</div>
+          <div className="font-serif" style={{ fontSize: '1.75rem', fontWeight: 'bold', color: activeCount > 0 ? 'var(--warning)' : 'var(--success)' }}>
+            {activeCount}
           </div>
-          <div className="flex gap-3" style={{ flexWrap: 'wrap' }}>
-            <div className="summary-card pixel-border" style={{ minWidth: 140, borderRadius: 0 }}>
-              <div className="font-pixel" style={{ fontSize: '1rem', color: 'var(--error)' }}>{urgentTickets}</div>
-              <div className="font-pixel text-muted" style={{ fontSize: '0.625rem', marginTop: '6px' }}>HIGH THREATS</div>
-            </div>
-            <div className="summary-card pixel-border" style={{ minWidth: 140, borderRadius: 0 }}>
-              <div className="font-pixel" style={{ fontSize: '1rem', color: 'var(--success)' }}>{verifiedCount}</div>
-              <div className="font-pixel text-muted" style={{ fontSize: '0.625rem', marginTop: '6px' }}>VERIFIED QUESTS</div>
-            </div>
-            <div className="summary-card pixel-border" style={{ minWidth: 180, borderRadius: 0 }}>
-              <div className="font-pixel" style={{ fontSize: '0.75rem', color: 'var(--accent)', textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap' }}>{topRisk ? `${topRisk.ward}` : '—'}</div>
-              <div className="font-pixel text-muted" style={{ fontSize: '0.625rem', marginTop: '6px' }}>{topRisk ? `${Math.round((topRisk.probability || 0) * 100)}% SPAWN RISK` : 'NO HOTSPOT'}</div>
-            </div>
-          </div>
+          <p style={{ fontSize: '0.75rem', color: 'var(--ink-muted)', marginTop: '4px' }}>
+            {activeCount === 0 ? 'All clear!' : `${urgentTickets} high-priority`}
+          </p>
         </div>
-        <div className="how-it-works-grid">
-          <div className="how-it-card pixel-border" style={{ borderRadius: 0 }}>
-            <h4 className="font-pixel" style={{ fontSize: '0.55rem', marginBottom: 'var(--space-2)', color: 'var(--accent)' }}>1. DISCOVER</h4>
-            <p className="text-secondary">Capture anomaly coordinates, upload visual proof, and write descriptions to log the quest.</p>
+        <div className="summary-card pixel-border" style={{ borderRadius: 0, background: 'var(--bg-secondary)', padding: '16px' }}>
+          <div className="font-pixel text-muted" style={{ fontSize: '0.625rem', marginBottom: '8px' }}>VERIFIED ISSUES</div>
+          <div className="font-serif" style={{ fontSize: '1.75rem', fontWeight: 'bold', color: 'var(--success)' }}>
+            {verifiedCount}
           </div>
-          <div className="how-it-card pixel-border" style={{ borderRadius: 0 }}>
-            <h4 className="font-pixel" style={{ fontSize: '0.55rem', marginBottom: 'var(--space-2)', color: 'var(--accent)' }}>2. TRIAGE</h4>
-            <p className="text-secondary">The Guild Sentinel AI dynamically analyzes, groups, and assigns difficulty tiers to the quest.</p>
+          <p style={{ fontSize: '0.75rem', color: 'var(--ink-muted)', marginTop: '4px' }}>
+            Consensus confirmed
+          </p>
+        </div>
+        <div className="summary-card pixel-border" style={{ borderRadius: 0, background: 'var(--bg-secondary)', padding: '16px' }}>
+          <div className="font-pixel text-muted" style={{ fontSize: '0.625rem', marginBottom: '8px' }}>COMMUNITY HOTSPOTS</div>
+          <div className="font-serif" style={{ fontSize: '1.75rem', fontWeight: 'bold', color: hotspotCount > 0 ? 'var(--error)' : 'var(--success)' }}>
+            {hotspotCount}
           </div>
-          <div className="how-it-card pixel-border" style={{ borderRadius: 0 }}>
-            <h4 className="font-pixel" style={{ fontSize: '0.55rem', marginBottom: 'var(--space-2)', color: 'var(--accent)' }}>3. SOLVE</h4>
-            <p className="text-secondary">Deploy to locations, verify solutions, earn gold/XP, and purge threats from the map.</p>
+          <p style={{ fontSize: '0.75rem', color: 'var(--ink-muted)', marginTop: '4px' }}>
+            Recurrence risk detected
+          </p>
+        </div>
+      </div>
+
+      {/* Section 2: Centerpiece Map */}
+      <div className="animate-fade-up stagger-2" style={{ marginBottom: 'var(--space-6)' }}>
+        <div className="map-wrapper pixel-border" style={{ height: '520px', minHeight: 520, borderRadius: 0, position: 'relative' }}>
+          <ConfigurableMap
+            provider={mapProvider}
+            center={[26.8467, 80.9462]}
+            zoom={12}
+            tickets={tickets}
+            clusterGroups={clusterGroups}
+            recurrence={recurrence}
+            missions={missions}
+            slaByWard={slaByWard}
+            layer={layer}
+            activeTicketId={activeTicketId}
+            onMarkerHover={setActiveTicketId}
+            onMarkerClick={(ticket) => navigate(`/ticket/${ticket.id}`)}
+            onMapReady={setMap}
+            wardCenters={WARD_CENTERS}
+            categoryColors={CATEGORY_COLORS}
+            categoryLabels={CATEGORY_LABELS}
+            capitalize={capitalize}
+          />
+          <div className="layer-toggle" role="tablist" aria-label="Map layers">
+            {LAYERS.map(l => (
+              <button
+                key={l.key}
+                role="tab"
+                aria-selected={layer === l.key}
+                className={`layer-chip font-pixel ${layer === l.key ? 'active' : ''}`}
+                style={{ fontSize: '0.65rem', borderRadius: 0, border: '1px solid var(--border)' }}
+                onClick={() => setLayer(l.key)}
+              >
+                {l.label}
+              </button>
+            ))}
+          </div>
+          <div className="layer-legend" aria-hidden="true" style={{ borderRadius: 0, border: '1px solid var(--border)' }}>
+            {legendItems().map((item, i) => (
+              <div className="legend-item font-pixel" key={i} style={{ fontSize: '0.625rem' }}>
+                <span className="legend-swatch" style={{ background: item.color, borderRadius: 0 }} />
+                <span>{item.label}</span>
+              </div>
+            ))}
           </div>
         </div>
       </div>
 
-      <div className="animate-fade-up stagger-2 home-grid">
-        {/* LEFT: Map full height */}
-        <div className="home-map-col">
-          <div className="map-wrapper pixel-border" style={{ height: '100%', minHeight: 520, borderRadius: 0 }}>
-            <ConfigurableMap
-              provider={mapProvider}
-              center={[26.8467, 80.9462]}
-              zoom={12}
-              tickets={tickets}
-              clusterGroups={clusterGroups}
-              recurrence={recurrence}
-              missions={missions}
-              slaByWard={slaByWard}
-              layer={layer}
-              activeTicketId={activeTicketId}
-              onMarkerHover={setActiveTicketId}
-              onMarkerClick={(ticket) => navigate(`/ticket/${ticket.id}`)}
-              onMapReady={setMap}
-              wardCenters={WARD_CENTERS}
-              categoryColors={CATEGORY_COLORS}
-              categoryLabels={CATEGORY_LABELS}
-              capitalize={capitalize}
-            />
-            <div className="layer-toggle" role="tablist" aria-label="Map layers">
-              {LAYERS.map(l => (
-                <button
-                  key={l.key}
-                  role="tab"
-                  aria-selected={layer === l.key}
-                  className={`layer-chip font-pixel ${layer === l.key ? 'active' : ''}`}
-                  style={{ fontSize: '0.65rem', borderRadius: 0, border: '1px solid var(--border)' }}
-                  onClick={() => setLayer(l.key)}
-                >
-                  {l.label}
-                </button>
-              ))}
-            </div>
-            <div className="layer-legend" aria-hidden="true" style={{ borderRadius: 0, border: '1px solid var(--border)' }}>
-              {legendItems().map((item, i) => (
-                <div className="legend-item font-pixel" key={i} style={{ fontSize: '0.625rem' }}>
-                  <span className="legend-swatch" style={{ background: item.color, borderRadius: 0 }} />
-                  <span>{item.label}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-
-        {/* RIGHT: Compact filter row + feed */}
-        <div className="flex flex-col gap-4 home-feed-col rpg-panel" style={{ padding: 'var(--space-4)', height: '100%' }}>
+      {/* Section 3 & 4: Bottom Grid */}
+      <div className="home-bottom-grid animate-fade-up stagger-2">
+        {/* Left Column: Community Activity Feed */}
+        <div className="flex flex-col gap-4 home-feed-col rpg-panel" style={{ padding: 'var(--space-4)', height: '480px' }}>
           <div className="flex justify-between items-center" style={{ borderBottom: '1px solid var(--border)', paddingBottom: '8px' }}>
-            <span className="font-pixel" style={{ fontSize: '0.65rem', color: 'var(--accent)' }}>⚔️ QUEST LEDGER BOARD</span>
+            <span className="font-pixel" style={{ fontSize: '0.65rem', color: 'var(--accent)' }}>📢 COMMUNITY ACTIVITY FEED</span>
             <div className="flex gap-2">
               <button 
                 onClick={() => scrollFeed('up')} 
@@ -404,11 +423,11 @@ function HomePage() {
               {WARD_LIST.map(w => (<option key={w} value={w}>{w.toUpperCase()}</option>))}
             </select>
             <span className="font-pixel text-muted" style={{ marginLeft: 'auto', whiteSpace: 'nowrap', fontSize: '0.625rem' }}>
-              {tickets.length} QUEST{tickets.length !== 1 ? 'S' : ''}
+              {tickets.length} ISSUE{tickets.length !== 1 ? 'S' : ''}
             </span>
           </div>
 
-          {/* Feed */}
+          {/* Feed list */}
           <div ref={feedRef} className="flex flex-col gap-3 rpg-scrollbar" style={{ overflowY: 'auto', flex: 1 }}>
             {loading ? (
               <div aria-busy="true" aria-label="Loading reports" className="flex flex-col gap-3">
@@ -416,8 +435,8 @@ function HomePage() {
               </div>
             ) : tickets.length === 0 ? (
               <div className="empty-state flex flex-col gap-4 pixel-border" style={{ borderRadius: 0 }}>
-                <p className="font-pixel" style={{ fontSize: '0.65rem' }}>NO QUESTS FOUND.</p>
-                <Link to="/report" className="btn btn-primary pixel-border" style={{ alignSelf: 'center', borderRadius: 0, fontFamily: 'var(--font-pixel)', fontSize: '0.55rem' }}>SUBMIT QUEST</Link>
+                <p className="font-pixel" style={{ fontSize: '0.65rem' }}>NO ISSUES FOUND.</p>
+                <Link to="/report" className="btn btn-primary pixel-border" style={{ alignSelf: 'center', borderRadius: 0, fontFamily: 'var(--font-pixel)', fontSize: '0.55rem' }}>REPORT ISSUE</Link>
               </div>
             ) : (
               tickets.map((ticket) => (
@@ -438,7 +457,7 @@ function HomePage() {
                 >
                   <div className="flex justify-between items-start" style={{ marginBottom: 'var(--space-2)' }}>
                     <span className="font-serif" style={{ fontSize: '1.0625rem', fontWeight: 600, color: 'var(--ink-primary)', lineHeight: 1.3 }}>
-                      {ticket.title || ticket.ai_title || 'Untitled Quest'}
+                      {ticket.title || ticket.ai_title || 'Untitled Issue'}
                     </span>
                     <span className="font-pixel text-muted" style={{ marginLeft: 'var(--space-3)', whiteSpace: 'nowrap', flexShrink: 0, fontSize: '0.625rem' }}>{timeAgo(ticket.created_at).toUpperCase()}</span>
                   </div>
@@ -458,6 +477,73 @@ function HomePage() {
                 </div>
               ))
             )}
+          </div>
+        </div>
+
+        {/* Right Column: Agent Insights Panel */}
+        <div className="flex flex-col gap-4 home-feed-col rpg-panel" style={{ padding: 'var(--space-4)', height: '480px' }}>
+          <div className="flex justify-between items-center" style={{ borderBottom: '1px solid var(--border)', paddingBottom: '8px' }}>
+            <span className="font-pixel" style={{ fontSize: '0.65rem', color: 'var(--accent)' }}>🤖 AGENT INSIGHTS NETWORK</span>
+          </div>
+
+          <div ref={insightsRef} className="flex flex-col gap-3 rpg-scrollbar" style={{ overflowY: 'auto', flex: 1 }}>
+            <div className="flex flex-col gap-3">
+              {/* Insight 1: Active Clusters */}
+              <div className="pixel-border" style={{ padding: '12px', background: 'var(--bg-secondary)', borderRadius: 0 }}>
+                <span className="font-pixel" style={{ fontSize: '0.55rem', color: 'var(--accent)' }}>DBSCAN CLUSTERING ANALYSIS</span>
+                <p className="text-secondary" style={{ fontSize: '0.85rem', marginTop: '4px' }}>
+                  {clusterGroups.length > 0 
+                    ? `Grouped ${tickets.length} issues into ${clusterGroups.length} high-density geographic clusters. Concentration monitored in ${topRisk?.ward || 'Lucknow'}.`
+                    : `Scanning coordinates... No high-density issue clusters detected yet.`}
+                </p>
+              </div>
+
+              {/* Insight 2: Recurrence Forecast */}
+              <div className="pixel-border" style={{ padding: '12px', background: 'var(--bg-secondary)', borderRadius: 0 }}>
+                <span className="font-pixel" style={{ fontSize: '0.55rem', color: 'var(--warning)' }}>RECURRENCE RISK FORECAST</span>
+                <p className="text-secondary" style={{ fontSize: '0.85rem', marginTop: '4px' }}>
+                  {topRisk 
+                    ? `AI predicts elevated recurrence risk (${Math.round((topRisk.probability || 0) * 100)}%) for ${topRisk.ward} ward based on historical patterns.`
+                    : `Weibull hazard model indicators stable across all Lucknow wards.`}
+                </p>
+              </div>
+
+              {/* Insight 3: SLA Status */}
+              <div className="pixel-border" style={{ padding: '12px', background: 'var(--bg-secondary)', borderRadius: 0 }}>
+                <span className="font-pixel" style={{ fontSize: '0.55rem', color: slaBreachCount > 0 ? 'var(--error)' : 'var(--success)' }}>SLA COMPLIANCE MONITOR</span>
+                <p className="text-secondary" style={{ fontSize: '0.85rem', marginTop: '4px' }}>
+                  {slaBreachCount > 0 
+                    ? `Alert: ${slaBreachCount} active issues have breached or are near their SLA resolution deadline.`
+                    : `All active issues are within expected SLA response window.`}
+                </p>
+              </div>
+
+              {/* Dynamic Consensus Logs from SSE events */}
+              {events.filter(e => ['ticket_created', 'ticket_updated', 'verification_recorded'].includes(e.type)).length > 0 && (
+                <div className="flex flex-col gap-2" style={{ marginTop: '4px' }}>
+                  <span className="font-pixel" style={{ fontSize: '0.55rem', color: 'var(--success)' }}>LIVE AI-CONSENSUS FEED</span>
+                  {events
+                    .filter(e => ['ticket_created', 'ticket_updated', 'verification_recorded'].includes(e.type))
+                    .slice(-5)
+                    .reverse()
+                    .map((ev, idx) => {
+                      let message = "";
+                      if (ev.type === 'ticket_created') {
+                        message = `[AI Auto-Triage] Parsed report "${ev.data.title || 'Untitled'}". Assigned category: ${ev.data.category || 'General'}.`;
+                      } else if (ev.type === 'ticket_updated') {
+                        message = `[Escalation] Priority level updated for issue #${(ev.data.ticket_id || '').substring(0, 6)} based on community signals.`;
+                      } else if (ev.type === 'verification_recorded') {
+                        message = `[Consensus] Consensus updated for issue #${(ev.data.ticket_id || '').substring(0, 6)}: ${ev.data.up} approvals / ${ev.data.down} flags.`;
+                      }
+                      return (
+                        <div key={idx} style={{ fontSize: '0.75rem', fontFamily: 'var(--font-mono)', color: 'var(--ink-secondary)', borderLeft: '2px solid var(--accent)', paddingLeft: '8px', marginBottom: '4px' }}>
+                          {message}
+                        </div>
+                      );
+                    })}
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </div>

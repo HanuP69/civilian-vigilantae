@@ -144,6 +144,13 @@ function ShopItemIcon({ id }) {
 
 function ProfilePage() {
   const { user, logout, refreshProfile, isAuthenticated, loading } = useAuth();
+  const getCommunityRank = (lvl) => {
+    if (lvl >= 15) return "City Champion 🏆";
+    if (lvl >= 10) return "Community Hero ⚡";
+    if (lvl >= 5) return "Guardian 🛡️";
+    if (lvl >= 3) return "Investigator 🔍";
+    return "Scout 🧭";
+  };
   const { toast } = useToast();
   const navigate = useNavigate();
   const [claiming, setClaiming] = useState(null);
@@ -250,7 +257,7 @@ function ProfilePage() {
     : 100;
 
   return (
-    <div style={{ maxWidth: 1100, margin: '0 auto', paddingBottom: 'var(--space-10)' }}>
+    <div style={{ maxWidth: 1200, margin: '0 auto', paddingBottom: 'var(--space-10)' }}>
       
       {/* 2-Column Responsive Dashboard Container */}
       <div 
@@ -389,20 +396,20 @@ function ProfilePage() {
                 style={{ 
                   background: 'var(--accent-muted)', 
                   color: 'var(--accent)', 
-                  fontSize: '0.5rem',
+                  fontSize: '10px',
                   padding: '3px 8px',
                   border: '1px solid var(--accent)',
                   fontWeight: 600,
                   display: 'inline-block'
                 }}
               >
-                {user.title || 'Novice Watchman'}
+                {user.title || getCommunityRank(level)}
               </span>
             </div>
 
             {/* XP progress bar */}
             <div style={{ marginTop: 'var(--space-5)' }} className="flex flex-col gap-1.5">
-              <div className="flex justify-between font-pixel text-muted" style={{ fontSize: '0.5rem' }}>
+              <div className="flex justify-between font-pixel text-muted" style={{ fontSize: '10px' }}>
                 <span>XP: {currentXP} / {xpEnd}</span>
                 <span>{Math.round(progressPercent)}%</span>
               </div>
@@ -425,28 +432,30 @@ function ProfilePage() {
 
           </div>
 
-          {/* Telemetry Stats Card */}
+          {/* Your Community Impact Card */}
           <div className="card rpg-panel" style={{ borderRadius: 0, padding: 'var(--space-4)' }}>
-            <h3 className="font-pixel" style={{ margin: '0 0 var(--space-4) 0', fontSize: '0.65rem', borderBottom: '2px solid var(--border)', paddingBottom: 'var(--space-2)' }}>📊 Telemetry</h3>
+            <h3 className="font-pixel" style={{ margin: '0 0 var(--space-4) 0', fontSize: '0.65rem', borderBottom: '2px solid var(--border)', paddingBottom: 'var(--space-2)' }}>🛡️ Your Community Impact</h3>
             
             <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
               <div className="flex justify-between items-center" style={{ borderBottom: '1px solid var(--border)', paddingBottom: 'var(--space-2)' }}>
-                <span className="font-pixel text-muted" style={{ fontSize: '0.45rem' }}>REPORTS</span>
-                <span className="font-pixel" style={{ fontSize: '0.65rem', color: 'var(--accent)' }}>{user.reports_submitted || 0}</span>
+                <span className="font-pixel text-muted" style={{ fontSize: '0.5rem' }}>COMMUNITY RANK</span>
+                <span className="font-pixel" style={{ fontSize: '0.6rem', color: 'var(--accent)' }}>{getCommunityRank(level)}</span>
               </div>
               <div className="flex justify-between items-center" style={{ borderBottom: '1px solid var(--border)', paddingBottom: 'var(--space-2)' }}>
-                <span className="font-pixel text-muted" style={{ fontSize: '0.45rem' }}>VOTES</span>
-                <span className="font-pixel" style={{ fontSize: '0.65rem', color: 'var(--accent)' }}>{user.verifications_made || 0}</span>
+                <span className="font-pixel text-muted" style={{ fontSize: '0.5rem' }}>ISSUES REPORTED</span>
+                <span className="font-pixel" style={{ fontSize: '0.65rem', color: 'var(--ink-primary)' }}>{user.reports_submitted || 0}</span>
               </div>
               <div className="flex justify-between items-center" style={{ borderBottom: '1px solid var(--border)', paddingBottom: 'var(--space-2)' }}>
-                <span className="font-pixel text-muted" style={{ fontSize: '0.45rem' }}>ACCURACY</span>
-                <span className="font-pixel" style={{ fontSize: '0.65rem', color: accuracyRate >= 70 ? 'var(--success)' : 'var(--warning)' }}>{accuracyRate}%</span>
+                <span className="font-pixel text-muted" style={{ fontSize: '0.5rem' }}>ISSUES VERIFIED</span>
+                <span className="font-pixel" style={{ fontSize: '0.65rem', color: 'var(--ink-primary)' }}>{user.verifications_made || 0}</span>
+              </div>
+              <div className="flex justify-between items-center" style={{ borderBottom: '1px solid var(--border)', paddingBottom: 'var(--space-2)' }}>
+                <span className="font-pixel text-muted" style={{ fontSize: '0.5rem' }}>NEIGHBORS HELPED</span>
+                <span className="font-pixel" style={{ fontSize: '0.65rem', color: 'var(--success)' }}>~{((user.reports_submitted || 0) * 12 + (user.verifications_made || 0) * 4) || 0}</span>
               </div>
               <div className="flex justify-between items-center">
-                <span className="font-pixel text-muted" style={{ fontSize: '0.45rem' }}>REGISTRY</span>
-                <span className="font-pixel" style={{ fontSize: '0.45rem', color: 'var(--ink-primary)' }}>
-                  {new Date(user.joined_at).toLocaleDateString(undefined, { year: '2-digit', month: 'short', day: '2-digit' })}
-                </span>
+                <span className="font-pixel text-muted" style={{ fontSize: '0.5rem' }}>ACCURACY RATING</span>
+                <span className="font-pixel" style={{ fontSize: '0.65rem', color: accuracyRate >= 70 ? 'var(--success)' : 'var(--warning)' }}>{accuracyRate}%</span>
               </div>
             </div>
           </div>
@@ -493,7 +502,7 @@ function ProfilePage() {
                 fontWeight: 800
               }}
             >
-              📜 QUEST JOURNAL
+              📜 MISSION JOURNAL
             </button>
             
             <button
@@ -511,17 +520,17 @@ function ProfilePage() {
                 fontWeight: 800
               }}
             >
-              🛒 MERCHANT SHOP
+              🛒 REWARD SHOP
             </button>
           </div>
 
           {/* TAB CONTENT PANEL */}
           <div className="card rpg-panel" style={{ borderRadius: 0, padding: 'var(--space-5)', minHeight: 400 }}>
             
-            {/* Quest Journal Tab Content */}
+            {/* Mission Journal Tab Content */}
             {activeTab === 'quests' && (
               <div className="flex flex-col gap-5">
-                {/* Quest Filters */}
+                {/* Mission Filters */}
                 <div style={{ display: 'flex', gap: '4px', borderBottom: '2px solid var(--border)', paddingBottom: 'var(--space-3)' }}>
                   {['active', 'completed'].map((f) => (
                     <button
@@ -530,7 +539,7 @@ function ProfilePage() {
                       className="font-pixel"
                       style={{
                         padding: '6px 10px',
-                        fontSize: '0.5rem',
+                        fontSize: '10px',
                         border: '1px solid var(--border)',
                         borderRadius: 0,
                         background: questFilter === f ? 'var(--accent)' : 'var(--bg-surface)',
@@ -572,7 +581,7 @@ function ProfilePage() {
                       >
                         <div className="flex justify-between items-start">
                           <div className="flex flex-col gap-1" style={{ flex: 1, paddingRight: '8px' }}>
-                            <span className="font-pixel" style={{ fontSize: '0.6rem', color: isClaimable ? 'var(--accent)' : 'var(--ink-primary)' }}>
+                            <span className="font-pixel" style={{ fontSize: '11px', color: isClaimable ? 'var(--accent)' : 'var(--ink-primary)' }}>
                               {quest.name}
                             </span>
                             <span className="text-xs text-muted">
@@ -580,7 +589,7 @@ function ProfilePage() {
                             </span>
                           </div>
 
-                          <div className="flex flex-col items-end font-pixel text-right" style={{ color: 'var(--accent)', fontSize: '0.45rem', gap: '2px' }}>
+                          <div className="flex flex-col items-end font-pixel text-right" style={{ color: 'var(--accent)', fontSize: '9px', gap: '2px' }}>
                             <span>+{quest.xpReward} XP</span>
                             <span>+{quest.goldReward} GLD</span>
                           </div>
@@ -630,7 +639,7 @@ function ProfilePage() {
                         )}
 
                         {quest.claimed && (
-                          <span className="font-pixel text-success" style={{ fontSize: '0.5rem', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                           <span className="font-pixel text-success" style={{ fontSize: '10px', display: 'flex', alignItems: 'center', gap: '4px' }}>
                             ✓ MISSION REWARD COLLECTED
                           </span>
                         )}
@@ -639,8 +648,8 @@ function ProfilePage() {
                   })}
 
                   {(user.quests || []).length === 0 && (
-                    <div className="text-center text-muted font-pixel" style={{ padding: 'var(--space-6)', fontSize: '0.55rem' }}>
-                      NO ACTIVE QUESTS DETECTED
+                    <div className="text-center text-muted font-pixel" style={{ padding: 'var(--space-6)', fontSize: '10px' }}>
+                      NO ACTIVE MISSION LOGS FOUND
                     </div>
                   )}
                 </div>
@@ -660,7 +669,7 @@ function ProfilePage() {
                       className="font-pixel"
                       style={{
                         padding: '6px 10px',
-                        fontSize: '0.5rem',
+                        fontSize: '10px',
                         border: '1px solid var(--border)',
                         borderRadius: 0,
                         background: shopCategory === cat ? 'var(--accent)' : 'var(--bg-surface)',
@@ -729,7 +738,7 @@ function ProfilePage() {
                                 className="font-pixel"
                                 style={{
                                   padding: '8px 12px',
-                                  fontSize: '0.5rem',
+                                  fontSize: '10px',
                                   border: '2px solid #000',
                                   boxShadow: canAfford ? '2px 2px 0 rgba(0,0,0,0.5)' : 'none',
                                   background: canAfford ? 'var(--accent)' : 'oklch(0.22 0.01 260)',
@@ -826,7 +835,7 @@ function ProfilePage() {
                   >
                     ◀
                   </button>
-                  <span className="font-pixel" style={{ fontSize: '0.5rem', minWidth: '42px', textAlign: 'center', display: 'inline-block' }}>
+                  <span className="font-pixel" style={{ fontSize: '10px', minWidth: '42px', textAlign: 'center', display: 'inline-block' }}>
                     {customSkin + 1} / 5
                   </span>
                   <button 
@@ -843,7 +852,7 @@ function ProfilePage() {
 
               {/* Hair Style Adjuster */}
               <div className="flex justify-between items-center" style={{ borderBottom: '1px solid var(--border)', paddingBottom: '6px' }}>
-                <span className="font-pixel text-muted" style={{ fontSize: '0.45rem' }}>HAIR STYLE</span>
+                <span className="font-pixel text-muted" style={{ fontSize: '9px' }}>HAIR STYLE</span>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                   <button 
                     onClick={() => setCustomHair(prev => (prev - 1 + 5) % 5)}
@@ -854,7 +863,7 @@ function ProfilePage() {
                   >
                     ◀
                   </button>
-                  <span className="font-pixel" style={{ fontSize: '0.5rem', minWidth: '42px', textAlign: 'center', display: 'inline-block' }}>
+                  <span className="font-pixel" style={{ fontSize: '10px', minWidth: '42px', textAlign: 'center', display: 'inline-block' }}>
                     {customHair + 1} / 5
                   </span>
                   <button 
@@ -871,7 +880,7 @@ function ProfilePage() {
 
               {/* Hair Color Adjuster */}
               <div className="flex justify-between items-center" style={{ borderBottom: '1px solid var(--border)', paddingBottom: '6px' }}>
-                <span className="font-pixel text-muted" style={{ fontSize: '0.45rem' }}>HAIR COLOR</span>
+                <span className="font-pixel text-muted" style={{ fontSize: '9px' }}>HAIR COLOR</span>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                   <button 
                     onClick={() => setCustomHcolor(prev => (prev - 1 + 5) % 5)}
@@ -882,7 +891,7 @@ function ProfilePage() {
                   >
                     ◀
                   </button>
-                  <span className="font-pixel" style={{ fontSize: '0.5rem', minWidth: '42px', textAlign: 'center', display: 'inline-block' }}>
+                  <span className="font-pixel" style={{ fontSize: '10px', minWidth: '42px', textAlign: 'center', display: 'inline-block' }}>
                     {customHcolor + 1} / 5
                   </span>
                   <button 
@@ -899,7 +908,7 @@ function ProfilePage() {
 
               {/* Eyes Adjuster */}
               <div className="flex justify-between items-center" style={{ borderBottom: '1px solid var(--border)', paddingBottom: '6px' }}>
-                <span className="font-pixel text-muted" style={{ fontSize: '0.45rem' }}>EYES TYPE</span>
+                <span className="font-pixel text-muted" style={{ fontSize: '9px' }}>EYES TYPE</span>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                   <button 
                     onClick={() => setCustomEyes(prev => (prev - 1 + 5) % 5)}
@@ -910,7 +919,7 @@ function ProfilePage() {
                   >
                     ◀
                   </button>
-                  <span className="font-pixel" style={{ fontSize: '0.5rem', minWidth: '42px', textAlign: 'center', display: 'inline-block' }}>
+                  <span className="font-pixel" style={{ fontSize: '10px', minWidth: '42px', textAlign: 'center', display: 'inline-block' }}>
                     {customEyes + 1} / 5
                   </span>
                   <button 
@@ -927,7 +936,7 @@ function ProfilePage() {
 
               {/* Beard Adjuster */}
               <div className="flex justify-between items-center" style={{ borderBottom: '1px solid var(--border)', paddingBottom: '6px' }}>
-                <span className="font-pixel text-muted" style={{ fontSize: '0.45rem' }}>FACIAL HAIR</span>
+                <span className="font-pixel text-muted" style={{ fontSize: '9px' }}>FACIAL HAIR</span>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                   <button 
                     onClick={() => setCustomFhair(prev => (prev - 1 + 5) % 5)}
@@ -938,7 +947,7 @@ function ProfilePage() {
                   >
                     ◀
                   </button>
-                  <span className="font-pixel" style={{ fontSize: '0.5rem', minWidth: '42px', textAlign: 'center', display: 'inline-block' }}>
+                  <span className="font-pixel" style={{ fontSize: '10px', minWidth: '42px', textAlign: 'center', display: 'inline-block' }}>
                     {customFhair + 1} / 5
                   </span>
                   <button 
@@ -955,7 +964,7 @@ function ProfilePage() {
 
               {/* Tattoo Adjuster */}
               <div className="flex justify-between items-center" style={{ borderBottom: '1px solid var(--border)', paddingBottom: '6px' }}>
-                <span className="font-pixel text-muted" style={{ fontSize: '0.45rem' }}>TATTOOS</span>
+                <span className="font-pixel text-muted" style={{ fontSize: '9px' }}>TATTOOS</span>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                   <button 
                     onClick={() => setCustomTattoo(prev => (prev - 1 + 5) % 5)}
@@ -966,7 +975,7 @@ function ProfilePage() {
                   >
                     ◀
                   </button>
-                  <span className="font-pixel" style={{ fontSize: '0.5rem', minWidth: '42px', textAlign: 'center', display: 'inline-block' }}>
+                  <span className="font-pixel" style={{ fontSize: '10px', minWidth: '42px', textAlign: 'center', display: 'inline-block' }}>
                     {customTattoo + 1} / 5
                   </span>
                   <button 
