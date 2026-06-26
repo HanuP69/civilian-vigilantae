@@ -117,26 +117,50 @@ function Navbar({ isConnected }) {
           </span>
         </div>
 
-        {/* Floating Backpack Trigger Button (Top-Right) */}
-        <button
-          onClick={toggleOpen}
-          className="rpg-panel flex items-center justify-center animate-fade-up"
-          style={{
-            width: '46px',
-            height: '46px',
-            borderRadius: 0,
-            cursor: 'pointer',
-            boxShadow: '4px 4px 0 rgba(0,0,0,0.6)',
-            fontSize: '1.25rem',
-            outline: 'none',
-            border: 'none',
-            padding: 0,
-            pointerEvents: 'auto'
-          }}
-          aria-label={isOpen ? "Close Navigation" : "Open Navigation Menu"}
-        >
-          {isOpen ? '✕' : '🎒'}
-        </button>
+        {/* Floating Backpack Trigger Button (Top-Right) or Sign In button */}
+        {isAuthenticated ? (
+          <button
+            onClick={toggleOpen}
+            className="rpg-panel flex items-center justify-center animate-fade-up"
+            style={{
+              width: '46px',
+              height: '46px',
+              borderRadius: 0,
+              cursor: 'pointer',
+              boxShadow: '4px 4px 0 rgba(0,0,0,0.6)',
+              fontSize: '1.25rem',
+              outline: 'none',
+              border: 'none',
+              padding: 0,
+              pointerEvents: 'auto'
+            }}
+            aria-label={isOpen ? "Close Navigation" : "Open Navigation Menu"}
+          >
+            {isOpen ? '✕' : '🎒'}
+          </button>
+        ) : (
+          <Link
+            to="/login"
+            className="rpg-panel flex items-center justify-center animate-fade-up font-pixel"
+            style={{
+              padding: '10px 16px',
+              borderRadius: 0,
+              cursor: 'pointer',
+              boxShadow: '4px 4px 0 rgba(0,0,0,0.6)',
+              fontSize: '0.625rem',
+              outline: 'none',
+              border: 'none',
+              color: 'var(--accent)',
+              textDecoration: 'none',
+              pointerEvents: 'auto',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px'
+            }}
+          >
+            🔑 SIGN IN
+          </Link>
+        )}
       </div>
 
       {/* Radial Wheel Overlay Modal */}
