@@ -1,4 +1,4 @@
-import { db } from '../config/firebase.js';
+import { db, setDb, createMockFirestore } from '../config/firebase.js';
 import { computeRecurrenceRisk } from '../math/recurrence.js';
 
 export async function writeSeedDoc(collectionName, id, data) {
@@ -146,12 +146,31 @@ export async function loadSeedData() {
     const seedPath = join(__dirname, '..', 'seed', 'seedOutput.json');
     const data = JSON.parse(readFileSync(seedPath, 'utf-8'));
 
-    for (const ticket of data.tickets) await writeSeedDoc('tickets', ticket.id, ticket);
-    for (const user of data.users) await writeSeedDoc('users', user.uid, user);
-    for (const dept of data.departments) await writeSeedDoc('departments', dept.id, dept);
+    try {
+      for (const ticket of data.tickets) await writeSeedDoc('tickets', ticket.id, ticket);
+      for (const user of data.users) await writeSeedDoc('users', user.uid, user);
+      for (const dept of data.departments) await writeSeedDoc('departments', dept.id, dept);
 
-    console.log(`[Seed] Loaded ${data.tickets.length} tickets, ${data.users.length} users, ${data.departments.length} departments`);
-    return data;
+      console.log(`[Seed] Loaded ${data.tickets.length} tickets, ${data.users.length} users, ${data.departments.length} departments`);
+      return data;
+    } catch (dbErr) {
+      console.warn(`[Seed] Firestore write failed during boot: ${dbErr.message}`);
+      console.warn('[Firebase] 🔴 Falling back to clean IN-MEMORY Mock Firestore to guarantee continuous application startup!');
+      const mockDb = createMockFirestore();
+      setDb(mockDb);
+
+      for (const ticket of data.tickets) {
+        await mockDb.collection('tickets').doc(ticket.id).set(ticket);
+      }
+      for (const user of data.users) {
+        await mockDb.collection('users').doc(user.uid).set(user);
+      }
+      for (const dept of data.departments) {
+        await mockDb.collection('departments').doc(dept.id).set(dept);
+      }
+      console.log(`[Seed] Successfully seeded in-memory database with ${data.tickets.length} tickets, ${data.users.length} users, ${data.departments.length} departments`);
+      return data;
+    }
   } catch (err) {
     console.warn('[Seed] Could not load seed data:', err.message);
     return null;
