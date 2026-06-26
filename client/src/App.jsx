@@ -119,25 +119,80 @@ function Navbar({ isConnected }) {
 
         {/* Floating Backpack Trigger Button (Top-Right) or Sign In button */}
         {isAuthenticated ? (
-          <button
+          <motion.div
             onClick={toggleOpen}
-            className="rpg-panel flex items-center justify-center animate-fade-up"
+            whileHover={{ scale: 1.1 }}
+            whileTap={{ scale: 0.9 }}
+            animate={!isOpen ? { y: [0, -6, 0] } : {}}
+            transition={{ repeat: Infinity, duration: 2.5, ease: "easeInOut" }}
             style={{
-              width: '46px',
-              height: '46px',
-              borderRadius: 0,
               cursor: 'pointer',
-              boxShadow: '4px 4px 0 rgba(0,0,0,0.6)',
-              fontSize: '1.25rem',
-              outline: 'none',
-              border: 'none',
-              padding: 0,
-              pointerEvents: 'auto'
+              pointerEvents: 'auto',
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              gap: '4px',
+              position: 'relative'
             }}
-            aria-label={isOpen ? "Close Navigation" : "Open Navigation Menu"}
+            aria-label={isOpen ? "Close Navigation" : "Open Inventory"}
           >
-            {isOpen ? '✕' : '🎒'}
-          </button>
+            <div style={{
+              position: 'relative',
+              width: '56px',
+              height: '56px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              background: isOpen ? 'var(--bg-surface)' : 'radial-gradient(circle, rgba(255,215,0,0.25) 0%, rgba(0,0,0,0) 70%)',
+              borderRadius: isOpen ? '0' : '50%',
+              border: isOpen ? '2px solid var(--border)' : 'none',
+              boxShadow: isOpen ? '4px 4px 0 rgba(0,0,0,0.6)' : 'none'
+            }}>
+              <span style={{ 
+                fontSize: isOpen ? '1.5rem' : '2.2rem', 
+                filter: isOpen ? 'none' : 'drop-shadow(0 0 10px rgba(255,215,0,0.9))',
+                transform: isOpen ? 'none' : 'rotate(-10deg)',
+                color: 'var(--ink-primary)'
+              }}>
+                {isOpen ? '✕' : '🎒'}
+              </span>
+              
+              {/* Notification Badge to intrigue user */}
+              {!isOpen && (
+                <motion.div
+                  initial={{ scale: 0.8 }}
+                  animate={{ scale: [0.8, 1.2, 0.8] }}
+                  transition={{ repeat: Infinity, duration: 1.5 }}
+                  className="font-pixel"
+                  style={{
+                    position: 'absolute',
+                    top: '2px',
+                    right: '0px',
+                    background: 'var(--error)',
+                    color: '#fff',
+                    fontSize: '0.45rem',
+                    padding: '3px 4px',
+                    border: '1px solid #fff',
+                    boxShadow: '0 0 8px var(--error)',
+                    zIndex: 10
+                  }}
+                >
+                  !
+                </motion.div>
+              )}
+            </div>
+            
+            {!isOpen && (
+              <span className="font-pixel" style={{ 
+                fontSize: '0.45rem', 
+                color: 'var(--accent)', 
+                textShadow: '1px 1px 0 #000, -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000',
+                letterSpacing: '1px'
+              }}>
+                INVENTORY
+              </span>
+            )}
+          </motion.div>
         ) : (
           <Link
             to="/login"
