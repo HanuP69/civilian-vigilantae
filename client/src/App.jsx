@@ -270,9 +270,20 @@ function AppContent() {
 
   return (
     <div className="app-layout">
+      {/* RPG Pixel Backdrop */}
+      <div className="rpg-backdrop">
+        <div className="rpg-sky">
+          <div className="pixel-cloud cloud-1"></div>
+          <div className="pixel-cloud cloud-2"></div>
+          <div className="pixel-cloud cloud-3"></div>
+        </div>
+        <div className="rpg-horizon"></div>
+        <div className="rpg-ground"></div>
+      </div>
+
       <Navbar isConnected={isConnected} />
 
-      <main className="app-main animate-fade-up stagger-1" style={{ paddingTop: '80px' }}>
+      <main className="app-main animate-fade-up stagger-1" style={{ paddingTop: '80px', position: 'relative', zIndex: 1 }}>
         <Routes>
           <Route path="/" element={<HomePage />} />
           <Route path="/report" element={<ReportPage />} />
