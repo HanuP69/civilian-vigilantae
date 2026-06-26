@@ -14,15 +14,18 @@ import userRoutes         from './routes/userRoutes.js';
 import sseRoutes          from './routes/sseRoutes.js';
 import missionRoutes      from './routes/missionRoutes.js';
 import copilotRoutes      from './routes/copilotRoutes.js';
+import { seedAssets, updateAllAssetsHealth } from './services/assetService.js';
 
 const app = express();
 
-loadSeedData().then((result) => {
+loadSeedData().then(async (result) => {
   if (result) {
     console.log('[Boot] Seed data loaded');
   } else {
     console.log('[Boot] Seed data unavailable; continuing with runtime state');
   }
+  await seedAssets();
+  await updateAllAssetsHealth();
   startScheduler();
 }).catch(err => console.warn('[Boot] Seed load skipped:', err.message));
 

@@ -160,6 +160,10 @@ export const toolHandlers = {
 
   async create_ticket({ title, description, category, severity, lat, lng, address, ward, department, status }, ctx) {
     const id = `ticket-${uuidv4().substring(0, 8)}`;
+    const resolvedWard = ward || resolveWard(lat, lng);
+    const { resolveNearestAsset, updateAssetHealth } = await import('../services/assetService.js');
+    const asset = await resolveNearestAsset(resolvedWard, category || 'other');
+
     const slaHours = DEFAULT_PARAMS[category]?.lambda || 168;
     const initialPriority = computePriority({
       severity: severity || 'medium',
@@ -173,8 +177,10 @@ export const toolHandlers = {
     const ticket = {
       id, title, description, category, severity, status: status || 'reported',
       priority_score: initialPriority, lat, lng,
-      address: address || `${ward || resolveWard(lat, lng)}, Lucknow`,
-      ward: ward || resolveWard(lat, lng),
+      address: address || `${resolvedWard}, Lucknow`,
+      ward: resolvedWard,
+      asset_id: asset.id,
+      asset_name: asset.name,
       department: department || DEPARTMENTS[category] || 'General Maintenance',
       media_urls: ctx?.mediaUrls || [], media_type: ctx?.mediaType || 'image',
       ai_classification: ctx?.classificationResult || { category, severity, confidence: 0.8, source: 'gemini' },
@@ -204,6 +210,7 @@ export const toolHandlers = {
       created_at: new Date().toISOString(), updated_at: new Date().toISOString(), resolved_at: null,
     };
     await db.collection('tickets').doc(id).set(ticket);
+    await updateAssetHealth(asset.id);
     broadcast('ticket_created', ticket);
     return { ticket_id: id, status: 'created' };
   },
@@ -324,6 +331,11 @@ export const toolHandlers = {
     };
 
     await db.collection('tickets').doc(ticket_id).update(update);
+
+    if (t.asset_id) {
+      const { updateAssetHealth } = await import('../services/assetService.js');
+      await updateAssetHealth(t.asset_id);
+    }
 
     // Update voter reputations and award XP if status transitioned
     if (finalStatus !== t.status) {

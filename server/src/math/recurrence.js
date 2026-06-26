@@ -1,81 +1,26 @@
 /**
  * @module math/recurrence
- * @description Recurrence-risk forecasting using Weibull survival analysis.
- *
- * Groups historically resolved tickets by (ward, category), computes
- * inter-arrival intervals, fits Weibull parameters via MLE, and returns
- * a probability-ranked list of recurrence forecasts with recommended
- * actions.
+ * @description Recurrence-risk forecasting using Weibull survival analysis and causal factor modeling.
  */
 
 import { weibullCDF, weibullMLE, DEFAULT_PARAMS } from './weibull.js';
 
-/**
- * Minimum number of inter-arrival intervals required to run MLE.
- * Below this threshold we fall back to category defaults.
- */
 const MIN_DATA_POINTS = 3;
 
 /**
- * @typedef {Object} ResolvedTicket
- * @property {Date|string} resolved_at — when the ticket was resolved
- * @property {string}      category    — issue category (e.g. 'pothole')
- * @property {string}      ward        — ward / zone identifier
- */
-
-/**
- * @typedef {Object} RecurrenceRisk
- * @property {string} ward              — ward identifier
- * @property {string} category          — issue category
- * @property {number} probability       — P(recurrence within forecast window) in [0, 1]
- * @property {number} lambda            — Weibull scale parameter used (hours)
- * @property {number} k                 — Weibull shape parameter used
- * @property {Date}   lastResolved      — most recent resolution timestamp
- * @property {string} recommendedAction — human-readable action label
- */
-
-/**
- * Derive a human-readable action from the recurrence probability.
- *
- * @param {number} probability — recurrence probability in [0, 1]
- * @returns {string} recommended action label
- */
-function actionForProbability(probability) {
-  if (probability > 0.7) return 'Urgent preventive inspection recommended';
-  if (probability > 0.5) return 'Schedule routine inspection';
-  if (probability > 0.3) return 'Monitor';
-  return 'Low risk';
-}
-
-/**
  * Compute recurrence-risk forecasts for all (ward, category) groups in the
- * set of resolved tickets.
+ * set of resolved tickets, incorporating causal factors (weather, repair quality, growth rate).
  *
- * **Methodology**
- * 1. Group tickets by `(ward, category)`.
- * 2. Sort each group chronologically and compute inter-arrival intervals.
- * 3. If ≥ {@link MIN_DATA_POINTS} intervals exist, fit Weibull parameters
- *    via MLE; otherwise fall back to {@link DEFAULT_PARAMS}.
- * 4. Compute `P(recurrence) = weibullCDF(hoursSinceLastResolved + forecastDays·24, λ, k)`.
- * 5. Assign a recommended action based on probability thresholds.
- * 6. Return results sorted by probability descending.
- *
- * @param {ResolvedTicket[]} resolvedTickets — historical resolved tickets
+ * @param {Array} resolvedTickets — historical resolved tickets
  * @param {number}           [forecastDays=14] — forecast horizon in days
- * @returns {RecurrenceRisk[]} probability-ranked recurrence forecasts
- *
- * @example
- * const risks = computeRecurrenceRisk(tickets, 14);
- * risks[0].probability; // 0.87
- * risks[0].recommendedAction; // 'Urgent preventive inspection recommended'
+ * @returns {Array} probability-ranked recurrence forecasts
  */
 export function computeRecurrenceRisk(resolvedTickets, forecastDays = 14) {
   if (!Array.isArray(resolvedTickets) || resolvedTickets.length === 0) {
     return [];
   }
 
-  // ── 1. Group by (ward, category) ────────────────────────────────
-  /** @type {Map<string, { ward: string, category: string, dates: Date[] }>} */
+  // 1. Group by (ward, category)
   const groups = new Map();
 
   for (const ticket of resolvedTickets) {
@@ -84,39 +29,37 @@ export function computeRecurrenceRisk(resolvedTickets, forecastDays = 14) {
         ? ticket.resolved_at
         : (ticket.resolved_at?.toDate?.() ?? new Date(ticket.resolved_at));
 
-    // Skip tickets with invalid dates
     if (Number.isNaN(resolvedAt.getTime())) continue;
 
     const key = `${ticket.ward}::${ticket.category}`;
     if (!groups.has(key)) {
-      groups.set(key, { ward: ticket.ward, category: ticket.category, dates: [] });
+      groups.set(key, { ward: ticket.ward, category: ticket.category, tickets: [] });
     }
-    groups.get(key).dates.push(resolvedAt);
+    groups.get(key).tickets.push({
+      resolvedAt,
+      verification_score: ticket.verification_score
+    });
   }
 
-  /** @type {RecurrenceRisk[]} */
   const results = [];
-
   const now = new Date();
 
-  for (const { ward, category, dates } of groups.values()) {
-    // Sort ascending
-    dates.sort((a, b) => a.getTime() - b.getTime());
+  for (const { ward, category, tickets: groupTickets } of groups.values()) {
+    groupTickets.sort((a, b) => a.resolvedAt.getTime() - b.resolvedAt.getTime());
 
-    const lastResolved = dates[dates.length - 1];
+    const lastResolved = groupTickets[groupTickets.length - 1].resolvedAt;
 
-    // ── 2. Compute inter-arrival intervals (hours) ───────────────
-    /** @type {number[]} */
+    // 2. Compute inter-arrival intervals
     const intervals = [];
-    for (let i = 1; i < dates.length; i++) {
-      const deltaMs = dates[i].getTime() - dates[i - 1].getTime();
+    for (let i = 1; i < groupTickets.length; i++) {
+      const deltaMs = groupTickets[i].resolvedAt.getTime() - groupTickets[i - 1].resolvedAt.getTime();
       const deltaH = deltaMs / (1000 * 60 * 60);
       if (deltaH > 0) {
         intervals.push(deltaH);
       }
     }
 
-    // ── 3. Fit or fall back ──────────────────────────────────────
+    // 3. Fit or fall back
     let lambda;
     let k;
 
@@ -126,7 +69,6 @@ export function computeRecurrenceRisk(resolvedTickets, forecastDays = 14) {
         lambda = fit.lambda;
         k = fit.k;
       } catch {
-        // MLE failed — use defaults
         const def = DEFAULT_PARAMS[category] ?? DEFAULT_PARAMS.other;
         lambda = def.lambda;
         k = def.k;
@@ -137,8 +79,7 @@ export function computeRecurrenceRisk(resolvedTickets, forecastDays = 14) {
       k = def.k;
     }
 
-    // ── 4. Forecast probability ──────────────────────────────────
-    // t = hours since last resolution + forecast window
+    // 4. Base Forecast probability
     const hoursSinceLast = Math.max(
       (now.getTime() - lastResolved.getTime()) / (1000 * 60 * 60),
       0,
@@ -146,15 +87,51 @@ export function computeRecurrenceRisk(resolvedTickets, forecastDays = 14) {
     const forecastHours = forecastDays * 24;
     const F_t0 = weibullCDF(hoursSinceLast, lambda, k);
     const F_t1 = weibullCDF(hoursSinceLast + forecastHours, lambda, k);
-    const probability = F_t0 >= 1 ? 1 : (F_t1 - F_t0) / (1 - F_t0);
+    const baseProbability = F_t0 >= 1 ? 1 : (F_t1 - F_t0) / (1 - F_t0);
 
-    // ── 5. Action ────────────────────────────────────────────────
-    const recommendedAction = actionForProbability(probability);
+    // 5. Causal Factors Adjustment
+    let multiplier = 1.0;
+
+    // 5a. Weather / Seasonality (Lucknow, India climate)
+    const currentMonth = now.getMonth(); // 0-11
+    if (currentMonth >= 6 && currentMonth <= 8) { // Monsoon (Jul-Sep)
+      if (category === 'drainage') multiplier += 0.35;
+      if (category === 'pothole' || category === 'road_damage') multiplier += 0.30;
+    } else if (currentMonth >= 3 && currentMonth <= 5) { // Summer (Apr-Jun)
+      if (category === 'streetlight') multiplier += 0.20;
+      if (category === 'waste') multiplier += 0.15;
+    }
+
+    // 5b. Repair Quality (based on verification score of resolved tickets in the group)
+    const validScores = groupTickets.map(gt => gt.verification_score).filter(s => s != null);
+    if (validScores.length > 0) {
+      const avgVerification = validScores.reduce((sum, s) => sum + s, 0) / validScores.length;
+      // High consensus resolution indicates high repair quality, reducing recurrence risk
+      const qualityFactor = 1 - (avgVerification - 50) / 100;
+      multiplier *= Math.max(0.5, Math.min(1.5, qualityFactor));
+    }
+
+    // 5c. Swarm Growth Rate (Recent inter-arrival velocity)
+    if (intervals.length > 0) {
+      const recentIntervals = intervals.slice(-3);
+      const avgRecentInterval = recentIntervals.reduce((sum, val) => sum + val, 0) / recentIntervals.length;
+      if (avgRecentInterval < 24) {
+        multiplier *= 1.25; // Increase risk by 25% for fast swarms
+      }
+    }
+
+    const finalProbability = Math.max(0.01, Math.min(0.99, baseProbability * multiplier));
+
+    // recommended action
+    let recommendedAction = 'Low risk';
+    if (finalProbability > 0.7) recommendedAction = 'Urgent preventive inspection recommended';
+    else if (finalProbability > 0.5) recommendedAction = 'Schedule routine inspection';
+    else if (finalProbability > 0.3) recommendedAction = 'Monitor';
 
     results.push({
       ward,
       category,
-      probability: Math.round(probability * 1e6) / 1e6, // 6 decimal places
+      probability: Math.round(finalProbability * 1e6) / 1e6,
       lambda: Math.round(lambda * 100) / 100,
       k: Math.round(k * 1000) / 1000,
       lastResolved,
@@ -162,8 +139,6 @@ export function computeRecurrenceRisk(resolvedTickets, forecastDays = 14) {
     });
   }
 
-  // ── 6. Sort descending by probability ──────────────────────────
   results.sort((a, b) => b.probability - a.probability);
-
   return results;
 }

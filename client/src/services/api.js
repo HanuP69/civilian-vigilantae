@@ -135,3 +135,8 @@ export async function sendCopilotMessage(message, chatHistory = []) {
   });
   return handleResponse(res);
 }
+
+export async function fetchAssets() {
+  const res = await fetch(`${API}/dashboard/assets`);
+  return handleResponse(res);
+}

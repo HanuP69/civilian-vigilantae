@@ -2,7 +2,7 @@ import { useState, useEffect, useMemo } from 'react';
 import { Bar, Doughnut, Line } from 'react-chartjs-2';
 import '../charts/register.js';
 import { TICK_COLOR, statusPalette, resolvePalette, resolveVar, refreshChartTheme, baseScales, baseChartProps } from '../charts/theme.js';
-import { fetchDashboardStats, fetchRecurrenceRisk, fetchTickets } from '../services/api';
+import { fetchDashboardStats, fetchRecurrenceRisk, fetchTickets, fetchAssets } from '../services/api';
 import { CATEGORY_LABELS, CATEGORY_COLORS } from '../utils/constants';
 import { formatHours, capitalize } from '../utils/formatters';
 import { useToast } from '../hooks/useToast.jsx';
@@ -367,6 +367,7 @@ function DashboardPage() {
   const [stats, setStats] = useState(null);
   const [recurrence, setRecurrence] = useState([]);
   const [tickets, setTickets] = useState([]);
+  const [assets, setAssets] = useState([]);
   const [budget, setBudget] = useState(80000);
   const [loading, setLoading] = useState(true);
   const [expandedRisk, setExpandedRisk] = useState(null);
@@ -386,12 +387,14 @@ function DashboardPage() {
       fetchDashboardStats().catch(() => null),
       fetchRecurrenceRisk().catch(() => null),
       fetchTickets().catch(() => ({ tickets: [] })),
-    ]).then(([s, r, t]) => {
+      fetchAssets().catch(() => []),
+    ]).then(([s, r, t, a]) => {
       if (s === null) toast('Failed to load dashboard stats', 'error');
       if (r === null) toast('Failed to load recurrence risk', 'error');
       setStats(s);
       setRecurrence(Array.isArray(r) ? r : r?.risks || []);
       setTickets(Array.isArray(t) ? t : t.tickets || []);
+      setAssets(Array.isArray(a) ? a : []);
       setLoading(false);
     });
   }, [toast]);
@@ -1142,6 +1145,108 @@ function DashboardPage() {
               ))}
             </div>
           )}
+        </div>
+      </motion.div>
+
+      {/* Infrastructure Assets Health Ledger */}
+      <motion.div variants={itemAnim} className="card rpg-panel" style={{ marginBottom: 'var(--space-6)', position: 'relative', borderRadius: 0 }}>
+        <div className="flex items-center justify-between" style={{ marginBottom: 'var(--space-4)', flexWrap: 'wrap', gap: 'var(--space-2)' }}>
+          <div className="flex items-center gap-3">
+            <h3 className="font-pixel" style={{ fontSize: '0.65rem', margin: 0, color: 'var(--accent)' }}>[ 🕸️ INFRASTRUCTURE ASSETS LEDGER ]</h3>
+            <button className="btn-info-icon" onClick={() => toggleInfo('assets_info')} aria-label="Formula details for Assets Health">ⓘ</button>
+          </div>
+          <span className="font-pixel text-muted" style={{ fontSize: '0.45rem' }}>DYNAMIC INFRASTRUCTURE HEALTH STATUS</span>
+        </div>
+
+        {activeInfo.assets_info && (
+          <div 
+            className="metric-explanation-panel" 
+            style={{ 
+              position: 'absolute', 
+              top: 0, 
+              left: 0, 
+              width: '100%', 
+              height: '100%', 
+              backgroundColor: 'rgba(21, 22, 29, 0.96)', 
+              backdropFilter: 'blur(4px)',
+              borderRadius: 0,
+              zIndex: 30,
+              display: 'flex',
+              flexDirection: 'column',
+              justifyContent: 'space-between',
+              margin: 0,
+              padding: 'var(--space-5)',
+              boxSizing: 'border-box'
+            }}
+          >
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-2)' }}>
+              <div className="flex justify-between items-center">
+                <span style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--accent)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                  Infrastructure Health Index
+                </span>
+                <button className="btn-close-inline" onClick={() => toggleInfo('assets_info')}>✕</button>
+              </div>
+              <p className="text-secondary text-xs rpg-scrollbar" style={{ lineHeight: 1.4, margin: 0, overflowY: 'auto', maxHeight: '140px' }}>
+                Asset Health decays dynamically when open tickets are linked to it: Critical (-30), High (-20), Medium (-10), Low (-5). Resolving tickets restores asset health.
+              </p>
+            </div>
+            <div className="formula-box" style={{ marginTop: 'auto' }}>
+              <Latex math="H_{asset} = \max\left(0, 100 - \sum_{t \in T_{open}} \text{SeverityWeight}_t\right)" block />
+            </div>
+          </div>
+        )}
+
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 'var(--space-5)' }}>
+          {/* Column 1: Top Failing Assets (Health < 100) */}
+          <div style={{ padding: 'var(--space-3)', background: 'var(--bg-primary)', border: '1px solid var(--border-subtle)' }}>
+            <h4 className="font-pixel" style={{ fontSize: '0.55rem', color: 'var(--error)', marginBottom: 'var(--space-3)' }}>
+              ⚠️ CRITICAL INFRASTRUCTURE STATUS
+            </h4>
+            {assets.filter(a => a.health < 100).length === 0 ? (
+              <p className="text-secondary text-xs" style={{ fontStyle: 'italic' }}>
+                All city assets check out at 100% health. Good work, Marshall.
+              </p>
+            ) : (
+              <div className="rpg-scrollbar" style={{ maxHeight: '280px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                {assets.filter(a => a.health < 100).sort((a,b) => a.health - b.health).map(asset => {
+                  const color = asset.health < 60 ? 'var(--error)' : 'var(--warning)';
+                  return (
+                    <div key={asset.id} style={{ borderBottom: '1px dashed var(--border-subtle)', paddingBottom: '6px', fontSize: '0.72rem' }}>
+                      <div className="flex justify-between items-center" style={{ marginBottom: '4px' }}>
+                        <span style={{ color: 'var(--ink-primary)', fontWeight: 600 }}>{asset.name}</span>
+                        <span style={{ color, fontWeight: 'bold' }}>{asset.health}%</span>
+                      </div>
+                      <div className="flex justify-between text-xs text-muted">
+                        <span>Ward: {asset.ward.toUpperCase()} · Type: {asset.type.toUpperCase()}</span>
+                        <span>{asset.open_issues_count || 0} active faults</span>
+                      </div>
+                      <div className="priority-bar" style={{ height: '4px', marginTop: '4px', borderRadius: 0 }}>
+                        <div className="priority-bar-fill" style={{ width: `${asset.health}%`, background: color, borderRadius: 0 }} />
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+
+          {/* Column 2: Healthy Infrastructure Registry */}
+          <div style={{ padding: 'var(--space-3)', background: 'var(--bg-primary)', border: '1px solid var(--border-subtle)' }}>
+            <h4 className="font-pixel" style={{ fontSize: '0.55rem', color: 'var(--success)', marginBottom: 'var(--space-3)' }}>
+              ✓ STABLE INFRASTRUCTURE REGISTRY
+            </h4>
+            <div className="rpg-scrollbar" style={{ maxHeight: '280px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+              {assets.filter(a => a.health === 100).map(asset => (
+                <div key={asset.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px dashed var(--border-subtle)', paddingBottom: '6px', fontSize: '0.72rem' }}>
+                  <div>
+                    <span style={{ color: 'var(--ink-secondary)' }}>{asset.name}</span>
+                    <div style={{ fontSize: '0.6rem', color: 'var(--ink-muted)' }}>Ward: {asset.ward.toUpperCase()} · Type: {asset.type.toUpperCase()}</div>
+                  </div>
+                  <span className="font-pixel" style={{ fontSize: '0.45rem', color: 'var(--success)', border: '1px solid var(--success)', padding: '2px 4px' }}>OPERATIONAL</span>
+                </div>
+              ))}
+            </div>
+          </div>
         </div>
       </motion.div>
 
