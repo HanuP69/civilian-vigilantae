@@ -106,12 +106,12 @@ function AgentTrace({ trace = [] }) {
                       </span>
                       {stepName === 'record_verification' && step.output?.verification_score !== undefined && (
                         <span style={{ fontSize: '0.55rem', color: 'var(--success)', border: '1px solid var(--success)', padding: '1px 3px', fontFamily: 'var(--font-mono)' }}>
-                          SCORE: {step.output.verification_score}%
+                          SCORE: {Math.round(step.output.verification_score)}%
                         </span>
                       )}
                       {stepName === 'compute_priority' && step.output?.priority_score !== undefined && (
                         <span style={{ fontSize: '0.55rem', color: 'var(--warning)', border: '1px solid var(--warning)', padding: '1px 3px', fontFamily: 'var(--font-mono)' }}>
-                          PRIORITY: {step.output.priority_score}
+                          PRIORITY: {Math.round(step.output.priority_score)}
                         </span>
                       )}
                       {stepName === 'check_sla_status' && step.output?.probability !== undefined && (

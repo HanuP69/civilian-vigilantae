@@ -123,10 +123,10 @@ function CopilotDrawer() {
               }}
             >
               <div>
-                <h3 className="font-pixel" style={{ fontSize: '0.65rem', color: 'var(--accent)', margin: 0 }}>
+                <h3 className="font-pixel" style={{ fontSize: '11px', color: 'var(--accent)', margin: 0 }}>
                   [ 🔮 SENTINEL COMMAND AI ]
                 </h3>
-                <span className="font-pixel text-muted" style={{ fontSize: '0.35rem', marginTop: '4px', display: 'block' }}>LUCKNOW GUILD CO-PILOT CONSOLE</span>
+                <span className="font-pixel text-muted" style={{ fontSize: '9px', marginTop: '4px', display: 'block' }}>LUCKNOW GUILD CO-PILOT CONSOLE</span>
               </div>
               <button 
                 onClick={() => setIsOpen(false)}
@@ -199,7 +199,7 @@ function CopilotDrawer() {
               })}
               {loading && (
                 <div style={{ alignSelf: 'flex-start', display: 'flex', gap: '6px', alignItems: 'center' }}>
-                  <span className="font-pixel text-muted animate-pulse" style={{ fontSize: '0.45rem' }}>Consulting spirits...</span>
+                  <span className="font-pixel text-muted animate-pulse" style={{ fontSize: '10px' }}>Consulting spirits...</span>
                 </div>
               )}
               <div ref={chatEndRef} />
@@ -208,7 +208,7 @@ function CopilotDrawer() {
             {/* Suggestions Panel */}
             {messages.length <= 2 && (
               <div style={{ padding: '0 20px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                <span className="font-pixel text-muted" style={{ fontSize: '0.35rem' }}>SUGGESTED DISPATCH QUERIES:</span>
+                <span className="font-pixel text-muted" style={{ fontSize: '9px' }}>SUGGESTED DISPATCH QUERIES:</span>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
                   {suggestions.map((s, idx) => (
                     <button

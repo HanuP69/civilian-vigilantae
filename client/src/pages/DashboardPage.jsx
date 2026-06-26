@@ -742,8 +742,8 @@ function DashboardPage() {
       </div>
 
       <div className="flex items-center justify-between" style={{ marginTop: 'var(--space-2)' }}>
-        <h2 className="font-pixel" style={{ fontSize: '0.8rem', color: 'var(--accent)' }}>🧮 Multi-Agent Mathematical Engine</h2>
-        <span className="font-pixel text-muted" style={{ fontSize: '0.45rem' }}>6 CORE ALGORITHMIC SCENARIOS</span>
+        <h2 className="font-pixel" style={{ fontSize: '13px', color: 'var(--accent)' }}>🧮 Multi-Agent Mathematical Engine</h2>
+        <span className="font-pixel text-muted" style={{ fontSize: '10px' }}>6 CORE ALGORITHMIC SCENARIOS</span>
       </div>
 
       <div className="grafana-kpi-grid">
@@ -757,7 +757,7 @@ function DashboardPage() {
             >
               <div className="flex flex-col gap-1" style={{ height: '100%', justifyContent: 'space-between' }}>
                 <div className="flex items-center justify-between">
-                  <span className="grafana-kpi-title" style={{ fontSize: '0.45rem', letterSpacing: '0.05em' }}>{kpi.label}</span>
+                  <span className="grafana-kpi-title" style={{ fontSize: '10px', letterSpacing: '0.05em' }}>{kpi.label}</span>
                   <button
                     className="btn-info-icon"
                     onClick={() => toggleInfo(kpi.panelKey)}
@@ -769,12 +769,12 @@ function DashboardPage() {
                 </div>
                 {isOpen ? (
                   <div className="text-xs text-muted rpg-scrollbar" style={{ lineHeight: 1.3, animation: 'slideDown 0.2s ease-out', overflowY: 'auto', maxHeight: '72px' }}>
-                    <span style={{ color: 'var(--accent)', fontWeight: 600, fontSize: '0.55rem' }}>{EXPLANATIONS[kpi.panelKey].title}:</span>{' '}
-                    <span style={{ fontSize: '0.55rem' }}>{EXPLANATIONS[kpi.panelKey].text}</span>
+                    <span style={{ color: 'var(--accent)', fontWeight: 600, fontSize: '11px' }}>{EXPLANATIONS[kpi.panelKey].title}:</span>{' '}
+                    <span style={{ fontSize: '11px' }}>{EXPLANATIONS[kpi.panelKey].text}</span>
                     <div className="formula-box" style={{ marginTop: '4px', padding: '2px', background: 'rgba(0,0,0,0.2)' }}>
                       <Latex math={EXPLANATIONS[kpi.panelKey].formula} block />
                     </div>
-                    <div style={{ marginTop: '4px', fontSize: '0.5rem', color: 'var(--accent)', borderTop: '1px dashed var(--border-subtle)', paddingTop: '2px' }}>
+                    <div style={{ marginTop: '4px', fontSize: '10px', color: 'var(--accent)', borderTop: '1px dashed var(--border-subtle)', paddingTop: '2px' }}>
                       <strong>Parameters:</strong> {kpi.params}
                     </div>
                   </div>
@@ -784,7 +784,7 @@ function DashboardPage() {
                   </div>
                 )}
                 {!isOpen && (
-                  <div style={{ fontSize: '0.35rem', color: 'var(--ink-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                  <div style={{ fontSize: '10px', color: 'var(--ink-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
                     ALGORITHM METRIC ACTIVE
                   </div>
                 )}
@@ -907,38 +907,38 @@ function DashboardPage() {
             {selectedWard && (
               <div className="hex-details-card rpg-panel" style={{ animation: 'fadeIn 0.25s ease-out', borderRadius: 0 }}>
                 <div style={{ borderBottom: '1px solid var(--border-subtle)', paddingBottom: 'var(--space-2)', marginBottom: 'var(--space-4)' }}>
-                  <h4 className="font-pixel" style={{ margin: 0, fontSize: '0.65rem', color: 'var(--accent)', fontWeight: 600 }}>{selectedWard.name}</h4>
-                  <span className="font-pixel" style={{ fontSize: '0.45rem', color: 'var(--ink-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', marginTop: '4px', display: 'block' }}>WARD SEVERITY STATUS</span>
+                  <h4 className="font-pixel" style={{ margin: 0, fontSize: '12px', color: 'var(--accent)', fontWeight: 600 }}>{selectedWard.name}</h4>
+                  <span className="font-pixel" style={{ fontSize: '10px', color: 'var(--ink-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', marginTop: '4px', display: 'block' }}>WARD SEVERITY STATUS</span>
                 </div>
                 
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <span className="font-pixel" style={{ fontSize: '0.45rem', color: 'var(--ink-muted)' }}>ACTIVE QUESTS</span>
+                    <span className="font-pixel" style={{ fontSize: '10px', color: 'var(--ink-muted)' }}>ACTIVE QUESTS</span>
                     <span style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--ink-primary)' }} className="font-mono">{selectedWard.active}</span>
                   </div>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <span className="font-pixel" style={{ fontSize: '0.45rem', color: 'var(--ink-muted)' }}>CRITICAL THREATS</span>
+                    <span className="font-pixel" style={{ fontSize: '10px', color: 'var(--ink-muted)' }}>CRITICAL THREATS</span>
                     <span style={{ fontSize: '0.85rem', fontWeight: 600, color: selectedWard.highUrgency > 0 ? 'var(--error)' : 'var(--ink-primary)' }} className="font-mono">{selectedWard.highUrgency}</span>
                   </div>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <span className="font-pixel" style={{ fontSize: '0.45rem', color: 'var(--ink-muted)' }}>HISTORICAL LOG</span>
+                    <span className="font-pixel" style={{ fontSize: '10px', color: 'var(--ink-muted)' }}>HISTORICAL LOG</span>
                     <span style={{ fontSize: '0.85rem', fontWeight: 500, color: 'var(--ink-secondary)' }} className="font-mono">{selectedWard.total}</span>
                   </div>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <span className="font-pixel" style={{ fontSize: '0.45rem', color: 'var(--ink-muted)' }}>RECURRENCE RISK</span>
+                    <span className="font-pixel" style={{ fontSize: '10px', color: 'var(--ink-muted)' }}>RECURRENCE RISK</span>
                     <span style={{ fontSize: '0.85rem', fontWeight: 600, color: selectedWard.maxRisk > 0.7 ? 'var(--error)' : selectedWard.maxRisk > 0.4 ? 'var(--warning)' : 'var(--success)' }} className="font-mono">
                       {selectedWard.maxRisk ? `${Math.round(selectedWard.maxRisk * 100)}%` : '—'}
                     </span>
                   </div>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: '1px dashed var(--border-subtle)', paddingTop: 'var(--space-3)', marginTop: 'var(--space-1)' }}>
-                    <span className="font-pixel" style={{ fontSize: '0.45rem', fontWeight: 600, color: 'var(--ink-secondary)' }}>THREAT INDEX</span>
+                    <span className="font-pixel" style={{ fontSize: '10px', fontWeight: 600, color: 'var(--ink-secondary)' }}>THREAT INDEX</span>
                     <span style={{ fontSize: '1rem', fontWeight: 700, color: ((selectedWard.active * 1.5) + (selectedWard.highUrgency * 3.0)) > 8 ? 'var(--error)' : ((selectedWard.active * 1.5) + (selectedWard.highUrgency * 3.0)) > 3 ? 'var(--warning)' : 'var(--success)' }} className="font-mono">
                       {((selectedWard.active * 1.5) + (selectedWard.highUrgency * 3.0)).toFixed(1)}
                     </span>
                   </div>
                   
                   <div style={{ background: 'oklch(0.12 0.01 260)', borderLeft: '2.5px solid var(--accent)', padding: 'var(--space-3)', borderRadius: 0, fontSize: '0.72rem', color: 'var(--ink-secondary)', marginTop: 'var(--space-2)', lineHeight: 1.4 }}>
-                    <span className="font-pixel" style={{ fontSize: '0.45rem', fontWeight: 700, color: 'var(--accent)', display: 'block', marginBottom: '4px' }}>RECOMMENDED ACTION:</span>{' '}
+                    <span className="font-pixel" style={{ fontSize: '10px', fontWeight: 700, color: 'var(--accent)', display: 'block', marginBottom: '4px' }}>RECOMMENDED ACTION:</span>{' '}
                     {selectedWard.active === 0 ? 'No active threats. Maintain regular civil sweeps.' :
                      selectedWard.highUrgency > 1 || ((selectedWard.active * 1.5) + (selectedWard.highUrgency * 3.0)) > 8 ? 'Dispatch emergency maintenance crew immediately to resolve critical breaches.' :
                      'Schedule department audit of outstanding tickets in next 48-hour routine cycle.'}
@@ -1088,7 +1088,7 @@ function DashboardPage() {
               <div className="summary-card text-center flex flex-col justify-center" style={{ padding: 'var(--space-3)', borderRadius: 0 }}>
                 <span className="font-pixel text-muted" style={{ fontSize: '0.35rem', marginBottom: '4px' }}>UTILITY PTS</span>
                 <span style={{ fontSize: '1.15rem', fontWeight: 700, color: 'var(--accent)' }} className="font-mono">
-                  +{optimizedLedger.totalValue}
+                  +{Math.round(optimizedLedger.totalValue)}
                 </span>
               </div>
             </div>
@@ -1139,7 +1139,7 @@ function DashboardPage() {
                         ₹{(ticket.estimated_cost || 4000).toLocaleString()}
                       </span>
                       <span style={{ color: 'var(--accent)' }}>
-                        +{ticket.priority_score || 10} Utility
+                        +{Math.round(ticket.priority_score || 10)} Utility
                       </span>
                     </div>
                   </div>

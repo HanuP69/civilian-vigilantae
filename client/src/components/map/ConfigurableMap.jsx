@@ -432,20 +432,20 @@ function ConfigurableMap({
                   }}
                 >
                   <Popup>
-                    <div className="font-sans" style={{ minWidth: 180, padding: '4px' }}>
-                      <strong className="font-pixel" style={{ fontSize: '0.55rem', color: 'var(--ink-primary)', display: 'block', marginBottom: '4px' }}>{ticket.title || ticket.ai_title || 'Untitled Quest'}</strong>
-                      <span className="font-pixel" style={{ color: categoryColors[ticket.category] || 'var(--ink-muted)', fontSize: '0.45rem', display: 'block', marginBottom: '6px' }}>
+                    <div className="font-sans" style={{ minWidth: 180, padding: '4px', lineHeight: 1.4 }}>
+                      <strong style={{ fontSize: '13px', color: 'var(--ink-primary)', display: 'block', marginBottom: '4px', fontWeight: 600 }}>{ticket.title || ticket.ai_title || 'Untitled Quest'}</strong>
+                      <span style={{ color: categoryColors[ticket.category] || 'var(--ink-muted)', fontSize: '10px', display: 'block', marginBottom: '6px', fontWeight: 700, textTransform: 'uppercase' }}>
                         {categoryLabels[ticket.category]?.toUpperCase() || capitalize(ticket.category).toUpperCase()}
                       </span>
-                      <div className="font-pixel text-secondary" style={{ fontSize: '0.45rem', marginBottom: '8px' }}>
+                      <div className="text-secondary" style={{ fontSize: '11px', marginBottom: '8px' }}>
                         {ticket.verification_up > 0 ? `✓ ${ticket.verification_up} VOTE${ticket.verification_up > 1 ? 'S' : ''} · ` : ''}{ticket.ward?.toUpperCase() || '—'}
                       </div>
                       {ticket.sla_risk_score !== undefined && (
-                        <div className="font-pixel text-error" style={{ fontSize: '0.45rem', marginBottom: '8px' }}>
+                        <div className="text-error" style={{ fontSize: '11px', marginBottom: '8px', fontWeight: 600 }}>
                           SLA RISK: {ticket.sla_risk_score}%
                         </div>
                       )}
-                      <Link to={`/ticket/${ticket.id}`} className="font-pixel" style={{ display: 'inline-block', color: 'var(--accent)', fontSize: '0.45rem', textDecoration: 'underline' }}>
+                      <Link to={`/ticket/${ticket.id}`} style={{ display: 'inline-block', color: 'var(--accent)', fontSize: '11px', textDecoration: 'underline', fontWeight: 600 }}>
                         ENTER QUEST →
                       </Link>
                     </div>
@@ -538,16 +538,16 @@ function ConfigurableMap({
                       })}
                     >
                       <Popup>
-                        <div className="font-sans" style={{ minWidth: 180, padding: '4px' }}>
-                          <strong className="font-pixel" style={{ fontSize: '0.55rem', color: 'var(--accent)', display: 'block', marginBottom: '4px' }}>🧭 {mission.title}</strong>
-                          <p className="text-secondary" style={{ fontSize: '0.45rem', marginBottom: '6px' }}>{mission.description}</p>
-                          <div className="font-pixel text-success" style={{ fontSize: '0.45rem', marginBottom: '6px' }}>
+                        <div className="font-sans" style={{ minWidth: 180, padding: '4px', lineHeight: 1.4 }}>
+                          <strong style={{ fontSize: '13px', color: 'var(--accent)', display: 'block', marginBottom: '4px', fontWeight: 600 }}>🧭 {mission.title}</strong>
+                          <p className="text-secondary" style={{ fontSize: '11px', marginBottom: '6px', lineHeight: 1.3 }}>{mission.description}</p>
+                          <div className="text-success" style={{ fontSize: '11px', marginBottom: '6px', fontWeight: 600 }}>
                             REWARDS: +{mission.xp_reward} XP · {mission.gold_reward} GOLD
                           </div>
-                          <div className="font-pixel text-muted" style={{ fontSize: '0.45rem', marginBottom: '8px' }}>
+                          <div className="text-muted" style={{ fontSize: '11px', marginBottom: '8px' }}>
                             PROGRESS: {mission.current_confirmations} / {mission.target_confirmations}
                           </div>
-                          <Link to="/missions" className="font-pixel" style={{ display: 'inline-block', color: 'var(--accent)', fontSize: '0.45rem', textDecoration: 'underline' }}>
+                          <Link to="/missions" style={{ display: 'inline-block', color: 'var(--accent)', fontSize: '11px', textDecoration: 'underline', fontWeight: 600 }}>
                             GO TO QUEST BOARD →
                           </Link>
                         </div>
