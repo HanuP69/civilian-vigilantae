@@ -93,7 +93,8 @@ export const toolHandlers = {
     const doc = await db.collection('tickets').doc(ticket_id).get();
     if (!doc.exists) return { error: 'Ticket not found' };
     const t = doc.data();
-    const elapsedHours = (Date.now() - new Date(t.created_at).getTime()) / 3600000;
+    const ts = t.created_at?.toDate?.() ?? new Date(t.created_at);
+    const elapsedHours = Number.isNaN(ts.getTime()) ? 0 : (Date.now() - ts.getTime()) / 3600000;
     const slaHours = DEFAULT_PARAMS[t.category]?.lambda || 168;
     const score = computePriority({
       severity: t.severity, reportCount: (t.child_reports?.length || 0) + 1,
@@ -185,7 +186,8 @@ export const toolHandlers = {
     const doc = await db.collection('tickets').doc(ticket_id).get();
     if (!doc.exists) return { error: 'Ticket not found' };
     const t = doc.data();
-    const elapsedHours = (Date.now() - new Date(t.created_at).getTime()) / 3600000;
+    const ts = t.created_at?.toDate?.() ?? new Date(t.created_at);
+    const elapsedHours = Number.isNaN(ts.getTime()) ? 0 : (Date.now() - ts.getTime()) / 3600000;
     const params = DEFAULT_PARAMS[t.category] || DEFAULT_PARAMS.other;
     const slaDeadline = t.sla_deadline ? new Date(t.sla_deadline) : null;
     const slaHours = slaDeadline
@@ -237,7 +239,8 @@ export const toolHandlers = {
     const doc = await db.collection('tickets').doc(ticket_id).get();
     if (!doc.exists) return { error: 'Ticket not found' };
     const t = doc.data();
-    const elapsedHours = (Date.now() - new Date(t.created_at).getTime()) / 3600000;
+    const ts = t.created_at?.toDate?.() ?? new Date(t.created_at);
+    const elapsedHours = Number.isNaN(ts.getTime()) ? 0 : (Date.now() - ts.getTime()) / 3600000;
     const slaHours = DEFAULT_PARAMS[t.category]?.lambda || 168;
     const score = computePriority({
       severity: t.severity === 'low' ? 'medium' : (t.severity === 'medium' ? 'high' : 'critical'),
