@@ -10,9 +10,9 @@
   --bg-elevated: #222225;
   --bg-hover: #2a2a2e;
 
-  --ink-primary: #f8f9fa;
-  --ink-secondary: #a1a1aa;
-  --ink-muted: #71717a;
+  --ink-primary: #ffffff;
+  --ink-secondary: #e4e4e7;
+  --ink-muted: #a1a1aa;
 
   --accent: #ffd700;
   --accent-hover: #ffc000;
@@ -121,7 +121,7 @@ h2 { font-size: 2rem; }
 h3 { font-size: 1.5rem; }
 h4 { font-size: 1.25rem; }
 
-p { max-width: 65ch; text-wrap: pretty; font-weight: 300; }
+p { max-width: 65ch; text-wrap: pretty; font-weight: 400; }
 
 a { color: var(--accent); text-decoration: none; }
 a:hover { color: var(--accent-hover); }
