@@ -1851,34 +1851,29 @@ tr:hover td { background: var(--bg-surface); }
   left: 0;
   width: 100%;
   height: 250px;
-  background: linear-gradient(to bottom, #070d14 0%, #0d1a29 55%, #172d47 100%);
+  background: linear-gradient(to bottom, #090e15 0%, #151124 50%, #2e1c2b 80%, #462624 100%);
 }
 
-.rpg-horizon {
-  position: absolute;
-  top: 242px; /* Overlap slightly with ground and sky to prevent rendering seam gaps */
-  left: 0;
-  width: 100%;
-  height: 16px;
-  background-image: url("data:image/svg+xml,%3Csvg width='64' height='16' viewBox='0 0 64 16' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M0 16h64V8h-4V6h-4v2h-4v2h-4V4h-4v2h-4v4h-4V6h-4v2h-4v2h-4V6h-4v2h-4v4H0z' fill='%230d1f11'/%3E%3Cpath d='M0 16h64V12h-4v-2h-4v2h-4v2h-4V8h-4v2h-4v4h-4V8h-4v2h-4v2h-4V8h-4v2h-4v4H0z' fill='%2307120a'/%3E%3C/svg%3E");
-  background-repeat: repeat-x;
-  background-size: 64px 16px;
-  image-rendering: pixelated;
-  z-index: 2;
+/* Twinkling Stars */
+@keyframes twinkle {
+  0%, 100% { opacity: 0.35; }
+  50% { opacity: 1; }
 }
 
-.rpg-ground {
+.pixel-star {
   position: absolute;
-  top: 256px;
-  bottom: 0;
-  left: 0;
-  width: 100%;
-  background-image: url("data:image/svg+xml,%3Csvg width='64' height='64' viewBox='0 0 64 64' xmlns='http://www.w3.org/2000/svg'%3E%3Crect width='64' height='64' fill='%23102615'/%3E%3Crect x='0' y='60' width='64' height='4' fill='%230b1b0e'/%3E%3Crect x='60' y='0' width='4' height='64' fill='%230b1b0e'/%3E%3Cpath d='M12 16h4v8h-4zm4 4h4v4h-4zm-8 4h4v4H8z' fill='%23183b20'/%3E%3Cpath d='M12 20h4v4h-4z' fill='%2322532d'/%3E%3Cpath d='M44 12h4v8h-4zm4 4h4v4h-4zm-8 4h4v4h-4z' fill='%23183b20'/%3E%3Cpath d='M44 16h4v4h-4z' fill='%2322532d'/%3E%3Cpath d='M28 40h4v8h-4zm4 4h4v4h-4zm-8 4h4v4h-4z' fill='%23183b20'/%3E%3Cpath d='M28 44h4v4h-4z' fill='%2322532d'/%3E%3Cpath d='M52 44h4v8h-4zm4 4h4v4h-4zm-8 4h4v4h-4z' fill='%23183b20'/%3E%3Cpath d='M52 48h4v4h-4z' fill='%2322532d'/%3E%3Crect x='20' y='28' width='4' height='4' fill='%23c9a35a'/%3E%3Crect x='48' y='36' width='4' height='4' fill='%23c9a35a'/%3E%3Crect x='4' y='48' width='4' height='4' fill='%23f1f2f4'/%3E%3C/svg%3E");
-  background-repeat: repeat;
-  background-size: 64px 64px;
+  width: 4px;
+  height: 4px;
+  background: #ffffff;
   image-rendering: pixelated;
-  z-index: 1;
+  animation: twinkle 3s infinite ease-in-out;
+  box-shadow: 0 0 4px #ffffff;
 }
+
+.star-1 { top: 20px; left: 12%; animation-delay: 0s; }
+.star-2 { top: 65px; left: 38%; animation-delay: 1.2s; }
+.star-3 { top: 40px; left: 68%; animation-delay: 0.6s; }
+.star-4 { top: 85px; left: 88%; animation-delay: 1.8s; }
 
 /* Floating Pixel Clouds */
 @keyframes float-cloud {
@@ -1924,18 +1919,147 @@ tr:hover td { background: var(--bg-surface); }
   animation-delay: -5s;
 }
 
+/* Horizon tree silhouette line */
+.rpg-horizon {
+  position: absolute;
+  top: 242px; /* Overlap slightly with ground and sky to prevent rendering seam gaps */
+  left: 0;
+  width: 100%;
+  height: 16px;
+  background-image: url("data:image/svg+xml,%3Csvg width='64' height='16' viewBox='0 0 64 16' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M0 16h64V8h-4V6h-4v2h-4v2h-4V4h-4v2h-4v4h-4V6h-4v2h-4v2h-4V6h-4v2h-4v4H0z' fill='%230d1f11'/%3E%3Cpath d='M0 16h64V12h-4v-2h-4v2h-4v2h-4V8h-4v2h-4v4h-4V8h-4v2h-4v2h-4V8h-4v2h-4v4H0z' fill='%2307120a'/%3E%3C/svg%3E");
+  background-repeat: repeat-x;
+  background-size: 64px 16px;
+  image-rendering: pixelated;
+  z-index: 2;
+}
+
+/* Farmhouse Silhouette at horizon */
+.rpg-farmhouse {
+  position: absolute;
+  top: 220px;
+  right: 15%;
+  width: 48px;
+  height: 32px;
+  background-image: url("data:image/svg+xml,%3Csvg width='48' height='32' viewBox='0 0 48 32' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M8 12l16-8 16 8H8z' fill='%23451a03'/%3E%3Cpath d='M10 12l14-7 14 7H10z' fill='%2378350f'/%3E%3Crect x='10' y='12' width='28' height='20' fill='%232d170a'/%3E%3Crect x='22' y='20' width='6' height='12' fill='%23180a03'/%3E%3Crect x='14' y='16' width='4' height='4' fill='%23facc15'/%3E%3Crect x='30' y='16' width='4' height='4' fill='%23facc15'/%3E%3Crect x='12' y='6' width='4' height='6' fill='%23180a03'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-size: contain;
+  image-rendering: pixelated;
+  z-index: 2;
+}
+
+/* Wooden Fence Line */
+.rpg-fence {
+  position: absolute;
+  top: 246px;
+  left: 0;
+  width: 100%;
+  height: 12px;
+  background-image: url("data:image/svg+xml,%3Csvg width='32' height='12' viewBox='0 0 32 12' xmlns='http://www.w3.org/2000/svg'%3E%3Crect x='0' y='4' width='32' height='1' fill='%23451a03'/%3E%3Crect x='0' y='8' width='32' height='1' fill='%23451a03'/%3E%3Crect x='0' y='5' width='32' height='1' fill='%2378350f'/%3E%3Crect x='0' y='9' width='32' height='1' fill='%2378350f'/%3E%3Crect x='6' y='0' width='2' height='12' fill='%23451a03'/%3E%3Crect x='7' y='0' width='1' height='12' fill='%2392400e'/%3E%3Crect x='22' y='0' width='2' height='12' fill='%23451a03'/%3E%3Crect x='23' y='0' width='1' height='12' fill='%2392400e'/%3E%3C/svg%3E");
+  background-repeat: repeat-x;
+  background-size: 32px 12px;
+  image-rendering: pixelated;
+  z-index: 3;
+}
+
+/* Ground meadow pasture with organic grass & multi-color flower patches */
+.rpg-ground {
+  position: absolute;
+  top: 256px;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  background-image: url("data:image/svg+xml,%3Csvg width='128' height='128' viewBox='0 0 128 128' xmlns='http://www.w3.org/2000/svg'%3E%3Crect width='128' height='128' fill='%230f2415'/%3E%3Crect x='16' y='32' width='32' height='16' fill='%23122c19'/%3E%3Crect x='64' y='80' width='48' height='24' fill='%23122c19'/%3E%3Crect x='80' y='16' width='24' height='16' fill='%23122c19'/%3E%3Cpath d='M12 16h4v8h-4zm4 4h4v4h-4zm-8 4h4v4H8z' fill='%231a4224'/%3E%3Cpath d='M12 20h4v4h-4z' fill='%23245c32'/%3E%3Cpath d='M96 24h4v8h-4zm4 4h4v4h-4zm-8 4h4v4h-4z' fill='%231a4224'/%3E%3Cpath d='M96 28h4v4h-4z' fill='%23245c32'/%3E%3Cpath d='M44 60h4v8h-4zm4 4h4v4h-4zm-8 4h4v4h-4z' fill='%231a4224'/%3E%3Cpath d='M44 64h4v4h-4z' fill='%23245c32'/%3E%3Cpath d='M110 70h4v8h-4zm4 4h4v4h-4zm-8 4h4v4h-4z' fill='%231a4224'/%3E%3Cpath d='M110 74h4v4h-4z' fill='%23245c32'/%3E%3Cpath d='M50 110h4v8h-4zm4 4h4v4h-4zm-8 4h4v4h-4z' fill='%231a4224'/%3E%3Cpath d='M50 114h4v4h-4z' fill='%23245c32'/%3E%3Crect x='24' y='12' width='4' height='4' fill='%23eab308'/%3E%3Crect x='25' y='13' width='2' height='2' fill='%23ffffff'/%3E%3Crect x='28' y='16' width='4' height='4' fill='%23eab308'/%3E%3Crect x='29' y='17' width='2' height='2' fill='%23ffffff'/%3E%3Crect x='84' y='48' width='4' height='4' fill='%23f1f2f4'/%3E%3Crect x='85' y='49' width='2' height='2' fill='%23eab308'/%3E%3Crect x='78' y='52' width='4' height='4' fill='%23f1f2f4'/%3E%3Crect x='79' y='53' width='2' height='2' fill='%23eab308'/%3E%3Crect x='104' y='96' width='4' height='4' fill='%23ef4444'/%3E%3Crect x='105' y='97' width='2' height='2' fill='%23facc15'/%3E%3Crect x='98' y='100' width='4' height='4' fill='%23ef4444'/%3E%3Crect x='99' y='101' width='2' height='2' fill='%23facc15'/%3E%3Crect x='16' y='96' width='4' height='4' fill='%233b82f6'/%3E%3Crect x='17' y='97' width='2' height='2' fill='%23ffffff'/%3E%3Crect x='22' y='100' width='4' height='4' fill='%233b82f6'/%3E%3Crect x='23' y='101' width='2' height='2' fill='%23ffffff'/%3E%3Crect x='60' y='28' width='4' height='4' fill='%23475569'/%3E%3Crect x='62' y='30' width='2' height='2' fill='%2364748b'/%3E%3Crect x='10' y='76' width='4' height='4' fill='%23475569'/%3E%3C/svg%3E");
+  background-repeat: repeat;
+  background-size: 128px 128px;
+  image-rendering: pixelated;
+  z-index: 1;
+}
+
+/* Grazing Sheep */
+@keyframes sheep-graze {
+  0%, 100% {
+    transform: scaleX(1) translateY(0);
+  }
+  35% {
+    transform: scaleX(1) translateY(2px);
+  }
+  50% {
+    transform: scaleX(-1) translateY(0);
+  }
+  85% {
+    transform: scaleX(-1) translateY(2px);
+  }
+}
+
+.rpg-sheep {
+  position: absolute;
+  top: 25px;
+  left: 20%;
+  width: 40px;
+  height: 28px;
+  background-image: url("data:image/svg+xml,%3Csvg width='20' height='14' viewBox='0 0 20 14' xmlns='http://www.w3.org/2000/svg'%3E%3Crect x='3' y='2' width='12' height='8' rx='2' fill='%23f1f5f9' /%3E%3Crect x='5' y='1' width='8' height='1' fill='%23f1f5f9' /%3E%3Crect x='2' y='4' width='1' height='4' fill='%23f1f5f9' /%3E%3Crect x='15' y='4' width='1' height='4' fill='%23f1f5f9' /%3E%3Crect x='4' y='9' width='10' height='1' fill='%23e2e8f0' /%3E%3Crect x='14' y='3' width='4' height='4' fill='%23334155' /%3E%3Crect x='13' y='3' width='1' height='2' fill='%23334155' /%3E%3Crect x='5' y='10' width='1' height='3' fill='%23334155' /%3E%3Crect x='7' y='10' width='1' height='3' fill='%23334155' /%3E%3Crect x='10' y='10' width='1' height='3' fill='%23334155' /%3E%3Crect x='12' y='10' width='1' height='3' fill='%23334155' /%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-size: contain;
+  image-rendering: pixelated;
+  animation: sheep-graze 9s infinite ease-in-out;
+  z-index: 4;
+}
+
+/* Walking Cows */
+@keyframes walk-right-cow {
+  0% {
+    transform: translateX(-100px) scaleX(1);
+  }
+  100% {
+    transform: translateX(100vw) scaleX(1);
+  }
+}
+
+.rpg-cow {
+  position: absolute;
+  top: 55px;
+  width: 48px;
+  height: 32px;
+  background-image: url("data:image/svg+xml,%3Csvg width='24' height='16' viewBox='0 0 24 16' xmlns='http://www.w3.org/2000/svg'%3E%3Crect x='4' y='2' width='14' height='8' fill='%23f8fafc' /%3E%3Crect x='6' y='2' width='3' height='3' fill='%231e293b' /%3E%3Crect x='12' y='5' width='4' height='3' fill='%231e293b' /%3E%3Crect x='15' y='2' width='3' height='2' fill='%231e293b' /%3E%3Crect x='16' y='1' width='6' height='6' fill='%23f8fafc' /%3E%3Crect x='20' y='4' width='2' height='3' fill='%23fda4af' /%3E%3Crect x='19' y='2' width='1' height='1' fill='%230f172a' /%3E%3Crect x='17' y='0' width='1' height='1' fill='%2394a3b8' /%3E%3Crect x='5' y='10' width='2' height='4' fill='%23f8fafc' /%3E%3Crect x='11' y='10' width='2' height='4' fill='%23f8fafc' /%3E%3Crect x='7' y='10' width='2' height='4' fill='%23cbd5e1' /%3E%3Crect x='13' y='10' width='2' height='4' fill='%23cbd5e1' /%3E%3Crect x='5' y='14' width='2' height='1' fill='%231e293b' /%3E%3Crect x='7' y='14' width='2' height='1' fill='%231e293b' /%3E%3Crect x='11' y='14' width='2' height='1' fill='%231e293b' /%3E%3Crect x='13' y='14' width='2' height='1' fill='%231e293b' /%3E%3Crect x='9' y='10' width='2' height='2' fill='%23fda4af' /%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-size: contain;
+  image-rendering: pixelated;
+  animation: walk-right-cow 160s linear infinite;
+  z-index: 5;
+}
+
+@keyframes walk-left-cow {
+  0% {
+    transform: translateX(100vw) scaleX(-1);
+  }
+  100% {
+    transform: translateX(-100px) scaleX(-1);
+  }
+}
+
+.rpg-cow-2 {
+  position: absolute;
+  top: 95px;
+  width: 48px;
+  height: 32px;
+  background-image: url("data:image/svg+xml,%3Csvg width='24' height='16' viewBox='0 0 24 16' xmlns='http://www.w3.org/2000/svg'%3E%3Crect x='4' y='2' width='14' height='8' fill='%23f8fafc' /%3E%3Crect x='6' y='2' width='3' height='3' fill='%231e293b' /%3E%3Crect x='12' y='5' width='4' height='3' fill='%231e293b' /%3E%3Crect x='15' y='2' width='3' height='2' fill='%231e293b' /%3E%3Crect x='16' y='1' width='6' height='6' fill='%23f8fafc' /%3E%3Crect x='20' y='4' width='2' height='3' fill='%23fda4af' /%3E%3Crect x='19' y='2' width='1' height='1' fill='%230f172a' /%3E%3Crect x='17' y='0' width='1' height='1' fill='%2394a3b8' /%3E%3Crect x='5' y='10' width='2' height='4' fill='%23f8fafc' /%3E%3Crect x='11' y='10' width='2' height='4' fill='%23f8fafc' /%3E%3Crect x='7' y='10' width='2' height='4' fill='%23cbd5e1' /%3E%3Crect x='13' y='10' width='2' height='4' fill='%23cbd5e1' /%3E%3Crect x='5' y='14' width='2' height='1' fill='%231e293b' /%3E%3Crect x='7' y='14' width='2' height='1' fill='%231e293b' /%3E%3Crect x='11' y='14' width='2' height='1' fill='%231e293b' /%3E%3Crect x='13' y='14' width='2' height='1' fill='%231e293b' /%3E%3Crect x='9' y='10' width='2' height='2' fill='%23fda4af' /%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-size: contain;
+  image-rendering: pixelated;
+  animation: walk-left-cow 190s linear infinite;
+  z-index: 5;
+}
+
 /* Reduced motion support */
 @media (prefers-reduced-motion: reduce) {
-  .cloud-1 {
+  .cloud-1, .cloud-2, .cloud-3, .pixel-star, .rpg-sheep, .rpg-cow, .rpg-cow-2 {
     animation: none !important;
-    left: 15%;
   }
-  .cloud-2 {
-    animation: none !important;
-    left: 45%;
-  }
-  .cloud-3 {
-    animation: none !important;
-    left: 75%;
-  }
+  .cloud-1 { left: 15%; }
+  .cloud-2 { left: 45%; }
+  .cloud-3 { left: 75%; }
+  .pixel-star { opacity: 0.7; }
+  .rpg-sheep { left: 20%; transform: scaleX(1); }
+  .rpg-cow { left: 35%; transform: scaleX(1); }
+  .rpg-cow-2 { left: 65%; transform: scaleX(-1); }
 }

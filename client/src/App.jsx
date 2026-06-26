@@ -273,12 +273,29 @@ function AppContent() {
       {/* RPG Pixel Backdrop */}
       <div className="rpg-backdrop">
         <div className="rpg-sky">
+          {/* Twinkling Stars */}
+          <div className="pixel-star star-1"></div>
+          <div className="pixel-star star-2"></div>
+          <div className="pixel-star star-3"></div>
+          <div className="pixel-star star-4"></div>
+
+          {/* Floating Clouds */}
           <div className="pixel-cloud cloud-1"></div>
           <div className="pixel-cloud cloud-2"></div>
           <div className="pixel-cloud cloud-3"></div>
         </div>
+        
+        {/* Horizon Landscape */}
         <div className="rpg-horizon"></div>
-        <div className="rpg-ground"></div>
+        <div className="rpg-farmhouse"></div>
+        <div className="rpg-fence"></div>
+        
+        {/* Ground Pasture with Cattle */}
+        <div className="rpg-ground">
+          <div className="rpg-sheep"></div>
+          <div className="rpg-cow"></div>
+          <div className="rpg-cow-2"></div>
+        </div>
       </div>
 
       <Navbar isConnected={isConnected} />
