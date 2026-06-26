@@ -2052,7 +2052,7 @@ tr:hover td { background: var(--bg-surface); }
 
 /* Reduced motion support */
 @media (prefers-reduced-motion: reduce) {
-  .cloud-1, .cloud-2, .cloud-3, .pixel-star, .rpg-sheep, .rpg-cow, .rpg-cow-2 {
+  .cloud-1, .cloud-2, .cloud-3, .pixel-star, .rpg-sheep, .rpg-cow, .rpg-cow-2, .rpg-quest-pin, .rpg-quest-pin-shadow {
     animation: none !important;
   }
   .cloud-1 { left: 15%; }
@@ -2062,4 +2062,65 @@ tr:hover td { background: var(--bg-surface); }
   .rpg-sheep { left: 20%; transform: scaleX(1); }
   .rpg-cow { left: 35%; transform: scaleX(1); }
   .rpg-cow-2 { left: 65%; transform: scaleX(-1); }
+  .rpg-quest-pin { transform: translateY(0) !important; }
+  .rpg-quest-pin-shadow { transform: translate(-50%, -50%) scale(1) !important; opacity: 0.4 !important; }
+}
+
+/* RPG Quest Marker Map Pins */
+.rpg-quest-pin-container {
+  position: relative;
+  width: 32px;
+  height: 40px;
+}
+
+@keyframes pin-bounce {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-8px);
+  }
+}
+
+.rpg-quest-pin {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 40px;
+  cursor: pointer;
+  animation: pin-bounce 2s infinite ease-in-out;
+}
+
+.rpg-quest-pin-container.active .rpg-quest-pin {
+  animation: pin-bounce 1s infinite ease-in-out;
+}
+
+@keyframes pin-shadow-pulse {
+  0%, 100% {
+    transform: translate(-50%, 0) scale(1);
+    opacity: 0.45;
+  }
+  50% {
+    transform: translate(-50%, 0) scale(0.65);
+    opacity: 0.15;
+  }
+}
+
+.rpg-quest-pin-shadow {
+  position: absolute;
+  left: 16px;
+  bottom: 0px;
+  width: 12px;
+  height: 4px;
+  background: rgba(0, 0, 0, 0.6);
+  border-radius: 50%;
+  transform: translate(-50%, 0);
+  animation: pin-shadow-pulse 2s infinite ease-in-out;
+  pointer-events: none;
+  z-index: -1;
+}
+
+.rpg-quest-pin-container.active .rpg-quest-pin-shadow {
+  animation: pin-shadow-pulse 1s infinite ease-in-out;
 }

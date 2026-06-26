@@ -38,45 +38,50 @@ function getMarkerColor(priorityScore) {
 
 function createLeafletIcon(priorityScore, isActive) {
   const color = getMarkerColor(priorityScore);
-  const scale = isActive ? 'scale(1.25)' : 'scale(1)';
+  const activeClass = isActive ? 'active' : '';
+  const svg = `
+    <svg width="32" height="40" viewBox="0 0 32 40" xmlns="http://www.w3.org/2000/svg">
+      <path d="M6 2h20v4h4v12h-4v8h-4v4h-4v8h-4v-8h-4v-4h-4v-8H2V6h4V2z" fill="#000000" />
+      <path d="M8 4h16v4h4v8h-4v8h-4v4h-4v8h-4v-8H8v-4H4V8h4V4z" fill="${color}" />
+      <path d="M12 28v4h8v-4h-4v-4h-4zm-4-8h4v4h-4zm12 0h4v4h-4z" fill="#000000" opacity="0.25" />
+      <rect x="14" y="8" width="4" height="8" fill="#ffffff" />
+      <rect x="14" y="18" width="4" height="4" fill="#ffffff" />
+    </svg>
+  `;
   return L.divIcon({
-    className: 'custom-leaflet-marker',
-    html: `<div style="
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      width: 20px; 
-      height: 20px; 
-      background-color: ${color}; 
-      border: 2px solid ${isActive ? '#ffffff' : '#0f172a'}; 
-      box-shadow: 2px 2px 0 oklch(0 0 0 / 0.5);
-      transform: ${scale};
-      transition: transform 0.2s ease;
-      font-family: 'Press Start 2P', cursive, monospace;
-      font-size: 10px;
-      font-weight: 900;
-      color: #000000;
-    ">!</div>`,
-    iconSize: [20, 20],
-    iconAnchor: [10, 10]
+    className: 'custom-leaflet-marker-wrapper',
+    html: `
+      <div class="rpg-quest-pin-container ${activeClass}">
+        <div class="rpg-quest-pin-shadow"></div>
+        <div class="rpg-quest-pin" style="image-rendering: pixelated;">${svg}</div>
+      </div>
+    `,
+    iconSize: [32, 40],
+    iconAnchor: [16, 40],
+    popupAnchor: [0, -40]
   });
 }
 
 function createGoogleMarkerIcon(priorityScore, isActive) {
   const color = getMarkerColor(priorityScore);
-  const size = isActive ? 26 : 20;
-  const strokeColor = isActive ? '#ffffff' : '#0f172a';
   const svg = `
-    <svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 20 20">
-      <rect x="2" y="2" width="16" height="16" fill="${color}" stroke="${strokeColor}" stroke-width="2" />
-      <text x="10" y="14" font-family="'Press Start 2P', monospace" font-size="11" font-weight="bold" fill="#000000" text-anchor="middle">!</text>
+    <svg xmlns="http://www.w3.org/2000/svg" width="32" height="40" viewBox="0 0 32 40">
+      <path d="M6 2h20v4h4v12h-4v8h-4v4h-4v8h-4v-8h-4v-4h-4v-8H2V6h4V2z" fill="#000000" />
+      <path d="M8 4h16v4h4v8h-4v8h-4v4h-4v8h-4v-8H8v-4H4V8h4V4z" fill="${color}" />
+      <path d="M12 28v4h8v-4h-4v-4h-4zm-4-8h4v4h-4zm12 0h4v4h-4z" fill="#000000" opacity="0.25" />
+      <rect x="14" y="8" width="4" height="8" fill="#ffffff" />
+      <rect x="14" y="18" width="4" height="4" fill="#ffffff" />
     </svg>
   `;
+  const scale = isActive ? 1.25 : 1;
+  const w = 32 * scale;
+  const h = 40 * scale;
   return {
     url: 'data:image/svg+xml;utf8,' + encodeURIComponent(svg),
-    size: { width: size, height: size },
-    origin: { x: 0, y: 0 },
-    anchor: { x: size / 2, y: size / 2 }
+    size: new window.google.maps.Size(w, h),
+    scaledSize: new window.google.maps.Size(w, h),
+    origin: new window.google.maps.Point(0, 0),
+    anchor: new window.google.maps.Point(16 * scale, 40 * scale)
   };
 }
 

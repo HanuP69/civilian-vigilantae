@@ -240,7 +240,7 @@ function HomePage() {
           }}>
             ⚔️ SUBMIT NEW QUEST
           </Link>
-          <p className="font-pixel text-muted" style={{ fontSize: '0.45rem', marginTop: 'var(--space-2)' }}>
+          <p className="font-pixel text-muted" style={{ fontSize: '0.625rem', marginTop: 'var(--space-2)' }}>
             {tickets.length > 0 ? `${tickets.length} ACTIVE INCIDENTS` : 'BE THE FIRST TO DEPLOY'}
           </p>
         </div>
@@ -248,9 +248,9 @@ function HomePage() {
 
       <div className="hero-panel animate-fade-up stagger-2 pixel-border" style={{ marginBottom: 'var(--space-6)', borderRadius: 0 }}>
         <div className="hero-panel-row">
-          <span className="info-pill font-pixel" style={{ fontSize: '0.45rem', borderRadius: 0 }}>⚡ AUTOMATIC QUEST TRIAGE</span>
-          <span className="info-pill font-pixel" style={{ fontSize: '0.45rem', borderRadius: 0 }}>🧭 GEOSPATIAL DEDUPLICATION</span>
-          <span className="info-pill font-pixel" style={{ fontSize: '0.45rem', borderRadius: 0 }}>📈 LIVE SPAWN RISK DETECTOR</span>
+          <span className="info-pill font-pixel" style={{ fontSize: '0.625rem', borderRadius: 0 }}>⚡ AUTOMATIC QUEST TRIAGE</span>
+          <span className="info-pill font-pixel" style={{ fontSize: '0.625rem', borderRadius: 0 }}>🧭 GEOSPATIAL DEDUPLICATION</span>
+          <span className="info-pill font-pixel" style={{ fontSize: '0.625rem', borderRadius: 0 }}>📈 LIVE SPAWN RISK DETECTOR</span>
         </div>
         <div className="flex items-center justify-between" style={{ gap: 'var(--space-4)', flexWrap: 'wrap' }}>
           <div>
@@ -260,15 +260,15 @@ function HomePage() {
           <div className="flex gap-3" style={{ flexWrap: 'wrap' }}>
             <div className="summary-card pixel-border" style={{ minWidth: 140, borderRadius: 0 }}>
               <div className="font-pixel" style={{ fontSize: '1rem', color: 'var(--error)' }}>{urgentTickets}</div>
-              <div className="font-pixel text-muted" style={{ fontSize: '0.45rem', marginTop: '6px' }}>HIGH THREATS</div>
+              <div className="font-pixel text-muted" style={{ fontSize: '0.625rem', marginTop: '6px' }}>HIGH THREATS</div>
             </div>
             <div className="summary-card pixel-border" style={{ minWidth: 140, borderRadius: 0 }}>
               <div className="font-pixel" style={{ fontSize: '1rem', color: 'var(--success)' }}>{verifiedCount}</div>
-              <div className="font-pixel text-muted" style={{ fontSize: '0.45rem', marginTop: '6px' }}>VERIFIED QUESTS</div>
+              <div className="font-pixel text-muted" style={{ fontSize: '0.625rem', marginTop: '6px' }}>VERIFIED QUESTS</div>
             </div>
             <div className="summary-card pixel-border" style={{ minWidth: 180, borderRadius: 0 }}>
               <div className="font-pixel" style={{ fontSize: '0.75rem', color: 'var(--accent)', textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap' }}>{topRisk ? `${topRisk.ward}` : '—'}</div>
-              <div className="font-pixel text-muted" style={{ fontSize: '0.45rem', marginTop: '6px' }}>{topRisk ? `${Math.round((topRisk.probability || 0) * 100)}% SPAWN RISK` : 'NO HOTSPOT'}</div>
+              <div className="font-pixel text-muted" style={{ fontSize: '0.625rem', marginTop: '6px' }}>{topRisk ? `${Math.round((topRisk.probability || 0) * 100)}% SPAWN RISK` : 'NO HOTSPOT'}</div>
             </div>
           </div>
         </div>
@@ -317,7 +317,7 @@ function HomePage() {
                   role="tab"
                   aria-selected={layer === l.key}
                   className={`layer-chip font-pixel ${layer === l.key ? 'active' : ''}`}
-                  style={{ fontSize: '0.45rem', borderRadius: 0, border: '1px solid var(--border)' }}
+                  style={{ fontSize: '0.65rem', borderRadius: 0, border: '1px solid var(--border)' }}
                   onClick={() => setLayer(l.key)}
                 >
                   {l.label}
@@ -326,7 +326,7 @@ function HomePage() {
             </div>
             <div className="layer-legend" aria-hidden="true" style={{ borderRadius: 0, border: '1px solid var(--border)' }}>
               {legendItems().map((item, i) => (
-                <div className="legend-item font-pixel" key={i} style={{ fontSize: '0.45rem' }}>
+                <div className="legend-item font-pixel" key={i} style={{ fontSize: '0.625rem' }}>
                   <span className="legend-swatch" style={{ background: item.color, borderRadius: 0 }} />
                   <span>{item.label}</span>
                 </div>
@@ -338,12 +338,12 @@ function HomePage() {
         {/* RIGHT: Compact filter row + feed */}
         <div className="flex flex-col gap-4 home-feed-col rpg-panel" style={{ padding: 'var(--space-4)', height: '100%' }}>
           <div className="flex justify-between items-center" style={{ borderBottom: '1px solid var(--border)', paddingBottom: '8px' }}>
-            <span className="font-pixel" style={{ fontSize: '0.55rem', color: 'var(--accent)' }}>⚔️ QUEST LEDGER BOARD</span>
+            <span className="font-pixel" style={{ fontSize: '0.65rem', color: 'var(--accent)' }}>⚔️ QUEST LEDGER BOARD</span>
             <div className="flex gap-2">
               <button 
                 onClick={() => scrollFeed('up')} 
                 className="btn btn-secondary font-pixel" 
-                style={{ padding: '4px 8px', fontSize: '0.45rem', borderRadius: 0, border: '1px solid var(--border)', background: 'var(--bg-surface)' }}
+                style={{ padding: '4px 8px', fontSize: '0.625rem', borderRadius: 0, border: '1px solid var(--border)', background: 'var(--bg-surface)' }}
                 aria-label="Scroll feed up"
               >
                 ▲
@@ -351,7 +351,7 @@ function HomePage() {
               <button 
                 onClick={() => scrollFeed('down')} 
                 className="btn btn-secondary font-pixel" 
-                style={{ padding: '4px 8px', fontSize: '0.45rem', borderRadius: 0, border: '1px solid var(--border)', background: 'var(--bg-surface)' }}
+                style={{ padding: '4px 8px', fontSize: '0.625rem', borderRadius: 0, border: '1px solid var(--border)', background: 'var(--bg-surface)' }}
                 aria-label="Scroll feed down"
               >
                 ▼
@@ -365,7 +365,7 @@ function HomePage() {
               value={filters.status}
               onChange={e => handleFilter('status', e.target.value)}
               className="filter-chip-select font-pixel"
-              style={{ borderRadius: 0, fontSize: '0.45rem' }}
+              style={{ borderRadius: 0, fontSize: '0.625rem' }}
             >
               <option value="">ALL STATUSES</option>
               <option value="reported">REPORTED</option>
@@ -378,7 +378,7 @@ function HomePage() {
               value={filters.category}
               onChange={e => handleFilter('category', e.target.value)}
               className="filter-chip-select font-pixel"
-              style={{ borderRadius: 0, fontSize: '0.45rem' }}
+              style={{ borderRadius: 0, fontSize: '0.625rem' }}
             >
               <option value="">ALL CATEGORIES</option>
               {Object.entries(CATEGORY_LABELS).map(([k, v]) => (
@@ -389,12 +389,12 @@ function HomePage() {
               value={filters.ward}
               onChange={e => handleFilter('ward', e.target.value)}
               className="filter-chip-select font-pixel"
-              style={{ borderRadius: 0, fontSize: '0.45rem' }}
+              style={{ borderRadius: 0, fontSize: '0.625rem' }}
             >
               <option value="">ALL WARDS</option>
               {WARD_LIST.map(w => (<option key={w} value={w}>{w.toUpperCase()}</option>))}
             </select>
-            <span className="font-pixel text-muted" style={{ marginLeft: 'auto', whiteSpace: 'nowrap', fontSize: '0.45rem' }}>
+            <span className="font-pixel text-muted" style={{ marginLeft: 'auto', whiteSpace: 'nowrap', fontSize: '0.625rem' }}>
               {tickets.length} QUEST{tickets.length !== 1 ? 'S' : ''}
             </span>
           </div>
@@ -431,15 +431,15 @@ function HomePage() {
                     <span className="font-serif" style={{ fontSize: '1.0625rem', fontWeight: 600, color: 'var(--ink-primary)', lineHeight: 1.3 }}>
                       {ticket.title || ticket.ai_title || 'Untitled Quest'}
                     </span>
-                    <span className="font-pixel text-muted" style={{ marginLeft: 'var(--space-3)', whiteSpace: 'nowrap', flexShrink: 0, fontSize: '0.45rem' }}>{timeAgo(ticket.created_at).toUpperCase()}</span>
+                    <span className="font-pixel text-muted" style={{ marginLeft: 'var(--space-3)', whiteSpace: 'nowrap', flexShrink: 0, fontSize: '0.625rem' }}>{timeAgo(ticket.created_at).toUpperCase()}</span>
                   </div>
                   <div className="flex items-center gap-2" style={{ flexWrap: 'wrap' }}>
-                    <span className="badge badge-outline font-pixel" style={{ color: CATEGORY_COLORS[ticket.category] || 'var(--ink-secondary)', borderRadius: 0, fontSize: '0.45rem', padding: '2px 4px' }}>
+                    <span className="badge badge-outline font-pixel" style={{ color: CATEGORY_COLORS[ticket.category] || 'var(--ink-secondary)', borderRadius: 0, fontSize: '0.625rem', padding: '2px 4px' }}>
                       {CATEGORY_LABELS[ticket.category] || capitalize(ticket.category)}
                     </span>
-                    <span className={`${severityClass(ticket.severity)} font-pixel`} style={{ borderRadius: 0, fontSize: '0.45rem', padding: '2px 4px' }}>{capitalize(ticket.severity)}</span>
-                    <span className={`${statusClass(ticket.status)} font-pixel`} style={{ borderRadius: 0, fontSize: '0.45rem', padding: '2px 4px' }}>{capitalize(ticket.status)}</span>
-                    <span className="font-pixel text-muted" style={{ marginLeft: 'auto', fontSize: '0.45rem' }}>{ticket.ward?.toUpperCase() || '—'}</span>
+                    <span className={`${severityClass(ticket.severity)} font-pixel`} style={{ borderRadius: 0, fontSize: '0.625rem', padding: '2px 4px' }}>{capitalize(ticket.severity)}</span>
+                    <span className={`${statusClass(ticket.status)} font-pixel`} style={{ borderRadius: 0, fontSize: '0.625rem', padding: '2px 4px' }}>{capitalize(ticket.status)}</span>
+                    <span className="font-pixel text-muted" style={{ marginLeft: 'auto', fontSize: '0.625rem' }}>{ticket.ward?.toUpperCase() || '—'}</span>
                   </div>
                   {ticket.priority_score != null && !isNaN(ticket.priority_score) && (
                     <div className="priority-bar" style={{ height: '3px', marginTop: 'var(--space-3)', borderRadius: 0 }}>
