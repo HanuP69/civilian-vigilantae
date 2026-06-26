@@ -30,6 +30,7 @@ export async function processReport(reportData, onStep) {
   const ctx = {
     userId: reportData.reporter_id,
     userName: reportData.reporter_name,
+    userAddress: reportData.address || null,
     mediaUrls: reportData.media_urls || [],
     mediaType: reportData.media_type || 'image',
     mediaBase64: reportData.mediaBase64 || null,

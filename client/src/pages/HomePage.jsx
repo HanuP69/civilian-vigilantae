@@ -99,9 +99,12 @@ function HomePage() {
           const updatedFields = {};
           if (lastEvent.data.event === 'escalated') {
             updatedFields.status = 'in_progress';
-            if (lastEvent.data.priority_score != null) updatedFields.priority_score = lastEvent.data.priority_score;
           }
           if (lastEvent.data.status) updatedFields.status = lastEvent.data.status;
+          // Always merge priority_score if present and valid
+          if (lastEvent.data.priority_score != null && !isNaN(lastEvent.data.priority_score)) {
+            updatedFields.priority_score = lastEvent.data.priority_score;
+          }
           return { ...t, ...updatedFields };
         })
       );
@@ -267,19 +270,69 @@ function HomePage() {
 
   return (
     <div className="home-container" style={{ paddingBottom: 'var(--space-10)' }}>
-      <section aria-label="Introduction" style={{ marginBottom: 'var(--space-10)', borderBottom: '1px solid var(--border-subtle)', paddingBottom: 'var(--space-8)' }}>
-        <h1 className="animate-reveal hero-heading">
-          Civic monitoring, <span style={{ color: 'var(--accent)' }}>reimagined</span>.
-        </h1>
-        <p className="animate-fade-up stagger-1 text-secondary" style={{ fontSize: '1.25rem', marginTop: 'var(--space-5)', maxWidth: '600px', fontWeight: 300 }}>
-          Real-time visibility into urban infrastructure, powered by agentic intelligence, spatial clustering, and predictive forecasting.
-        </p>
+      {/* Hero — editorial strip, not a landing page */}
+      <section aria-label="Introduction" style={{
+        display: 'grid',
+        gridTemplateColumns: '1fr auto',
+        alignItems: 'end',
+        gap: 'var(--space-8)',
+        marginBottom: 'var(--space-8)',
+        paddingBottom: 'var(--space-6)',
+        borderBottom: '1px solid var(--border-subtle)',
+      }}>
+        <div>
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: 'var(--space-3)',
+            marginBottom: 'var(--space-4)',
+          }}>
+            <span style={{
+              fontFamily: 'var(--font-mono)',
+              fontSize: '0.6875rem',
+              color: 'var(--accent)',
+              textTransform: 'uppercase',
+              letterSpacing: '0.12em',
+              padding: '3px 8px',
+              border: '1px solid var(--accent-muted)',
+              borderRadius: 'var(--radius-sm)',
+            }}>
+              Live · Lucknow
+            </span>
+            <span style={{
+              width: 6, height: 6, borderRadius: '50%',
+              background: 'var(--success)',
+              boxShadow: '0 0 0 3px oklch(0.65 0.16 155 / 0.2)',
+              animation: 'pulse-dot 2s ease-in-out infinite',
+              display: 'inline-block',
+            }} />
+          </div>
+          <h1 className="animate-reveal hero-heading" style={{ fontStyle: 'normal', letterSpacing: '-0.03em' }}>
+            Infrastructure issues,<br />
+            <span style={{ color: 'var(--accent)', fontStyle: 'italic' }}>tracked in the open.</span>
+          </h1>
+        </div>
+        <div className="animate-fade-up stagger-2" style={{ textAlign: 'right' }}>
+          <Link to="/report" className="btn btn-primary btn-lg" style={{
+            padding: 'var(--space-3) var(--space-6)',
+            fontSize: '0.9375rem',
+            borderRadius: 'var(--radius-full)',
+            gap: 'var(--space-2)',
+          }}>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+            Report an issue
+          </Link>
+          <p className="text-xs text-muted" style={{ marginTop: 'var(--space-2)' }}>
+            {tickets.length > 0 ? `${tickets.length} active incidents` : 'Be the first to report'}
+          </p>
+        </div>
       </section>
 
       <div className="animate-fade-up stagger-2 home-grid">
-        <div className="flex flex-col gap-6">
-          <div className="map-wrapper">
-            <MapContainer ref={setMap} center={[26.8467, 80.9462]} zoom={11} style={{ height: '100%', width: '100%' }}>
+        {/* LEFT: Map full height */}
+        <div className="home-map-col">
+          <div className="map-wrapper" style={{ height: '100%', minHeight: 520 }}>
+            <MapContainer ref={setMap} center={[26.8467, 80.9462]} zoom={12} style={{ height: '100%', width: '100%' }}>
               <TileLayer
                 attribution='&copy; OpenStreetMap contributors'
                 url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png"
@@ -308,49 +361,52 @@ function HomePage() {
               ))}
             </div>
           </div>
-
-          <div className="flex flex-col gap-4 panel">
-            <h3 className="label" style={{ fontSize: '0.875rem' }}>Filters</h3>
-            <label className="flex flex-col gap-1">
-              <span className="label">Status</span>
-              <select value={filters.status} onChange={e => handleFilter('status', e.target.value)}>
-                <option value="">All Statuses</option>
-                <option value="reported">Reported</option>
-                <option value="verified">Verified</option>
-                <option value="in_progress">In Progress</option>
-                <option value="resolved">Resolved</option>
-                <option value="reopened">Reopened</option>
-              </select>
-            </label>
-            <label className="flex flex-col gap-1">
-              <span className="label">Category</span>
-              <select value={filters.category} onChange={e => handleFilter('category', e.target.value)}>
-                <option value="">All Categories</option>
-                {Object.entries(CATEGORY_LABELS).map(([k, v]) => (
-                  <option key={k} value={k}>{v}</option>
-                ))}
-              </select>
-            </label>
-            <label className="flex flex-col gap-1">
-              <span className="label">Ward</span>
-              <select value={filters.ward} onChange={e => handleFilter('ward', e.target.value)}>
-                <option value="">All Wards</option>
-                {WARD_LIST.map(w => (<option key={w} value={w}>{w}</option>))}
-              </select>
-            </label>
-          </div>
         </div>
 
-        <div className="flex flex-col gap-4">
-          <div className="flex items-center justify-between" style={{ paddingBottom: 'var(--space-3)', borderBottom: '1px solid var(--border-subtle)' }}>
-            <h2 style={{ fontSize: '1.5rem' }}>Recent Reports</h2>
-            <span className="text-sm text-muted">{tickets.length} incidents</span>
+        {/* RIGHT: Compact filter row + feed */}
+        <div className="flex flex-col gap-4 home-feed-col">
+          {/* Filter chips row */}
+          <div style={{ display: 'flex', gap: 'var(--space-2)', flexWrap: 'wrap', alignItems: 'center' }}>
+            <select
+              value={filters.status}
+              onChange={e => handleFilter('status', e.target.value)}
+              className="filter-chip-select"
+            >
+              <option value="">All statuses</option>
+              <option value="reported">Reported</option>
+              <option value="verified">Verified</option>
+              <option value="in_progress">In Progress</option>
+              <option value="resolved">Resolved</option>
+              <option value="reopened">Reopened</option>
+            </select>
+            <select
+              value={filters.category}
+              onChange={e => handleFilter('category', e.target.value)}
+              className="filter-chip-select"
+            >
+              <option value="">All categories</option>
+              {Object.entries(CATEGORY_LABELS).map(([k, v]) => (
+                <option key={k} value={k}>{v}</option>
+              ))}
+            </select>
+            <select
+              value={filters.ward}
+              onChange={e => handleFilter('ward', e.target.value)}
+              className="filter-chip-select"
+            >
+              <option value="">All wards</option>
+              {WARD_LIST.map(w => (<option key={w} value={w}>{w}</option>))}
+            </select>
+            <span className="text-xs text-muted" style={{ marginLeft: 'auto', whiteSpace: 'nowrap' }}>
+              {tickets.length} incident{tickets.length !== 1 ? 's' : ''}
+            </span>
           </div>
 
-          <div className="flex flex-col gap-4">
+          {/* Feed */}
+          <div className="flex flex-col gap-3" style={{ overflowY: 'auto', flex: 1 }}>
             {loading ? (
-              <div aria-busy="true" aria-label="Loading reports" className="flex flex-col gap-4">
-                {[1, 2, 3, 4].map(i => (<div key={i} className="skeleton" style={{ height: 120, borderRadius: 'var(--radius-lg)' }} />))}
+              <div aria-busy="true" aria-label="Loading reports" className="flex flex-col gap-3">
+                {[1, 2, 3, 4].map(i => (<div key={i} className="skeleton" style={{ height: 110, borderRadius: 'var(--radius-lg)' }} />))}
               </div>
             ) : tickets.length === 0 ? (
               <div className="empty-state flex flex-col gap-4">
@@ -361,23 +417,23 @@ function HomePage() {
               tickets.map((ticket) => (
                 <div
                   key={ticket.id}
-                  className="card flex-col gap-3 clickable-card"
+                  className="home-ticket-card clickable-card"
                   role="button"
                   tabIndex={0}
                   onClick={() => navigate(`/ticket/${ticket.id}`)}
                   onKeyDown={(e) => handleCardKey(e, ticket)}
                   style={{
-                    background: activeTicketId === ticket.id ? 'var(--bg-secondary)' : 'var(--bg-primary)',
-                    transform: activeTicketId === ticket.id ? 'translateY(-4px)' : 'translateY(0)'
+                    borderLeft: `3px solid ${ticket.priority_score > 70 ? 'var(--error)' : ticket.priority_score > 40 ? 'var(--warning)' : 'var(--border)'}`,
+                    background: activeTicketId === ticket.id ? 'var(--bg-elevated)' : 'var(--bg-secondary)',
                   }}
                   onMouseEnter={() => handleHover(ticket)}
                   onMouseLeave={() => setActiveTicketId(null)}
                 >
-                  <div className="flex justify-between items-start">
-                    <span className="font-serif" style={{ fontSize: '1.25rem', fontWeight: 500, color: 'var(--ink-primary)' }}>
+                  <div className="flex justify-between items-start" style={{ marginBottom: 'var(--space-2)' }}>
+                    <span className="font-serif" style={{ fontSize: '1.0625rem', fontWeight: 500, color: 'var(--ink-primary)', lineHeight: 1.3 }}>
                       {ticket.title || ticket.ai_title || 'Untitled Report'}
                     </span>
-                    <span className="text-xs text-muted" style={{ letterSpacing: '0.05em' }}>{timeAgo(ticket.created_at)}</span>
+                    <span className="text-xs text-muted" style={{ marginLeft: 'var(--space-3)', whiteSpace: 'nowrap', flexShrink: 0 }}>{timeAgo(ticket.created_at)}</span>
                   </div>
                   <div className="flex items-center gap-2" style={{ flexWrap: 'wrap' }}>
                     <span className="badge badge-outline" style={{ color: CATEGORY_COLORS[ticket.category] || 'var(--ink-secondary)' }}>
@@ -385,17 +441,11 @@ function HomePage() {
                     </span>
                     <span className={severityClass(ticket.severity)}>{capitalize(ticket.severity)}</span>
                     <span className={statusClass(ticket.status)}>{capitalize(ticket.status)}</span>
-                    <span className="text-xs text-muted" style={{ marginLeft: 'auto' }}>{ticket.ward || 'Unknown Ward'}</span>
+                    <span className="text-xs text-muted" style={{ marginLeft: 'auto' }}>{ticket.ward || '—'}</span>
                   </div>
-                  {ticket.priority_score != null && (
-                    <div style={{ marginTop: 'var(--space-2)' }}>
-                      <div className="flex justify-between text-xs" style={{ marginBottom: 'var(--space-1)' }}>
-                        <span className="text-muted">Priority Score</span>
-                        <span style={{ color: ticket.priority_score > 70 ? 'var(--error)' : 'var(--accent)' }}>{Math.round(ticket.priority_score)}%</span>
-                      </div>
-                      <div className="priority-bar" style={{ height: '2px' }}>
-                        <div className="priority-bar-fill" style={{ width: `${Math.round(ticket.priority_score)}%`, background: ticket.priority_score > 70 ? 'var(--error)' : ticket.priority_score > 40 ? 'var(--warning)' : 'var(--accent)' }} />
-                      </div>
+                  {ticket.priority_score != null && !isNaN(ticket.priority_score) && (
+                    <div className="priority-bar" style={{ height: '2px', marginTop: 'var(--space-3)' }}>
+                      <div className="priority-bar-fill" style={{ width: `${Math.round(ticket.priority_score)}%`, background: ticket.priority_score > 70 ? 'var(--error)' : ticket.priority_score > 40 ? 'var(--warning)' : 'var(--accent)' }} />
                     </div>
                   )}
                 </div>

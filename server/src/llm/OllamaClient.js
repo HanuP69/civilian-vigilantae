@@ -227,8 +227,10 @@ export class OllamaClient extends LLMClient {
   }
 
   /**
-   * Send a multimodal message (text + image) for classification.
-   * Note: Ollama has limited video support — image only.
+   * Send a multimodal message (text + image/audio/video) for classification.
+   * - Images: passed inline as base64 to vision-capable models (llava, gemma3, etc.)
+   * - Audio: transcribed first via Ollama's Whisper speech endpoint, then classified as text
+   * - Video: falls back to text-only (no inline video support in Ollama)
    *
    * @param {string} text
    * @param {Object} media — { mimeType: string, data: string (base64) }
@@ -236,13 +238,47 @@ export class OllamaClient extends LLMClient {
    * @returns {Promise<import('./LLMClient.js').LLMResponse>}
    */
   async chatWithMedia(text, media, tools) {
-    const messages = [
-      {
-        role: 'user',
-        content: text,
-        media,
-      },
-    ];
+    if (media && media.mimeType?.startsWith('audio/')) {
+      // Transcribe audio via Ollama's Whisper endpoint, then classify
+      let transcriptContext = '';
+      try {
+        const audioBytes = Buffer.from(media.data, 'base64');
+        const { Blob: NodeBlob } = await import('node:buffer');
+        const audioBlob = new NodeBlob([audioBytes], { type: media.mimeType });
+
+        // Ollama exposes OpenAI-compatible speech endpoint: POST /api/audio/transcriptions
+        const formData = new FormData();
+        formData.append('file', audioBlob, 'audio.webm');
+        formData.append('model', 'whisper');
+
+        const controller = new AbortController();
+        const timeout = setTimeout(() => controller.abort(), 30000);
+        const resp = await fetch(`${this.baseUrl}/api/audio/transcriptions`, {
+          method: 'POST',
+          body: formData,
+          signal: controller.signal,
+        }).finally(() => clearTimeout(timeout));
+
+        if (resp.ok) {
+          const result = await resp.json();
+          if (result.text) {
+            transcriptContext = `\n\nAudio transcript from the voice note: "${result.text}"`;
+            console.log('[Ollama] Audio transcribed:', result.text.slice(0, 80));
+          }
+        } else {
+          console.warn(`[Ollama] Whisper endpoint unavailable (${resp.status}) — classifying from text only`);
+        }
+      } catch (err) {
+        console.warn('[Ollama] Audio transcription failed, falling back to text-only classification:', err.message);
+      }
+
+      const messages = [{ role: 'user', content: text + transcriptContext }];
+      return this.chat(messages, tools);
+    }
+
+    // Images: pass base64 inline (supported by llava, gemma3, llama3.2-vision etc.)
+    // Video: Ollama has no inline video support — pass text prompt only
+    const messages = [{ role: 'user', content: text, media }];
     return this.chat(messages, tools);
   }
 }

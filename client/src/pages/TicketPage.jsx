@@ -103,19 +103,29 @@ function TicketPage() {
           {ticket.title || ticket.ai_title || 'Untitled Ticket'}
         </h1>
 
-        <div className="flex gap-8 text-sm text-secondary animate-fade-up stagger-1" style={{ letterSpacing: '0.05em', textTransform: 'uppercase', flexWrap: 'wrap' }}>
+        <div className="flex gap-6 text-sm text-secondary animate-fade-up stagger-1" style={{ flexWrap: 'wrap', rowGap: 'var(--space-3)' }}>
           <div className="flex flex-col gap-1">
-            <span className="text-muted text-xs">Reported</span>
+            <span className="text-muted text-xs" style={{ letterSpacing: '0.1em', textTransform: 'uppercase' }}>Reported</span>
             <span>{ticket.created_at ? timeAgo(ticket.created_at) : '—'}</span>
           </div>
-          <div className="flex flex-col gap-1">
-            <span className="text-muted text-xs">Location</span>
-            <span>{ticket.ward || '—'}</span>
-          </div>
-          <div className="flex flex-col gap-1">
-            <span className="text-muted text-xs">Address</span>
-            <span>{ticket.address || '—'}</span>
-          </div>
+          {ticket.ward && (
+            <div className="flex flex-col gap-1">
+              <span className="text-muted text-xs" style={{ letterSpacing: '0.1em', textTransform: 'uppercase' }}>Ward</span>
+              <span>{ticket.ward}</span>
+            </div>
+          )}
+          {ticket.address && !ticket.address.toLowerCase().startsWith(ticket.ward?.toLowerCase()) && (
+            <div className="flex flex-col gap-1">
+              <span className="text-muted text-xs" style={{ letterSpacing: '0.1em', textTransform: 'uppercase' }}>Address</span>
+              <span>{ticket.address}</span>
+            </div>
+          )}
+          {ticket.department && (
+            <div className="flex flex-col gap-1">
+              <span className="text-muted text-xs" style={{ letterSpacing: '0.1em', textTransform: 'uppercase' }}>Department</span>
+              <span>{ticket.department}</span>
+            </div>
+          )}
         </div>
       </header>
 
@@ -128,6 +138,48 @@ function TicketPage() {
               {ticket.description || ticket.raw_text || 'No description provided for this incident.'}
             </p>
           </section>
+
+          {ticket.media_urls && ticket.media_urls.length > 0 && (
+            <section style={{ borderTop: '1px solid var(--border-subtle)', paddingTop: 'var(--space-6)' }}>
+              <h3 className="section-title">Attachments</h3>
+              <div className="flex flex-col gap-4">
+                {ticket.media_urls.map((url, i) => {
+                  const type = ticket.media_type || (
+                    /\.(mp4|webm|mov|avi)$/i.test(url) ? 'video' :
+                    /\.(mp3|wav|webm|ogg|m4a)$/i.test(url) ? 'audio' : 'image'
+                  );
+                  if (type === 'video') return (
+                    <div key={i} style={{ borderRadius: 'var(--radius-md)', overflow: 'hidden', background: 'var(--bg-secondary)', border: '1px solid var(--border-subtle)' }}>
+                      <video
+                        src={url}
+                        controls
+                        style={{ width: '100%', maxHeight: 400, display: 'block', borderRadius: 'var(--radius-md)' }}
+                      />
+                    </div>
+                  );
+                  if (type === 'audio') return (
+                    <div key={i} className="panel flex items-center gap-4" style={{ padding: 'var(--space-4)' }}>
+                      <div style={{ width: 40, height: 40, borderRadius: '50%', background: 'var(--accent-muted)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
+                      </div>
+                      <audio src={url} controls style={{ flex: 1, minWidth: 0 }} />
+                    </div>
+                  );
+                  // image (default)
+                  return (
+                    <a key={i} href={url} target="_blank" rel="noopener noreferrer" style={{ display: 'block', borderRadius: 'var(--radius-md)', overflow: 'hidden', border: '1px solid var(--border-subtle)' }}>
+                      <img
+                        src={url}
+                        alt={`Attachment ${i + 1}`}
+                        style={{ width: '100%', maxHeight: 480, objectFit: 'cover', display: 'block' }}
+                        onError={e => { e.target.style.display = 'none'; }}
+                      />
+                    </a>
+                  );
+                })}
+              </div>
+            </section>
+          )}
 
           {ticket.agent_trace && ticket.agent_trace.length > 0 && (
             <section style={{ marginTop: 'var(--space-6)', paddingTop: 'var(--space-6)', borderTop: '1px solid var(--border-subtle)' }}>
@@ -158,15 +210,15 @@ function TicketPage() {
 
         <div className="flex flex-col gap-6">
 
-          {ticket.priority_score != null && (
+          {ticket.priority_score != null && !isNaN(ticket.priority_score) && (
             <div className="panel" style={{ borderColor: 'var(--accent-muted)' }}>
-              <h4 className="label" style={{ marginBottom: 'var(--space-2)' }}>Computed Priority</h4>
+              <h4 className="label" style={{ marginBottom: 'var(--space-2)' }}>Urgency Score</h4>
               <div className="flex items-end justify-between" style={{ marginBottom: 'var(--space-3)' }}>
                 <span className="font-serif" style={{ fontSize: '2.5rem', lineHeight: 1, color: ticket.priority_score > 70 ? 'var(--error)' : 'var(--accent)' }}>
-                  {Math.round(ticket.priority_score)}%
+                  {Math.round(ticket.priority_score)}
                 </span>
                 <span className="text-sm text-secondary" style={{ paddingBottom: '4px' }}>
-                  {ticket.priority_score > 70 ? 'Critical' : ticket.priority_score > 40 ? 'Moderate' : 'Low'}
+                  {ticket.priority_score > 70 ? '🔴 Critical' : ticket.priority_score > 40 ? '🟡 Moderate' : '🟢 Low'} · out of 100
                 </span>
               </div>
               <div className="priority-bar" style={{ height: '2px' }}>

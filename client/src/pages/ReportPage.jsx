@@ -47,9 +47,17 @@ function ReportPage() {
     if (!f) return;
     setFile(f);
     setGeoError('');
-    const reader = new FileReader();
-    reader.onload = (e) => setPreview(e.target.result);
-    reader.readAsDataURL(f);
+    if (f.type.startsWith('audio')) {
+      // Audio files: no image preview, handled separately
+      const url = URL.createObjectURL(f);
+      setAudioUrl(url);
+      setPreview(null);
+    } else {
+      // Image and video: use FileReader for data URL preview
+      const reader = new FileReader();
+      reader.onload = (e) => setPreview(e.target.result);
+      reader.readAsDataURL(f);
+    }
   };
 
   const removeFile = () => {
@@ -69,26 +77,48 @@ function ReportPage() {
   const getLocation = () => {
     setDetecting(true);
     setGeoError('');
-    if ('geolocation' in navigator) {
-      navigator.geolocation.getCurrentPosition(
-        (pos) => {
-          setLat(pos.coords.latitude);
-          setLng(pos.coords.longitude);
-          setDetecting(false);
-        },
-        (err) => {
-          setDetecting(false);
-          if (err.code === err.PERMISSION_DENIED) {
-            setGeoError('Location access denied. Enter an address instead.');
-          } else {
-            setGeoError('Could not detect location. Enter an address instead.');
-          }
-        }
-      );
-    } else {
+    if (!('geolocation' in navigator)) {
       setDetecting(false);
       setGeoError('Geolocation is not supported by your browser.');
+      return;
     }
+    navigator.geolocation.getCurrentPosition(
+      async (pos) => {
+        const { latitude, longitude } = pos.coords;
+        setLat(latitude);
+        setLng(longitude);
+        // Reverse-geocode using Nominatim (no API key needed)
+        try {
+          const res = await fetch(
+            `https://nominatim.openstreetmap.org/reverse?lat=${latitude}&lon=${longitude}&format=json&addressdetails=1`,
+            { headers: { 'Accept-Language': 'en' } }
+          );
+          if (res.ok) {
+            const data = await res.json();
+            // Build a readable address: road + suburb/neighbourhood + city
+            const a = data.address || {};
+            const parts = [
+              a.road || a.pedestrian || a.footway,
+              a.suburb || a.neighbourhood || a.quarter,
+              a.city || a.town || a.village || a.county,
+            ].filter(Boolean);
+            const readable = parts.length > 0 ? parts.join(', ') : data.display_name?.split(',').slice(0, 3).join(',').trim();
+            if (readable) setAddress(readable);
+          }
+        } catch {
+          // Reverse geocode failed — coords are still set, address box stays empty
+        }
+        setDetecting(false);
+      },
+      (err) => {
+        setDetecting(false);
+        if (err.code === err.PERMISSION_DENIED) {
+          setGeoError('Location access denied. Enter an address instead.');
+        } else {
+          setGeoError('Could not detect location. Enter an address instead.');
+        }
+      }
+    );
   };
 
   const startRecording = async () => {
@@ -140,6 +170,10 @@ function ReportPage() {
 
   const handleSubmit = async () => {
     setSubmitting(true);
+    // Generate a report ID immediately so the reveal overlay opens NOW
+    const reportId = `report-${Date.now()}`;
+    setActiveReportId(reportId);
+
     const formData = new FormData();
     if (file) formData.append('media', file);
     formData.append('text', description);
@@ -147,6 +181,7 @@ function ReportPage() {
     formData.append('lat', lat != null ? lat.toString() : '26.85');
     formData.append('lng', lng != null ? lng.toString() : '80.95');
     formData.append('reporter_name', 'Anonymous');
+    formData.append('report_id', reportId);
 
     let res;
     try {
@@ -160,7 +195,6 @@ function ReportPage() {
       return;
     }
 
-    setActiveReportId(res.report_id);
     setResult(res);
     if (res.trace) setTraceSteps(res.trace);
     if (res.classification) setClassification(res.classification.category);
@@ -254,11 +288,12 @@ function ReportPage() {
               onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
               onDragLeave={() => setDragOver(false)}
               onDrop={handleDrop}
-              onClick={() => fileRef.current?.click()}
+              onClick={() => !file && fileRef.current?.click()}
+              style={{ cursor: file ? 'default' : 'pointer' }}
             >
-              {preview ? (
+              {preview && mediaType === 'image' ? (
                 <div style={{ position: 'relative' }}>
-                  <img src={preview} alt="Preview" style={{ maxHeight: 240, borderRadius: 'var(--radius-md)', margin: '0 auto' }} />
+                  <img src={preview} alt="Preview" style={{ maxHeight: 240, borderRadius: 'var(--radius-md)', margin: '0 auto', display: 'block' }} />
                   <button
                     type="button"
                     className="btn btn-secondary btn-sm"
@@ -268,52 +303,72 @@ function ReportPage() {
                     ✕ Remove
                   </button>
                 </div>
+              ) : preview && mediaType === 'video' ? (
+                <div style={{ position: 'relative' }}>
+                  <video src={preview} controls style={{ maxHeight: 240, borderRadius: 'var(--radius-md)', margin: '0 auto', display: 'block', maxWidth: '100%' }} />
+                  <button
+                    type="button"
+                    className="btn btn-secondary btn-sm"
+                    onClick={(e) => { e.stopPropagation(); removeFile(); }}
+                    style={{ position: 'absolute', top: 'var(--space-2)', right: 'var(--space-2)' }}
+                  >
+                    ✕ Remove
+                  </button>
+                </div>
+              ) : audioUrl && mediaType === 'audio' && !recording ? (
+                <div className="flex flex-col items-center gap-3" onClick={(e) => e.stopPropagation()}>
+                  <div style={{ width: '48px', height: '48px', borderRadius: '50%', background: 'var(--accent-muted)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
+                  </div>
+                  <audio src={audioUrl} controls style={{ width: '100%', maxWidth: 320 }} />
+                  <p className="text-xs text-muted">{file?.name || 'audio file'}</p>
+                  <button className="btn btn-ghost btn-sm" onClick={removeFile}>✕ Remove</button>
+                </div>
               ) : (
                 <div className="flex flex-col items-center justify-center">
                   <div style={{ width: '56px', height: '56px', borderRadius: '50%', background: 'var(--bg-primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 'var(--space-4)' }}>
                     <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
                   </div>
-                  <p className="font-serif" style={{ fontSize: '1.25rem', marginBottom: 'var(--space-2)' }}>Drag & drop your image or video</p>
-                  <p className="text-sm text-muted">or click to browse · JPG, PNG, MP4</p>
+                  <p className="font-serif" style={{ fontSize: '1.25rem', marginBottom: 'var(--space-2)' }}>Drag & drop image, video, or audio</p>
+                  <p className="text-sm text-muted">or click to browse · JPG, PNG, MP4, MP3, WAV</p>
                 </div>
               )}
               <input
                 ref={fileRef}
                 type="file"
-                accept="image/*,video/*"
+                accept="image/*,video/*,audio/*"
                 style={{ display: 'none' }}
                 onChange={e => handleFile(e.target.files[0])}
               />
             </div>
 
-            <div className="flex items-center gap-4" aria-hidden="true">
-              <div style={{ flex: 1, height: 1, background: 'var(--border)' }} />
-              <span className="text-xs text-muted" style={{ textTransform: 'uppercase', letterSpacing: '0.1em' }}>OR</span>
-              <div style={{ flex: 1, height: 1, background: 'var(--border)' }} />
-            </div>
+            {!(audioUrl && mediaType === 'audio' && !recording) && (
+              <>
+                <div className="flex items-center gap-4" aria-hidden="true">
+                  <div style={{ flex: 1, height: 1, background: 'var(--border)' }} />
+                  <span className="text-xs text-muted" style={{ textTransform: 'uppercase', letterSpacing: '0.1em' }}>OR</span>
+                  <div style={{ flex: 1, height: 1, background: 'var(--border)' }} />
+                </div>
 
-            {audioUrl ? (
-              <div className="flex items-center justify-center gap-4 panel">
-                <audio src={audioUrl} controls aria-label="Voice note recording" style={{ height: 40 }} />
-                <button className="btn btn-ghost btn-sm" onClick={() => { setAudioUrl(null); removeFile(); }}>Discard</button>
-              </div>
-            ) : recording ? (
-              <button
-                className="btn btn-danger flex justify-center items-center"
-                style={{ padding: 'var(--space-4)', fontSize: '1.125rem', borderRadius: 'var(--radius-lg)', width: '100%' }}
-                onClick={stopRecording}
-              >
-                <span className="rec-indicator"><span className="rec-dot" /> Recording</span>
-                <span style={{ marginLeft: 'var(--space-3)' }}>Tap to stop</span>
-              </button>
-            ) : (
-              <button
-                className="btn btn-secondary flex justify-center items-center"
-                style={{ padding: 'var(--space-4)', fontSize: '1.125rem', borderRadius: 'var(--radius-lg)', width: '100%' }}
-                onClick={startRecording}
-              >
-                🎙 Record Voice Note instead
-              </button>
+                {audioUrl && recording === false ? null : recording ? (
+                  <button
+                    className="btn btn-danger flex justify-center items-center"
+                    style={{ padding: 'var(--space-4)', fontSize: '1.125rem', borderRadius: 'var(--radius-lg)', width: '100%' }}
+                    onClick={stopRecording}
+                  >
+                    <span className="rec-indicator"><span className="rec-dot" /> Recording</span>
+                    <span style={{ marginLeft: 'var(--space-3)' }}>Tap to stop</span>
+                  </button>
+                ) : (
+                  <button
+                    className="btn btn-secondary flex justify-center items-center"
+                    style={{ padding: 'var(--space-4)', fontSize: '1.125rem', borderRadius: 'var(--radius-lg)', width: '100%' }}
+                    onClick={startRecording}
+                  >
+                    🎙 Record Voice Note instead
+                  </button>
+                )}
+              </>
             )}
           </div>
         )}

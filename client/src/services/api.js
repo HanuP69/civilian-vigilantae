@@ -25,8 +25,10 @@ export async function submitReport(formData) {
     userId = `user-${Math.random().toString(36).slice(2, 8)}`;
     localStorage.setItem('userId', userId);
   }
-  const reportId = `report-${Date.now()}`;
-  formData.append('report_id', reportId);
+  // Use existing report_id from formData if present, otherwise generate one
+  const existingId = formData.get('report_id');
+  const reportId = existingId || `report-${Date.now()}`;
+  if (!existingId) formData.append('report_id', reportId);
   const res = await fetch(`${API}/reports`, {
     method: 'POST',
     headers: { 'Authorization': `Bearer ${userId}` },

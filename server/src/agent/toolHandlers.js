@@ -100,15 +100,25 @@ export const toolHandlers = {
       elapsedHours, slaHours, category: t.category,
     });
     await db.collection('tickets').doc(ticket_id).update({ priority_score: score });
+    broadcast('ticket_updated', { ticket_id, event: 'priority_computed', priority_score: score });
     return { ticket_id, priority_score: score };
   },
 
   async create_ticket({ title, description, category, severity, lat, lng, address, ward, department }, ctx) {
     const id = `ticket-${uuidv4().substring(0, 8)}`;
     const slaHours = DEFAULT_PARAMS[category]?.lambda || 168;
+    const initialPriority = computePriority({
+      severity: severity || 'medium',
+      reportCount: 1,
+      verificationUp: 0,
+      verificationDown: 0,
+      elapsedHours: 0,
+      slaHours,
+      category: category || 'other',
+    });
     const ticket = {
       id, title, description, category, severity, status: 'reported',
-      priority_score: 0, lat, lng,
+      priority_score: initialPriority, lat, lng,
       address: address || `${ward || resolveWard(lat, lng)}, Lucknow`,
       ward: ward || resolveWard(lat, lng),
       department: department || DEPARTMENTS[category] || 'General Maintenance',
