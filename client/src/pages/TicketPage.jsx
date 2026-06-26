@@ -371,7 +371,7 @@ function TicketPage() {
                     <span className="font-pixel text-sm" style={{ color: 'var(--accent)' }}>{ticket.dispatch_plan.crew_size} Rangers</span>
                   </div>
                   <div style={{ padding: 'var(--space-2)', border: '1px solid var(--border-subtle)', background: 'var(--bg-primary)' }}>
-                    <span className="font-pixel block text-muted" style={{ fontSize: '0.35rem' }}>GOLD BUDGET</span>
+                    <span className="font-pixel block text-muted" style={{ fontSize: '0.35rem' }}>ESTIMATED COST</span>
                     <span className="font-pixel text-sm" style={{ color: 'var(--success)' }}>₹{ticket.dispatch_plan.estimated_cost}</span>
                   </div>
                   <div style={{ padding: 'var(--space-2)', border: '1px solid var(--border-subtle)', background: 'var(--bg-primary)' }}>

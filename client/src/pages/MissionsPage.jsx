@@ -130,10 +130,7 @@ function MissionsPage() {
                         <div className="font-pixel" style={{ fontSize: '0.55rem', color: 'var(--success)' }}>+{mission.xp_reward}</div>
                         <div className="font-pixel text-muted" style={{ fontSize: '0.35rem', marginTop: '2px' }}>XP</div>
                       </div>
-                      <div className="summary-card text-center" style={{ padding: '6px 12px', minWidth: '70px', borderRadius: 0 }}>
-                        <div className="font-pixel" style={{ fontSize: '0.55rem', color: 'var(--accent)' }}>{mission.gold_reward}</div>
-                        <div className="font-pixel text-muted" style={{ fontSize: '0.35rem', marginTop: '2px' }}>GOLD</div>
-                      </div>
+
                     </div>
 
                     {isCompleted ? (

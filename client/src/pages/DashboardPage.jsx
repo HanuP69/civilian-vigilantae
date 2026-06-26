@@ -1052,7 +1052,7 @@ function DashboardPage() {
             <div className="flex justify-between items-center" style={{ marginBottom: 'var(--space-3)' }}>
               <span className="font-pixel text-muted" style={{ fontSize: '0.45rem' }}>TREASURY LIMIT</span>
               <span className="font-mono" style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--accent)' }}>
-                ₹{(budget / 1000).toFixed(0)}k Gold
+                ₹{(budget / 1000).toFixed(0)}k
               </span>
             </div>
             <input 
