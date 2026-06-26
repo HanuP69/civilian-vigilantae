@@ -4,21 +4,13 @@ import { db } from '../../config/firebase.js';
 import { createTraceLogger } from '../traceLogger.js';
 import { resetLLMClient, setTestLLMClient } from '../../llm/index.js';
 
-function buildSequence(sequence) {
-  const queue = [...sequence];
-  return async function chat(messages) {
-    const step = queue.shift();
-    if (!step) {
-      return { toolCalls: [], text: 'done' };
-    }
-    return step(messages);
-  };
-}
-
-async function loadOrchestratorWithStubbedLLM(sequence) {
+async function loadOrchestratorWithStubbedLLM() {
   resetLLMClient();
-  const fakeLlm = { async chat(messages) { return chatSequence(messages); } };
-  const chatSequence = buildSequence(sequence);
+  const fakeLlm = {
+    async chat() {
+      return { text: 'Enriched reasoning summary' };
+    }
+  };
   setTestLLMClient(fakeLlm);
 
   const orchestratorUrl = new URL('../orchestrator.js', import.meta.url);
@@ -26,15 +18,8 @@ async function loadOrchestratorWithStubbedLLM(sequence) {
   return orchestrator;
 }
 
-test('processReport runs the full tool pipeline and records every step', async () => {
-  const orchestrator = await loadOrchestratorWithStubbedLLM([
-    () => ({ toolCalls: [{ name: 'classify_issue', args: { text: 'pothole', has_media: false } }], text: 'classify' }),
-    () => ({ toolCalls: [{ name: 'geo_resolve', args: { lat: 26.85, lng: 80.95 } }], text: 'geo' }),
-    () => ({ toolCalls: [{ name: 'find_cluster', args: { lat: 26.85, lng: 80.95, category: 'pothole', timestamp: new Date().toISOString() } }], text: 'cluster' }),
-    () => ({ toolCalls: [{ name: 'create_ticket', args: { title: 'Pothole', description: 'Big pothole', category: 'road_damage', severity: 'high', lat: 26.85, lng: 80.95, address: 'Hazratganj', ward: 'Hazratganj' } }], text: 'create' }),
-    () => ({ toolCalls: [{ name: 'compute_priority', args: { ticket_id: 'ticket-test' } }], text: 'priority' }),
-    () => ({ toolCalls: [], text: 'done' }),
-  ]);
+test('processReport runs the full deterministic tool pipeline and records every step', async () => {
+  const orchestrator = await loadOrchestratorWithStubbedLLM();
 
   const steps = [];
   const result = await orchestrator.processReport({
@@ -50,13 +35,41 @@ test('processReport runs the full tool pipeline and records every step', async (
 
   assert.ok(result.ticketId);
   assert.equal(result.merged, false);
+
+  // Phase 2 Schema & Explainability checks
+  const ticketDoc = await db.collection('tickets').doc(result.ticketId).get();
+  const ticket = ticketDoc.data();
+  assert.ok(ticket.verification_score !== undefined);
+  assert.ok(ticket.verification_explanation);
+  assert.ok(ticket.priority_explanation);
+  assert.ok(ticket.sla_risk_score !== undefined);
+  assert.ok(ticket.sla_risk_explanation);
+  assert.ok(ticket.dispatch_plan);
+  assert.ok(ticket.cluster_explanation);
+
+  // Phase 4 checks
+  assert.ok(ticket.priority_detail);
+  const calculatedTotal = ticket.priority_detail.severity +
+                          ticket.priority_detail.volume +
+                          ticket.priority_detail.verification +
+                          ticket.priority_detail.sla_urgency +
+                          ticket.priority_detail.safety;
+  assert.equal(calculatedTotal, ticket.priority_score);
+  assert.ok(ticket.cluster_detail);
+  assert.ok(ticket.cluster_detail.found !== undefined);
+  assert.ok(ticket.sla_params);
+
   assert.equal(result.trace.some((step) => step.step === 'create_ticket' && step.status === 'success'), true);
-  assert.ok(steps.some((step) => step.step === 'llm_reasoning'));
+  assert.ok(steps.some((step) => step.step === 'intake'));
   assert.ok(steps.some((step) => step.step === 'classify_issue'));
   assert.ok(steps.some((step) => step.step === 'geo_resolve'));
   assert.ok(steps.some((step) => step.step === 'find_cluster'));
+  assert.ok(steps.some((step) => step.step === 'record_verification'));
   assert.ok(steps.some((step) => step.step === 'create_ticket'));
   assert.ok(steps.some((step) => step.step === 'compute_priority'));
+  assert.ok(steps.some((step) => step.step === 'check_sla_status'));
+  assert.ok(steps.some((step) => step.step === 'planning'));
+  assert.ok(steps.some((step) => step.step === 'notify_reporters'));
   assert.ok(steps.some((step) => step.step === 'agent_response'));
   assert.ok(steps.some((step) => step.status === 'success'));
   assert.ok(steps.some((step) => step.status === 'pending'));
@@ -65,21 +78,21 @@ test('processReport runs the full tool pipeline and records every step', async (
   assert.ok(steps.every((step) => step.index != null));
 });
 
-test('processReport records the fallback response when no tool call is emitted', async () => {
-  const orchestrator = await loadOrchestratorWithStubbedLLM([
-    () => ({ toolCalls: [], text: 'No tool call needed' }),
-  ]);
+test('processReport throws error for invalid coordinates', async () => {
+  const orchestrator = await loadOrchestratorWithStubbedLLM();
 
-  const steps = [];
-  const result = await orchestrator.processReport({
-    id: 'report-2',
-    text: 'bad',
-    classificationResult: { category: 'other', severity: 'medium', confidence: 0.8, reasoning: 'test' },
-  }, (step) => steps.push(step));
-
-  assert.equal(result.ticketId, null);
-  assert.ok(steps.some((step) => step.step === 'llm_reasoning'));
-  assert.ok(steps.some((step) => step.step === 'agent_response'));
+  await assert.rejects(
+    async () => {
+      await orchestrator.processReport({
+        id: 'report-2',
+        text: 'bad coords',
+        lat: 95.0, // Invalid latitude (> 90)
+        lng: 80.95,
+        classificationResult: { category: 'other', severity: 'medium', confidence: 0.8, reasoning: 'test' },
+      });
+    },
+    /Invalid coordinates/
+  );
   resetLLMClient();
 });
 
@@ -135,3 +148,72 @@ test('tool handlers cover classification, geocoding, and error fallback branches
   const priority = await handlers.compute_priority({ ticket_id: 'missing-ticket' });
   assert.equal(priority.error, 'Ticket not found');
 });
+
+test('weighted community votes update verification, priority, and voter reputation trust', async () => {
+  const handlers = (await import('../toolHandlers.js')).toolHandlers;
+
+  // 1. Create a ticket
+  const created = await handlers.create_ticket({
+    title: 'Consensus Quest',
+    description: 'Civic anomaly verification test',
+    category: 'water_leak',
+    severity: 'medium',
+    lat: 26.85,
+    lng: 80.95,
+    address: 'Hazratganj',
+    ward: 'Hazratganj'
+  }, { userId: 'u_reporter', userName: 'Reporter' });
+  const ticketId = created.ticket_id;
+
+  // 2. Create users with different trust scores
+  await db.collection('users').doc('voter_high').set({
+    uid: 'voter_high', display_name: 'Noble Ranger', trust_score: 0.9,
+    reports_verified: 0, reports_rejected: 0, verification_accuracy: 1.0, xp: 0
+  });
+  await db.collection('users').doc('voter_low').set({
+    uid: 'voter_low', display_name: 'Novice Squire', trust_score: 0.1,
+    reports_verified: 0, reports_rejected: 0, verification_accuracy: 1.0, xp: 0
+  });
+
+  // 3. noble ranger upvotes
+  await handlers.record_verification({ ticket_id: ticketId, vote_type: 'still_issue' }, { userId: 'voter_high' });
+
+  // 4. novice squire downvotes
+  await handlers.record_verification({ ticket_id: ticketId, vote_type: 'looks_resolved' }, { userId: 'voter_low' });
+
+  let ticketDoc = await db.collection('tickets').doc(ticketId).get();
+  let ticket = ticketDoc.data();
+  assert.equal(ticket.verification_up, 1);
+  assert.equal(ticket.verification_down, 1);
+  // community votes ratio should be 0.9 / (0.9 + 0.1) = 0.9
+  assert.ok(ticket.verification_score > 0);
+
+  // 5. Cast 4 more downvotes to resolve the ticket (reaches 5 downvotes)
+  for (let i = 1; i <= 4; i++) {
+    await handlers.record_verification({ ticket_id: ticketId, vote_type: 'looks_resolved' }, { userId: `down_voter_${i}` });
+  }
+
+  ticketDoc = await db.collection('tickets').doc(ticketId).get();
+  ticket = ticketDoc.data();
+  // Status should transition to resolved
+  assert.equal(ticket.status, 'resolved');
+  assert.ok(ticket.resolved_at);
+
+  // 6. Verify reputation updates
+  // voter_low voted looks_resolved (correct stance) -> reports_verified: 1, reports_rejected: 0
+  // Laplace trust: (1 + 1) / (1 + 2) = 0.67
+  const lowVoterDoc = await db.collection('users').doc('voter_low').get();
+  const lowVoter = lowVoterDoc.data();
+  assert.equal(lowVoter.reports_verified, 1);
+  assert.equal(lowVoter.reports_rejected, 0);
+  assert.equal(lowVoter.trust_score, 0.67);
+
+  // voter_high voted still_issue (incorrect stance) -> reports_verified: 0, reports_rejected: 1
+  // Laplace trust: (0 + 1) / (1 + 2) = 0.33
+  const highVoterDoc = await db.collection('users').doc('voter_high').get();
+  const highVoter = highVoterDoc.data();
+  assert.equal(highVoter.reports_verified, 0);
+  assert.equal(highVoter.reports_rejected, 1);
+  assert.equal(highVoter.trust_score, 0.33);
+});
+

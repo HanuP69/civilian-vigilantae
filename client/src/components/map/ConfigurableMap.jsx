@@ -106,10 +106,16 @@ function MapController({ tickets, clusterGroups, recurrence, slaByWard, layer, c
 
     let currentDataLength = 0;
     const positions = [];
-    if (layer === 'reports') {
-      const activeTickets = tickets.filter(t => t.lat && t.lng);
-      currentDataLength = activeTickets.length;
-      activeTickets.forEach(t => {
+    if (layer === 'reports' || layer === 'verified' || layer === 'sla') {
+      const filtered = tickets.filter(t => {
+        if (!t.lat || !t.lng) return false;
+        if (layer === 'reports') return t.status !== 'resolved';
+        if (layer === 'verified') return t.status === 'verified';
+        if (layer === 'sla') return t.status !== 'resolved' && t.sla_risk_score > 50;
+        return false;
+      });
+      currentDataLength = filtered.length;
+      filtered.forEach(t => {
         positions.push([Number(t.lat), Number(t.lng)]);
       });
     } else if (layer === 'clusters') {
@@ -122,13 +128,6 @@ function MapController({ tickets, clusterGroups, recurrence, slaByWard, layer, c
       currentDataLength = activeRecurrence.length;
       activeRecurrence.forEach(item => {
         const c = wardCenters[item.ward];
-        positions.push([c.lat, c.lng]);
-      });
-    } else if (layer === 'sla') {
-      const activeSla = Object.entries(slaByWard).filter(([ward]) => wardCenters[ward]);
-      currentDataLength = activeSla.length;
-      activeSla.forEach(([ward]) => {
-        const c = wardCenters[ward];
         positions.push([c.lat, c.lng]);
       });
     }
@@ -236,8 +235,16 @@ function ConfigurableMap({
       }
     };
 
-    if (layer === 'reports') {
-      tickets.filter((ticket) => ticket.lat && ticket.lng).forEach((ticket) => {
+    if (layer === 'reports' || layer === 'verified' || layer === 'sla') {
+      const filtered = tickets.filter((ticket) => {
+        if (!ticket.lat || !ticket.lng) return false;
+        if (layer === 'reports') return ticket.status !== 'resolved';
+        if (layer === 'verified') return ticket.status === 'verified';
+        if (layer === 'sla') return ticket.status !== 'resolved' && ticket.sla_risk_score > 50;
+        return false;
+      });
+
+      filtered.forEach((ticket) => {
         const position = { lat: Number(ticket.lat), lng: Number(ticket.lng) };
         const marker = new window.google.maps.Marker({
           position,
@@ -254,6 +261,7 @@ function ConfigurableMap({
               <strong style="font-size: 8px; color: var(--ink-primary); display: block; margin-bottom: 4px;">${ticket.title || ticket.ai_title || 'Untitled Quest'}</strong>
               <span style="color:${categoryColors[ticket.category] || 'var(--ink-muted)'}; font-size: 6px; display: block; margin-bottom: 6px;">${(categoryLabels[ticket.category] || capitalize(ticket.category)).toUpperCase()}</span>
               <div style="font-size: 6px; color: var(--ink-secondary); margin-bottom: 6px;">${ticket.verification_up > 0 ? `✓ ${ticket.verification_up} VOTES · ` : ''}${(ticket.ward || '—').toUpperCase()}</div>
+              ${ticket.sla_risk_score !== undefined ? `<div style="font-size: 6px; color: var(--error); margin-bottom: 6px;">SLA BREACH RISK: ${ticket.sla_risk_score}%</div>` : ''}
               <a href="/ticket/${ticket.id}" style="color: var(--accent); font-size: 6px; text-decoration: underline;">ENTER QUEST →</a>
             </div>
           `;
@@ -301,24 +309,6 @@ function ConfigurableMap({
         });
         overlaysRef.current.push(circle);
         addBounds(wardCenters[item.ward].lat, wardCenters[item.ward].lng);
-      });
-    } else if (layer === 'sla') {
-      Object.entries(slaByWard).filter(([ward]) => wardCenters[ward]).forEach(([ward, values]) => {
-        const ratio = values.total > 0 ? values.breached / values.total : 0;
-        const color = ratio > 0.5 ? '#ef4444' : ratio > 0.25 ? '#f59e0b' : '#10b981';
-        const circle = new window.google.maps.Circle({
-          map,
-          center: wardCenters[ward],
-          radius: 500,
-          strokeColor: color,
-          strokeOpacity: 0.8,
-          strokeWeight: 2,
-          fillColor: color,
-          fillOpacity: 0.18,
-          strokePattern: '4 4',
-        });
-        overlaysRef.current.push(circle);
-        addBounds(wardCenters[ward].lat, wardCenters[ward].lng);
       });
     }
 
@@ -371,9 +361,15 @@ function ConfigurableMap({
             onMapReady={onMapReady}
           />
 
-          {layer === 'reports' &&
+          {(layer === 'reports' || layer === 'verified' || layer === 'sla') &&
             tickets
-              .filter((ticket) => ticket.lat && ticket.lng)
+              .filter((ticket) => {
+                if (!ticket.lat || !ticket.lng) return false;
+                if (layer === 'reports') return ticket.status !== 'resolved';
+                if (layer === 'verified') return ticket.status === 'verified';
+                if (layer === 'sla') return ticket.status !== 'resolved' && ticket.sla_risk_score > 50;
+                return false;
+              })
               .map((ticket) => (
                 <Marker
                   key={`${ticket.id}-${activeTicketId === ticket.id}`}
@@ -394,6 +390,11 @@ function ConfigurableMap({
                       <div className="font-pixel text-secondary" style={{ fontSize: '0.45rem', marginBottom: '8px' }}>
                         {ticket.verification_up > 0 ? `✓ ${ticket.verification_up} VOTE${ticket.verification_up > 1 ? 'S' : ''} · ` : ''}{ticket.ward?.toUpperCase() || '—'}
                       </div>
+                      {ticket.sla_risk_score !== undefined && (
+                        <div className="font-pixel text-error" style={{ fontSize: '0.45rem', marginBottom: '8px' }}>
+                          SLA RISK: {ticket.sla_risk_score}%
+                        </div>
+                      )}
                       <Link to={`/ticket/${ticket.id}`} className="font-pixel" style={{ display: 'inline-block', color: 'var(--accent)', fontSize: '0.45rem', textDecoration: 'underline' }}>
                         ENTER QUEST →
                       </Link>
@@ -447,37 +448,6 @@ function ConfigurableMap({
                         <strong>{Math.round(item.probability * 100)}% recurrence</strong> · {item.ward}<br/>
                         <span style={{ fontSize: '0.75rem' }}>{categoryLabels[item.category] || capitalize(item.category)}</span><br/>
                         <span style={{ fontSize: '0.7rem', opacity: 0.8 }}>{item.recommendedAction || item.recommendation}</span>
-                      </div>
-                    </Tooltip>
-                  </Circle>
-                );
-              })}
-
-          {layer === 'sla' &&
-            Object.entries(slaByWard)
-              .filter(([ward]) => wardCenters[ward])
-              .map(([ward, values], index) => {
-                const ratio = values.total > 0 ? values.breached / values.total : 0;
-                const color = ratio > 0.5 ? '#ef4444' : ratio > 0.25 ? '#f59e0b' : '#10b981';
-                const centerCoord = wardCenters[ward];
-                return (
-                  <Circle
-                    key={`sla-${index}`}
-                    center={[centerCoord.lat, centerCoord.lng]}
-                    radius={500}
-                    pathOptions={{
-                      color,
-                      fillColor: color,
-                      fillOpacity: 0.18,
-                      weight: 2,
-                      dashArray: '4 4',
-                    }}
-                  >
-                    <Tooltip sticky>
-                      <div style={{ fontFamily: 'var(--font-sans)' }}>
-                        <strong>{ward}</strong><br/>
-                        <span style={{ color }}>{values.breached}</span> / {values.total} tickets past SLA<br/>
-                        <span style={{ fontSize: '0.7rem', opacity: 0.7 }}>{Math.round(ratio * 100)}% breach rate</span>
                       </div>
                     </Tooltip>
                   </Circle>

@@ -9,9 +9,10 @@ import ConfigurableMap from '../components/map/ConfigurableMap';
 
 const LAYERS = [
   { key: 'reports', label: 'ACTIVE QUESTS' },
+  { key: 'verified', label: 'VERIFIED QUESTS' },
   { key: 'clusters', label: 'THREAT SWARMS' },
-  { key: 'recurrence', label: 'SPAWN DENSITY' },
-  { key: 'sla', label: 'TIME-LIMIT QUESTS' },
+  { key: 'sla', label: 'SLA RISK' },
+  { key: 'recurrence', label: 'PREDICTED HOTSPOTS' },
 ];
 
 
@@ -168,7 +169,7 @@ function HomePage() {
 
 
   const legendItems = () => {
-    if (layer === 'reports') return [
+    if (layer === 'reports' || layer === 'verified') return [
       { color: 'var(--marker-critical)', label: 'Critical (>70)' },
       { color: 'var(--marker-warning)', label: 'Moderate (40-70)' },
       { color: 'var(--marker-ok)', label: 'Low (<40)' },
@@ -180,9 +181,7 @@ function HomePage() {
       { color: 'var(--success)', label: 'Low (<40%)' },
     ];
     if (layer === 'sla') return [
-      { color: 'var(--error)', label: '>50% breached' },
-      { color: 'var(--warning)', label: '25-50% breached' },
-      { color: 'var(--success)', label: 'Healthy' },
+      { color: 'var(--error)', label: 'High SLA Risk (>50%)' }
     ];
     return [];
   };

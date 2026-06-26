@@ -100,9 +100,31 @@ function AgentTrace({ trace = [] }) {
                     {icon}
                   </span>
                   <div className="flex flex-col">
-                    <span className="text-sm font-semibold" style={{ color: 'var(--ink-primary)' }}>
-                      {stepName || 'system_process'}
-                    </span>
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className="text-sm font-semibold" style={{ color: 'var(--ink-primary)' }}>
+                        {stepName || 'system_process'}
+                      </span>
+                      {stepName === 'record_verification' && step.output?.verification_score !== undefined && (
+                        <span style={{ fontSize: '0.55rem', color: 'var(--success)', border: '1px solid var(--success)', padding: '1px 3px', fontFamily: 'var(--font-mono)' }}>
+                          SCORE: {step.output.verification_score}%
+                        </span>
+                      )}
+                      {stepName === 'compute_priority' && step.output?.priority_score !== undefined && (
+                        <span style={{ fontSize: '0.55rem', color: 'var(--warning)', border: '1px solid var(--warning)', padding: '1px 3px', fontFamily: 'var(--font-mono)' }}>
+                          PRIORITY: {step.output.priority_score}
+                        </span>
+                      )}
+                      {stepName === 'check_sla_status' && step.output?.probability !== undefined && (
+                        <span style={{ fontSize: '0.55rem', color: 'var(--error)', border: '1px solid var(--error)', padding: '1px 3px', fontFamily: 'var(--font-mono)' }}>
+                          BREACH RISK: {Math.round(step.output.probability * 100)}%
+                        </span>
+                      )}
+                      {stepName === 'classify_issue' && step.output?.confidence !== undefined && (
+                        <span style={{ fontSize: '0.55rem', color: 'var(--accent)', border: '1px solid var(--accent)', padding: '1px 3px', fontFamily: 'var(--font-mono)' }}>
+                          CONFIDENCE: {Math.round(step.output.confidence * 100)}%
+                        </span>
+                      )}
+                    </div>
                     <span className="text-xs" style={{ color: 'var(--ink-muted)' }}>
                       {step.reasoning || step.detail || step.result || 'Executing...'}
                     </span>

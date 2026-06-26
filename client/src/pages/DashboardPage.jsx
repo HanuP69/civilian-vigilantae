@@ -280,6 +280,36 @@ const EXPLANATIONS = {
     title: 'Localized Ward Hotspot Density',
     text: 'Measures ward severity by weighting active issues (w = 1.5) and critical priority issues (w = 3.0) to calculate a localized civic risk index.',
     formula: '\\text{Risk Index} = (\\text{Active} \\times 1.5) + (\\text{High Urgency} \\times 3.0)'
+  },
+  verification_confidence: {
+    title: 'Verification Confidence Index',
+    text: 'Consolidates AI confidence, reporter trust, nearby report density, and community upvotes into a composite score representing system-wide data accuracy.',
+    formula: '\\text{Avg V} = \\frac{1}{|T_{active}|} \\sum_{t \\in T_{active}} (0.40 \\cdot c_{ai} + 0.20 \\cdot t_{rep} + 0.20 \\cdot e_{near} + 0.20 \\cdot v_{comm}) \\times 100'
+  },
+  cluster_density: {
+    title: 'Hotspot Cluster Density',
+    text: 'Measures the proportion of active reports that reside inside a localized DBSCAN geospatial cluster, indicating collective regional issues.',
+    formula: '\\text{Cluster Ratio} = \\frac{\\sum_{t \\in T} \\mathbb{I}(t.cluster\\_detail.found = \\text{true})}{|T|} \\times 100\\%'
+  },
+  sla_breach_risk: {
+    title: 'SLA Breach Risk (Average)',
+    text: 'The average probability of open tickets breaching their SLA resolution time limit, calculated using the Weibull probability of breach.',
+    formula: '\\bar{P}(SLA) = \\frac{1}{|T_{active}|} \\sum_{t \\in T_{active}} P(T_{breach} < \\text{now} \\mid t)'
+  },
+  recurrence_risk: {
+    title: 'Peak Recurrence Risk Forecast',
+    text: 'The highest 14-day recurrence probability predicted across all wards and categories, fitted using a Weibull hazard function on historical arrival rates.',
+    formula: '\\max_{w, c} P_w(R_c) = \\max_{w, c} \\left[ 1 - e^{-\\left(\\frac{t_0 + 336}{\\lambda}\\right)^k + \\left(\\frac{t_0}{\\lambda}\\right)^k} \\right]'
+  },
+  ward_health_score: {
+    title: 'Guild Ward Health Score',
+    text: 'The average health index across all municipal wards. Each ward health is 100 minus the mean priority score of active tickets in that ward.',
+    formula: '\\bar{H}_{ward} = \\frac{1}{|W|} \\sum_{w \\in W} \\left(100 - \\frac{1}{|T_{w}|} \\sum_{t \\in T_w} \\text{priority\\_score}_t\\right)'
+  },
+  dept_accountability: {
+    title: 'Department Guild Accountability',
+    text: 'Average success rate of resolution throughput across all departments, tracking the percent of assigned tickets successfully resolved.',
+    formula: '\\bar{R}_{dept} = \\frac{1}{|D|} \\sum_{d \\in D} \\frac{N_{resolved, d}}{N_{total, d}} \\times 100\\%'
   }
 };
 
@@ -374,6 +404,129 @@ function DashboardPage() {
   const createdSpark = useMemo(() => build7dSpark(tickets, 'created_at'), [tickets]);
   const resolvedSpark = useMemo(() => build7dSpark(tickets, 'resolved_at'), [tickets]);
   const velocity = useMemo(() => buildVelocity30d(tickets), [tickets]);
+
+  const mathMetrics = useMemo(() => {
+    // 1. Verification Confidence
+    const verifiedTickets = tickets.filter(t => t.verification_score !== undefined);
+    const avgVerification = verifiedTickets.length > 0
+      ? Math.round(verifiedTickets.reduce((sum, t) => sum + (t.verification_score || 0), 0) / verifiedTickets.length)
+      : 75; // fallback
+    const verificationParams = {
+      n: verifiedTickets.length,
+      avg: avgVerification
+    };
+
+    // 2. Cluster Density
+    const clusteredCount = tickets.filter(t => t.cluster_detail?.found || (t.cluster_detail?.cluster_size && t.cluster_detail.cluster_size > 1)).length;
+    const clusterDensity = tickets.length > 0 ? Math.round((clusteredCount / tickets.length) * 100) : 0;
+    const clusterParams = {
+      clustered: clusteredCount,
+      total: tickets.length
+    };
+
+    // 3. SLA Breach Risk
+    const activeTickets = tickets.filter(t => t.status !== 'resolved');
+    const ticketsWithSla = activeTickets.filter(t => t.sla_risk_score !== undefined);
+    const avgSlaRisk = ticketsWithSla.length > 0
+      ? Math.round(ticketsWithSla.reduce((sum, t) => sum + (t.sla_risk_score || 0), 0) / ticketsWithSla.length)
+      : 0;
+    const slaParams = {
+      active: activeTickets.length,
+      withSla: ticketsWithSla.length,
+      avgProb: avgSlaRisk
+    };
+
+    // 4. Recurrence Risk
+    const maxRecurrence = recurrence.length > 0
+      ? Math.round(Math.max(...recurrence.map(r => r.probability || 0)) * 100)
+      : 0;
+    const peakRecurrenceRecord = recurrence.length > 0
+      ? recurrence.reduce((prev, current) => ((prev.probability || 0) > (current.probability || 0)) ? prev : current, recurrence[0])
+      : null;
+    const recurrenceParams = {
+      peak: maxRecurrence,
+      ward: peakRecurrenceRecord ? peakRecurrenceRecord.ward : 'N/A',
+      category: peakRecurrenceRecord ? (CATEGORY_LABELS[peakRecurrenceRecord.category] || peakRecurrenceRecord.category) : 'N/A'
+    };
+
+    // 5. Ward Health Score
+    const wardScores = stats?.wardHealthScores ? Object.values(stats.wardHealthScores) : [];
+    const avgWardHealth = wardScores.length > 0
+      ? Math.round(wardScores.reduce((sum, s) => sum + s, 0) / wardScores.length)
+      : 100;
+    const wardEntries = stats?.wardHealthScores ? Object.entries(stats.wardHealthScores) : [];
+    const minWard = wardEntries.length > 0
+      ? wardEntries.reduce((prev, current) => (prev[1] < current[1] ? prev : current), wardEntries[0])
+      : null;
+    const wardParams = {
+      avg: avgWardHealth,
+      minWardName: minWard ? minWard[0] : 'N/A',
+      minWardScore: minWard ? minWard[1] : 100
+    };
+
+    // 6. Department Accountability
+    const deptsList = stats?.deptLeaderboard || [];
+    const avgDeptAccountability = deptsList.length > 0
+      ? Math.round(deptsList.reduce((sum, d) => sum + (d.resolution_rate || 0), 0) / deptsList.length)
+      : 0;
+    const topDept = deptsList.length > 0 ? deptsList[0] : null;
+    const bottomDept = deptsList.length > 1 ? deptsList[deptsList.length - 1] : null;
+    const deptParams = {
+      avg: avgDeptAccountability,
+      topName: topDept ? topDept.name : 'N/A',
+      topRate: topDept ? topDept.resolution_rate : 0,
+      bottomName: bottomDept ? bottomDept.name : 'N/A',
+      bottomRate: bottomDept ? bottomDept.resolution_rate : 0
+    };
+
+    return [
+      {
+        label: 'VERIFICATION CONFIDENCE',
+        value: avgVerification,
+        suffix: '%',
+        panelKey: 'verification_confidence',
+        params: `N = ${verificationParams.n} tickets, Avg Score = ${verificationParams.avg}%`
+      },
+      {
+        label: 'CLUSTER DENSITY',
+        value: clusterDensity,
+        suffix: '%',
+        panelKey: 'cluster_density',
+        params: `Clustered = ${clusterParams.clustered}, Total = ${clusterParams.total}`
+      },
+      {
+        label: 'SLA BREACH RISK',
+        value: avgSlaRisk,
+        suffix: '%',
+        panelKey: 'sla_breach_risk',
+        danger: avgSlaRisk > 50,
+        params: `Active = ${slaParams.active}, With SLA = ${slaParams.withSla}, Avg Prob = ${slaParams.avgProb}%`
+      },
+      {
+        label: 'RECURRENCE RISK',
+        value: maxRecurrence,
+        suffix: '%',
+        panelKey: 'recurrence_risk',
+        warning: maxRecurrence > 50,
+        params: `Peak = ${recurrenceParams.peak}%, Ward = ${recurrenceParams.ward}, Cat = ${recurrenceParams.category}`
+      },
+      {
+        label: 'WARD HEALTH SCORE',
+        value: avgWardHealth,
+        suffix: '/100',
+        panelKey: 'ward_health_score',
+        success: avgWardHealth > 75,
+        params: `Avg Health = ${wardParams.avg}%, Min Ward = ${wardParams.minWardName} (${wardParams.minWardScore}%)`
+      },
+      {
+        label: 'DEPT ACCOUNTABILITY',
+        value: avgDeptAccountability,
+        suffix: '%',
+        panelKey: 'dept_accountability',
+        params: `Top = ${deptParams.topName} (${deptParams.topRate}%), Bottom = ${deptParams.bottomName} (${deptParams.bottomRate}%)`
+      }
+    ];
+  }, [tickets, recurrence, stats]);
 
   const categoryData = {
     labels: catKeys.map(k => CATEGORY_LABELS[k] || capitalize(k)),
@@ -524,6 +677,59 @@ function DashboardPage() {
                 {!isOpen && kpi.spark && (
                   <div className="kpi-spark" style={{ height: 28 }}>
                     <Line {...sparkConfig(kpi.spark, kpi.sparkColor)} />
+                  </div>
+                )}
+              </div>
+            </motion.div>
+          );
+        })}
+      </div>
+
+      <div className="flex items-center justify-between" style={{ marginTop: 'var(--space-2)' }}>
+        <h2 className="font-pixel" style={{ fontSize: '0.8rem', color: 'var(--accent)' }}>🧮 Multi-Agent Mathematical Engine</h2>
+        <span className="font-pixel text-muted" style={{ fontSize: '0.45rem' }}>6 CORE ALGORITHMIC SCENARIOS</span>
+      </div>
+
+      <div className="grafana-kpi-grid">
+        {mathMetrics.map((kpi) => {
+          const isOpen = activeInfo[kpi.panelKey];
+          return (
+            <motion.div
+              key={kpi.label}
+              variants={itemAnim}
+              className={`grafana-kpi-card ${kpi.danger ? 'danger' : kpi.warning ? 'warning' : kpi.success ? 'success' : ''}`}
+            >
+              <div className="flex flex-col gap-1" style={{ height: '100%', justifyContent: 'space-between' }}>
+                <div className="flex items-center justify-between">
+                  <span className="grafana-kpi-title" style={{ fontSize: '0.45rem', letterSpacing: '0.05em' }}>{kpi.label}</span>
+                  <button
+                    className="btn-info-icon"
+                    onClick={() => toggleInfo(kpi.panelKey)}
+                    style={{ width: 14, height: 14, fontSize: '0.65rem' }}
+                    aria-label={`Formula details for ${kpi.label}`}
+                  >
+                    ⓘ
+                  </button>
+                </div>
+                {isOpen ? (
+                  <div className="text-xs text-muted rpg-scrollbar" style={{ lineHeight: 1.3, animation: 'slideDown 0.2s ease-out', overflowY: 'auto', maxHeight: '72px' }}>
+                    <span style={{ color: 'var(--accent)', fontWeight: 600, fontSize: '0.55rem' }}>{EXPLANATIONS[kpi.panelKey].title}:</span>{' '}
+                    <span style={{ fontSize: '0.55rem' }}>{EXPLANATIONS[kpi.panelKey].text}</span>
+                    <div className="formula-box" style={{ marginTop: '4px', padding: '2px', background: 'rgba(0,0,0,0.2)' }}>
+                      <Latex math={EXPLANATIONS[kpi.panelKey].formula} block />
+                    </div>
+                    <div style={{ marginTop: '4px', fontSize: '0.5rem', color: 'var(--accent)', borderTop: '1px dashed var(--border-subtle)', paddingTop: '2px' }}>
+                      <strong>Parameters:</strong> {kpi.params}
+                    </div>
+                  </div>
+                ) : (
+                  <div className="grafana-kpi-val" style={{ fontSize: '1.25rem', fontFamily: 'var(--font-mono)' }}>
+                    <CountUp to={kpi.value} suffix={kpi.suffix || ''} />
+                  </div>
+                )}
+                {!isOpen && (
+                  <div style={{ fontSize: '0.35rem', color: 'var(--ink-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                    ALGORITHM METRIC ACTIVE
                   </div>
                 )}
               </div>

@@ -1,4 +1,5 @@
 import { db } from '../config/firebase.js';
+import { computeRecurrenceRisk } from '../math/recurrence.js';
 
 export async function writeSeedDoc(collectionName, id, data) {
   try {
@@ -42,6 +43,7 @@ export async function getDashboardStats() {
   const now = Date.now();
   const weekAgo = now - 7 * 24 * 60 * 60 * 1000;
   const resolved = tickets.filter(t => t.status === 'resolved');
+  const activeTickets = tickets.filter(t => t.status !== 'resolved');
   const resolvedThisWeek = resolved.filter(t => {
     const resTs = t.resolved_at?.toDate?.() ?? new Date(t.resolved_at);
     return resTs > weekAgo;
@@ -82,11 +84,46 @@ export async function getDashboardStats() {
     }
   }
 
+  // Phase 5: Urban Intelligence Agent calculations
+  const WARDS = ['Hazratganj', 'Aminabad', 'Aliganj', 'Gomti Nagar', 'Indira Nagar', 'Alambagh', 'Chowk', 'Rajajipuram'];
+  const wardHealthScores = {};
+
+  for (const w of WARDS) {
+    const activeInWard = activeTickets.filter(t => t.ward === w);
+    if (activeInWard.length > 0) {
+      const avgPriority = activeInWard.reduce((s, t) => s + (t.priority_score || 0), 0) / activeInWard.length;
+      wardHealthScores[w] = Math.max(0, Math.round(100 - avgPriority));
+    } else {
+      wardHealthScores[w] = 100;
+    }
+  }
+
   const deptLeaderboard = Object.entries(byDept).map(([name, d]) => ({
     name, total: d.total, resolved: d.resolved,
     resolution_rate: d.total > 0 ? Math.round(d.resolved / d.total * 100) : 0,
     avg_hours: d.resolved > 0 ? Math.round(d.totalTime / d.resolved) : 0,
   })).sort((a, b) => b.resolution_rate - a.resolution_rate);
+
+  // Department risks (average priority of active tickets)
+  const departmentRisks = {};
+  const DEPTS = ['Roads & Infrastructure', 'Water Supply', 'Electrical & Lighting', 'Sanitation & Waste Management', 'General Maintenance', 'Drainage & Sewerage'];
+  for (const d of DEPTS) {
+    const activeInDept = activeTickets.filter(t => t.department === d);
+    if (activeInDept.length > 0) {
+      const avgPriority = activeInDept.reduce((s, t) => s + (t.priority_score || 0), 0) / activeInDept.length;
+      departmentRisks[d] = Math.round(avgPriority);
+    } else {
+      departmentRisks[d] = 0;
+    }
+  }
+
+  // Recurrence risk details
+  const resolvedForRecurrence = resolved.map(t => ({
+    resolved_at: t.resolved_at,
+    category: t.category,
+    ward: t.ward,
+  }));
+  const recurrenceForecasts = computeRecurrenceRisk(resolvedForRecurrence, 14);
 
   return {
     total: tickets.length, resolved: resolved.length,
@@ -94,6 +131,9 @@ export async function getDashboardStats() {
     activeReporters: activeReporters.size,
     avgResolutionHours: Math.round(avgResolution),
     byCategory, byWard, byStatus, deptLeaderboard,
+    wardHealthScores,
+    departmentRisks,
+    recurrenceForecasts,
   };
 }
 

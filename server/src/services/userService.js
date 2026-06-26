@@ -61,6 +61,10 @@ export async function registerUser(email, password, displayName) {
     reports_submitted: 0,
     verifications_made: 0,
     accurate_verifications: 0,
+    trust_score: 0.5,
+    reports_verified: 0,
+    reports_rejected: 0,
+    verification_accuracy: 1.0,
     unique_wards: [],
     unlocked_avatars: [],
     unlocked_badges: [],
@@ -122,6 +126,10 @@ export async function ensureUser(uid) {
     if (data.unlocked_avatars === undefined) { updates.unlocked_avatars = []; needsUpdate = true; }
     if (data.unlocked_badges === undefined) { updates.unlocked_badges = []; needsUpdate = true; }
     if (data.unique_wards === undefined) { updates.unique_wards = []; needsUpdate = true; }
+    if (data.trust_score === undefined) { updates.trust_score = 0.5; needsUpdate = true; }
+    if (data.reports_verified === undefined) { updates.reports_verified = 0; needsUpdate = true; }
+    if (data.reports_rejected === undefined) { updates.reports_rejected = 0; needsUpdate = true; }
+    if (data.verification_accuracy === undefined) { updates.verification_accuracy = 1.0; needsUpdate = true; }
 
     if (needsUpdate) {
       const merged = { ...data, ...updates };
@@ -148,6 +156,10 @@ export async function ensureUser(uid) {
     reports_submitted: 0,
     verifications_made: 0,
     accurate_verifications: 0,
+    trust_score: 0.5,
+    reports_verified: 0,
+    reports_rejected: 0,
+    verification_accuracy: 1.0,
     unique_wards: [],
     unlocked_avatars: [],
     unlocked_badges: [],

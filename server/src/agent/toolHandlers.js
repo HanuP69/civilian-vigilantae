@@ -1,6 +1,6 @@
 import { db } from '../config/firebase.js';
 import { dbscan, compositeDistance } from '../math/dbscan.js';
-import { computePriority } from '../math/priority.js';
+import { computePriority, computePriorityWithBreakdown } from '../math/priority.js';
 import { weibullCDF, DEFAULT_PARAMS, weibullConditionalProbability, weibullMLE } from '../math/weibull.js';
 import { computeRecurrenceRisk } from '../math/recurrence.js';
 import { haversine } from '../math/haversine.js';
@@ -33,6 +33,52 @@ function resolveWard(lat, lng) {
     if (d < minDist) { minDist = d; closest = w; }
   }
   return closest.name;
+}
+
+async function updateVoterReputations(votes, newStatus) {
+  const { awardXP } = await import('../services/userService.js');
+  for (const [uid, voteType] of Object.entries(votes)) {
+    if (uid === 'anonymous') continue;
+
+    let isCorrect = false;
+    if (newStatus === 'verified') {
+      isCorrect = (voteType === 'still_issue');
+    } else if (newStatus === 'resolved') {
+      isCorrect = (voteType === 'looks_resolved');
+    } else if (newStatus === 'disputed') {
+      isCorrect = (voteType === 'looks_resolved');
+    } else {
+      continue;
+    }
+
+    try {
+      const userRef = db.collection('users').doc(uid);
+      const userDoc = await userRef.get();
+      if (!userDoc.exists) continue;
+      const userData = userDoc.data();
+
+      const reportsVerified = (userData.reports_verified || 0) + (isCorrect ? 1 : 0);
+      const reportsRejected = (userData.reports_rejected || 0) + (isCorrect ? 0 : 1);
+      const totalVotes = reportsVerified + reportsRejected;
+      const accuracy = totalVotes > 0 ? (reportsVerified / totalVotes) : 1.0;
+
+      // Laplace smoothing: trust_score = (reportsVerified + 1) / (totalVotes + 2)
+      const trustScore = Math.round(((reportsVerified + 1) / (totalVotes + 2)) * 100) / 100;
+
+      await userRef.update({
+        reports_verified: reportsVerified,
+        reports_rejected: reportsRejected,
+        verification_accuracy: accuracy,
+        trust_score: trustScore,
+      });
+
+      if (isCorrect) {
+        await awardXP(uid, 'vote_accurate');
+      }
+    } catch (err) {
+      console.error(`[Reputation] Failed to update voter ${uid}:`, err.message);
+    }
+  }
 }
 
 export const toolHandlers = {
@@ -83,10 +129,13 @@ export const toolHandlers = {
     for (const cluster of clusters) {
       if (cluster.includes('__new__')) {
         const existingId = cluster.find(id => id !== '__new__');
-        if (existingId) return { found: true, ticket_id: existingId, cluster_size: cluster.length };
+        if (existingId) {
+          const neighbors = cluster.filter(id => id !== '__new__');
+          return { found: true, ticket_id: existingId, cluster_size: cluster.length, category, neighbors };
+        }
       }
     }
-    return { found: false };
+    return { found: false, neighbors: [] };
   },
 
   async compute_priority({ ticket_id }) {
@@ -96,17 +145,20 @@ export const toolHandlers = {
     const ts = t.created_at?.toDate?.() ?? new Date(t.created_at);
     const elapsedHours = Number.isNaN(ts.getTime()) ? 0 : (Date.now() - ts.getTime()) / 3600000;
     const slaHours = DEFAULT_PARAMS[t.category]?.lambda || 168;
-    const score = computePriority({
+    const result = computePriorityWithBreakdown({
       severity: t.severity, reportCount: (t.child_reports?.length || 0) + 1,
       verificationUp: t.verification_up || 0, verificationDown: t.verification_down || 0,
       elapsedHours, slaHours, category: t.category,
     });
-    await db.collection('tickets').doc(ticket_id).update({ priority_score: score });
-    broadcast('ticket_updated', { ticket_id, event: 'priority_computed', priority_score: score });
-    return { ticket_id, priority_score: score };
+    await db.collection('tickets').doc(ticket_id).update({
+      priority_score: result.score,
+      priority_detail: result.breakdown,
+    });
+    broadcast('ticket_updated', { ticket_id, event: 'priority_computed', priority_score: result.score, priority_detail: result.breakdown });
+    return { ticket_id, priority_score: result.score, priority_detail: result.breakdown };
   },
 
-  async create_ticket({ title, description, category, severity, lat, lng, address, ward, department }, ctx) {
+  async create_ticket({ title, description, category, severity, lat, lng, address, ward, department, status }, ctx) {
     const id = `ticket-${uuidv4().substring(0, 8)}`;
     const slaHours = DEFAULT_PARAMS[category]?.lambda || 168;
     const initialPriority = computePriority({
@@ -119,7 +171,7 @@ export const toolHandlers = {
       category: category || 'other',
     });
     const ticket = {
-      id, title, description, category, severity, status: 'reported',
+      id, title, description, category, severity, status: status || 'reported',
       priority_score: initialPriority, lat, lng,
       address: address || `${ward || resolveWard(lat, lng)}, Lucknow`,
       ward: ward || resolveWard(lat, lng),
@@ -134,6 +186,20 @@ export const toolHandlers = {
       cluster_id: null, merged_into: null, child_reports: [],
       sla_deadline: new Date(Date.now() + slaHours * 3600000).toISOString(),
       sla_probability: 0, agent_trace: ctx?.trace?.getSteps() || [],
+      verification_score: 70,
+      verification_explanation: 'Initial verification check passed. Awaiting community votes.',
+      priority_explanation: 'Initial priority calculated on severity and base metrics.',
+      sla_risk_score: 0,
+      sla_risk_explanation: 'SLA risk monitoring initiated.',
+      dispatch_plan: {
+        department: department || DEPARTMENTS[category] || 'General Maintenance',
+        crew_size: 2,
+        materials: ['tools'],
+        estimated_cost: 4000,
+        eta: '48h',
+        explanation: 'Initial automated dispatch plan.',
+      },
+      cluster_explanation: 'No duplicate hotspots identified in proximity.',
       resolution_media_url: null,
       created_at: new Date().toISOString(), updated_at: new Date().toISOString(), resolved_at: null,
     };
@@ -159,29 +225,112 @@ export const toolHandlers = {
     const doc = await db.collection('tickets').doc(ticket_id).get();
     if (!doc.exists) return { error: 'Ticket not found' };
     const t = doc.data();
-    const verifiedBy = t.verified_by || [];
-    if (ctx?.userId && verifiedBy.includes(ctx.userId)) return { error: 'Already voted' };
+    const votes = t.votes || {};
+    const userId = ctx?.userId || 'anonymous';
+    if (userId !== 'anonymous' && votes[userId]) {
+      return { error: 'Already voted' };
+    }
+    votes[userId] = vote_type;
 
-    const newUp = (t.verification_up || 0) + (vote_type === 'still_issue' ? 1 : 0);
-    const newDown = (t.verification_down || 0) + (vote_type === 'looks_resolved' ? 1 : 0);
+    const newUp = Object.values(votes).filter(v => v === 'still_issue').length;
+    const newDown = Object.values(votes).filter(v => v === 'looks_resolved').length;
+
+    // Fetch user trust scores to compute weighted community votes ratio
+    let weightedUp = 0;
+    let weightedDown = 0;
+    for (const [uid, vType] of Object.entries(votes)) {
+      if (uid === 'anonymous') {
+        if (vType === 'still_issue') weightedUp += 0.5;
+        else weightedDown += 0.5;
+        continue;
+      }
+      const voterDoc = await db.collection('users').doc(uid).get();
+      const vTrust = voterDoc.exists ? (voterDoc.data().trust_score ?? 0.5) : 0.5;
+      if (vType === 'still_issue') weightedUp += vTrust;
+      else weightedDown += vTrust;
+    }
+    const commVotesValue = (weightedUp + weightedDown) > 0
+      ? (weightedUp / (weightedUp + weightedDown))
+      : 0.5;
+
+    // Get components for verification score recalculation
+    let reporterTrust = t.reporter_trust;
+    if (reporterTrust === undefined && t.reporter_id) {
+      const repDoc = await db.collection('users').doc(t.reporter_id).get();
+      if (repDoc.exists) {
+        reporterTrust = repDoc.data().trust_score ?? 0.5;
+      }
+    }
+    if (reporterTrust === undefined) reporterTrust = 0.5;
+
+    const aiConfidence = t.ai_confidence ?? t.classificationResult?.confidence ?? 0.7;
+    const nearbyEvidence = t.nearby_evidence ?? (t.cluster_detail?.found ? Math.min((t.cluster_detail.cluster_size || 1) / 5, 1.0) : 0.0);
+
+    const { calculateVerificationScore, statusFromVerificationScore } = await import('../math/verification.js');
+    const newVScore = calculateVerificationScore({
+      aiConfidence,
+      reporterTrust,
+      nearbyEvidence,
+      communityVotes: commVotesValue,
+    });
+
+    let newStatus = statusFromVerificationScore(newVScore);
+
+    // Apply count thresholds for community resolution or reopening
+    let finalStatus = newStatus;
+    let resolvedAt = t.resolved_at || null;
+    if (newDown >= 5 && t.status !== 'resolved') {
+      finalStatus = 'resolved';
+      resolvedAt = new Date().toISOString();
+    } else if (newUp >= 5 && t.status === 'resolved') {
+      finalStatus = 'reopened';
+    } else if (t.status === 'resolved') {
+      finalStatus = 'resolved';
+    }
+
+    // Recalculate Priority Score
+    const { computePriorityWithBreakdown } = await import('../math/priority.js');
+    const ts = t.created_at?.toDate?.() ?? new Date(t.created_at);
+    const elapsedHours = Number.isNaN(ts.getTime()) ? 0 : (Date.now() - ts.getTime()) / 3600000;
+    const slaDeadline = t.sla_deadline ? (t.sla_deadline.toDate?.() ?? new Date(t.sla_deadline)) : null;
+    const slaHours = slaDeadline && !Number.isNaN(ts.getTime())
+      ? (slaDeadline.getTime() - ts.getTime()) / 3600000
+      : 48;
+
+    const priorityResult = computePriorityWithBreakdown({
+      severity: t.severity || 'medium',
+      reportCount: t.cluster_detail?.cluster_size || 1,
+      verificationUp: newUp,
+      verificationDown: newDown,
+      elapsedHours,
+      slaHours,
+      category: t.category || 'other',
+    });
 
     const update = {
       updated_at: new Date().toISOString(),
+      votes,
+      verified_by: Object.keys(votes),
       verification_up: newUp,
       verification_down: newDown,
+      verification_score: newVScore,
+      status: finalStatus,
+      resolved_at: resolvedAt,
+      priority_score: priorityResult.score,
+      priority_detail: priorityResult.breakdown,
+      ai_confidence: aiConfidence,
+      reporter_trust: reporterTrust,
+      nearby_evidence: nearbyEvidence,
     };
-    if (ctx?.userId) { verifiedBy.push(ctx.userId); update.verified_by = verifiedBy; }
-
-    const status = t.status;
-    if (newUp >= 5 && status === 'resolved') update.status = 'reopened';
-    else if (newDown >= 5 && status !== 'resolved') {
-      update.status = 'resolved';
-      update.resolved_at = new Date().toISOString();
-    }
-    else if (newUp >= 3 && status === 'reported') update.status = 'verified';
 
     await db.collection('tickets').doc(ticket_id).update(update);
-    broadcast('verification_recorded', { ticket_id, vote_type, up: newUp, down: newDown });
+
+    // Update voter reputations and award XP if status transitioned
+    if (finalStatus !== t.status) {
+      await updateVoterReputations(votes, finalStatus);
+    }
+
+    broadcast('verification_recorded', { ticket_id, vote_type, up: newUp, down: newDown, status: finalStatus });
     return { ticket_id, verification_up: newUp, verification_down: newDown };
   },
 
@@ -229,7 +378,12 @@ export const toolHandlers = {
     const breached = slaDeadline ? Date.now() > slaDeadline.getTime() : elapsedHours > slaHours;
     const probability = breached ? 0 : weibullConditionalProbability(elapsedHours, slaHours, fitParams.lambda, fitParams.k);
 
-    await db.collection('tickets').doc(ticket_id).update({ sla_probability: probability });
+    await db.collection('tickets').doc(ticket_id).update({
+      sla_probability: probability,
+      sla_risk_score: Math.round(probability * 100),
+      sla_risk_explanation: `Weibull conditional resolution probability is ${Math.round(probability * 100)}% with parameters scale lambda = ${Math.round(fitParams.lambda * 10) / 10}h and shape k = ${Math.round(fitParams.k * 100) / 100}.`,
+      sla_params: { lambda: fitParams.lambda, k: fitParams.k, localizedUsed }
+    });
     return { 
       ticket_id, 
       elapsed_hours: Math.round(elapsedHours), 

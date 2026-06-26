@@ -119,3 +119,48 @@ export function computePriority({
   // Raw theoretical range: ~0 to 1. Return clamped float [0, 100].
   return Math.min(Math.max(raw, 0), 1) * 100;
 }
+
+/**
+ * Compute priority score along with its individual weighted components.
+ *
+ * @param {PriorityInput} input
+ * @returns {{ score: number, breakdown: { severity: number, volume: number, verification: number, sla_urgency: number, safety: number } }}
+ */
+export function computePriorityWithBreakdown(input) {
+  const sVis = SEVERITY_MAP[input.severity] ?? SEVERITY_MAP.medium;
+
+  const maxExpectedReports = 100;
+  const logReports = Math.log(1 + Math.max(input.reportCount || 0, 0));
+  const logNorm = logReports / Math.log(1 + maxExpectedReports);
+  const nReports = Math.min(logNorm, 1);
+
+  const up = Math.max(input.verificationUp || 0, 0);
+  const down = Math.max(input.verificationDown || 0, 0);
+  const rawRatio = (up - down) / (up + down + 1);
+  const vRatio = (rawRatio + 1) / 2;
+
+  const elapsed = Math.max(input.elapsedHours || 0, 0);
+  const sla = input.slaHours > 0 ? input.slaHours : 1;
+  const slaRatio = Math.min(elapsed / sla, 1);
+
+  const rSafety = SAFETY_CRITICAL.has(input.category) ? 1.0 : 0.5;
+
+  const severityVal = Math.round(W1 * sVis * 100);
+  const volumeVal = Math.round(W2 * nReports * 100);
+  const verificationVal = Math.round(W3 * vRatio * 100);
+  const slaUrgencyVal = Math.round(W4 * slaRatio * 100);
+  const safetyVal = Math.round(W5 * rSafety * 100);
+
+  const score = severityVal + volumeVal + verificationVal + slaUrgencyVal + safetyVal;
+
+  return {
+    score,
+    breakdown: {
+      severity: severityVal,
+      volume: volumeVal,
+      verification: verificationVal,
+      sla_urgency: slaUrgencyVal,
+      safety: safetyVal,
+    },
+  };
+}

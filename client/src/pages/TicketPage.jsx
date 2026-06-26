@@ -187,9 +187,129 @@ function TicketPage() {
             </section>
           )}
 
+          {/* Phase 6: UI Explainability Panels */}
+          <div className="flex flex-col gap-6" style={{ marginTop: 'var(--space-6)', paddingTop: 'var(--space-6)', borderTop: '1px solid var(--border-subtle)' }}>
+            
+            {/* 1. Why Verified? */}
+            <div className="panel rpg-panel" style={{ borderRadius: 0 }}>
+              <h3 className="section-title font-pixel" style={{ fontSize: '0.65rem', color: 'var(--success)', marginBottom: 'var(--space-3)' }}>
+                [ 🔍 WHY VERIFIED? ]
+              </h3>
+              <div className="flex items-center gap-4" style={{ marginBottom: 'var(--space-2)' }}>
+                <span className="font-pixel" style={{ fontSize: '1.25rem', color: 'var(--success)', lineHeight: 1 }}>
+                  {ticket.verification_score != null ? `${ticket.verification_score}%` : 'N/A'}
+                </span>
+                <span className="badge badge-outline font-pixel" style={{ color: 'var(--success)', borderRadius: 0, fontSize: '0.45rem', padding: '2px 4px' }}>
+                  {ticket.status?.toUpperCase()}
+                </span>
+              </div>
+              <p className="text-secondary text-xs" style={{ lineHeight: 1.6 }}>
+                {ticket.verification_explanation || 'Verification assessment is pending.'}
+              </p>
+            </div>
+
+            {/* 2. Why This Priority? */}
+            <div className="panel rpg-panel" style={{ borderRadius: 0 }}>
+              <h3 className="section-title font-pixel" style={{ fontSize: '0.65rem', color: 'var(--warning)', marginBottom: 'var(--space-3)' }}>
+                [ ⚖️ WHY THIS PRIORITY? ]
+              </h3>
+              <p className="text-secondary text-xs" style={{ lineHeight: 1.6, marginBottom: 'var(--space-4)' }}>
+                {ticket.priority_explanation || 'Priority calculations loading.'}
+              </p>
+              {ticket.priority_detail && (
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: 'var(--space-3)' }}>
+                  {Object.entries(ticket.priority_detail).map(([key, val]) => (
+                    <div key={key} style={{ padding: 'var(--space-2)', border: '1px solid var(--border-subtle)', background: 'var(--bg-primary)' }}>
+                      <span className="font-pixel block text-muted" style={{ fontSize: '0.35rem', letterSpacing: '0.05em' }}>
+                        {key.toUpperCase().replace('_', ' ')}
+                      </span>
+                      <span className="font-pixel text-sm" style={{ color: 'var(--accent)' }}>
+                        +{val}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* 3. Cluster Evidence */}
+            <div className="panel rpg-panel" style={{ borderRadius: 0 }}>
+              <h3 className="section-title font-pixel" style={{ fontSize: '0.65rem', color: 'var(--accent)', marginBottom: 'var(--space-3)' }}>
+                [ 🗺️ CLUSTER EVIDENCE ]
+              </h3>
+              <p className="text-secondary text-xs" style={{ lineHeight: 1.6, marginBottom: 'var(--space-3)' }}>
+                {ticket.cluster_explanation || 'Duplicate detection summary details loading.'}
+              </p>
+              {ticket.cluster_detail && ticket.cluster_detail.found && (
+                <div className="text-xs font-mono" style={{ padding: 'var(--space-3)', background: 'var(--bg-primary)', border: '1px solid var(--border-subtle)' }}>
+                  <div><strong>Cluster Match:</strong> Swarm ID #{ticket.cluster_detail.ticket_id}</div>
+                  <div><strong>Group Size:</strong> {ticket.cluster_detail.cluster_size} tickets</div>
+                  {ticket.cluster_detail.neighbors && ticket.cluster_detail.neighbors.length > 0 && (
+                    <div style={{ wordBreak: 'break-all', marginTop: '4px' }}>
+                      <strong>Co-neighbors:</strong> {ticket.cluster_detail.neighbors.join(', ')}
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+
+            {/* 4. SLA Risk */}
+            <div className="panel rpg-panel" style={{ borderRadius: 0 }}>
+              <h3 className="section-title font-pixel" style={{ fontSize: '0.65rem', color: 'var(--error)', marginBottom: 'var(--space-3)' }}>
+                [ 🔮 SLA BREACH RISK FORECAST ]
+              </h3>
+              <div className="flex items-center gap-4" style={{ marginBottom: 'var(--space-2)' }}>
+                <span className="font-pixel" style={{ fontSize: '1.25rem', color: 'var(--error)', lineHeight: 1 }}>
+                  {ticket.sla_risk_score != null ? `${ticket.sla_risk_score}%` : '0%'}
+                </span>
+                <span className="text-xs text-muted">breach likelihood</span>
+              </div>
+              <p className="text-secondary text-xs" style={{ lineHeight: 1.6, marginBottom: 'var(--space-3)' }}>
+                {ticket.sla_risk_explanation || 'Weibull time-to-resolution forecasting loading.'}
+              </p>
+              {ticket.sla_params && (
+                <div className="text-xs font-mono" style={{ padding: 'var(--space-3)', background: 'var(--bg-primary)', border: '1px solid var(--border-subtle)' }}>
+                  <div><strong>Weibull scale (&lambda;):</strong> {ticket.sla_params.lambda} hours</div>
+                  <div><strong>Weibull shape (k):</strong> {ticket.sla_params.k}</div>
+                  <div><strong>Consensus level:</strong> {ticket.sla_params.localizedUsed ? 'Localized MLE converges' : 'Category default parameters fallback'}</div>
+                </div>
+              )}
+            </div>
+
+            {/* 5. Resolution Plan */}
+            {ticket.dispatch_plan && (
+              <div className="panel rpg-panel" style={{ borderRadius: 0 }}>
+                <h3 className="section-title font-pixel" style={{ fontSize: '0.65rem', color: 'var(--success)', marginBottom: 'var(--space-3)' }}>
+                  [ ⚔️ OPERATION DISPATCH PLAN ]
+                </h3>
+                <p className="text-secondary text-xs" style={{ lineHeight: 1.6, marginBottom: 'var(--space-4)' }}>
+                  {ticket.dispatch_plan.explanation}
+                </p>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: 'var(--space-3)' }}>
+                  <div style={{ padding: 'var(--space-2)', border: '1px solid var(--border-subtle)', background: 'var(--bg-primary)' }}>
+                    <span className="font-pixel block text-muted" style={{ fontSize: '0.35rem' }}>CREW SIZE</span>
+                    <span className="font-pixel text-sm" style={{ color: 'var(--accent)' }}>{ticket.dispatch_plan.crew_size} Rangers</span>
+                  </div>
+                  <div style={{ padding: 'var(--space-2)', border: '1px solid var(--border-subtle)', background: 'var(--bg-primary)' }}>
+                    <span className="font-pixel block text-muted" style={{ fontSize: '0.35rem' }}>GOLD BUDGET</span>
+                    <span className="font-pixel text-sm" style={{ color: 'var(--success)' }}>₹{ticket.dispatch_plan.estimated_cost}</span>
+                  </div>
+                  <div style={{ padding: 'var(--space-2)', border: '1px solid var(--border-subtle)', background: 'var(--bg-primary)' }}>
+                    <span className="font-pixel block text-muted" style={{ fontSize: '0.35rem' }}>ESTIMATED ETA</span>
+                    <span className="font-pixel text-sm" style={{ color: 'var(--accent)' }}>{ticket.dispatch_plan.eta}</span>
+                  </div>
+                </div>
+                <div style={{ marginTop: 'var(--space-3)', fontSize: '0.65rem' }} className="font-mono text-muted">
+                  <strong>Supplies:</strong> {ticket.dispatch_plan.materials?.join(', ')}
+                </div>
+              </div>
+            )}
+
+          </div>
+
           {ticket.agent_trace && ticket.agent_trace.length > 0 && (
             <section style={{ marginTop: 'var(--space-6)', paddingTop: 'var(--space-6)', borderTop: '1px solid var(--border-subtle)' }}>
-              <h3 className="section-title font-pixel" style={{ fontSize: '0.65rem', color: 'var(--accent)' }}>[ 🧠 SENTINEL REASONING TRACE ]</h3>
+              <h3 className="section-title font-pixel" style={{ fontSize: '0.65rem', color: 'var(--accent)' }}>[ 🧠 MULTI-AGENT INVESTIGATION ]</h3>
               <AgentTrace trace={ticket.agent_trace} />
             </section>
           )}
