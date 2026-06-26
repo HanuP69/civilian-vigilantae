@@ -20,9 +20,10 @@ const haversineApprox = (a, b) => {
   const R = 6371000;
   const dLat = (b[0] - a[0]) * Math.PI / 180;
   const dLng = (b[1] - a[1]) * Math.PI / 180;
-  const x = dLat / 2;
-  const y = dLng * Math.cos(a[0] * Math.PI / 180);
-  return 2 * R * Math.asin(Math.sqrt(Math.sin(x) ** 2 + Math.cos(a[0] * Math.PI / 180) * Math.cos(b[0] * Math.PI / 180) * Math.sin(y / 2) ** 2));
+  const lat1 = a[0] * Math.PI / 180;
+  const lat2 = b[0] * Math.PI / 180;
+  const h = Math.sin(dLat / 2) ** 2 + Math.cos(lat1) * Math.cos(lat2) * Math.sin(dLng / 2) ** 2;
+  return 2 * R * Math.asin(Math.sqrt(h));
 };
 
 function HomePage() {

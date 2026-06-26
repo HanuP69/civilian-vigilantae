@@ -120,11 +120,15 @@ export async function processSchedulerTick(onStep) {
   
   for (let i = 0; i < openTickets.length; i += 20) {
     const chunk = openTickets.slice(i, i + 20);
-    const ticketSummaries = chunk.map(t => ({
-      id: t.id, category: t.category, severity: t.severity, status: t.status,
-      created_at: t.created_at, ward: t.ward,
-      elapsed_hours: Math.round((Date.now() - new Date(t.created_at).getTime()) / 3600000),
-    }));
+    const ticketSummaries = chunk.map(t => {
+      const ts = t.created_at?.toDate?.() ?? new Date(t.created_at);
+      const elapsedHours = Number.isNaN(ts.getTime()) ? 0 : Math.round((Date.now() - ts.getTime()) / 3600000);
+      return {
+        id: t.id, category: t.category, severity: t.severity, status: t.status,
+        created_at: t.created_at, ward: t.ward,
+        elapsed_hours: elapsedHours,
+      };
+    });
 
     const messages = [
       { role: 'system', content: SYSTEM_PROMPT },

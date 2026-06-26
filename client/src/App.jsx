@@ -98,24 +98,10 @@ function Navbar({ isConnected }) {
           zIndex: 1001,
           pointerEvents: 'none',
           display: 'flex',
-          justifyContent: 'space-between',
+          justifyContent: 'flex-end',
           alignItems: 'center'
         }}
       >
-        {/* Floating Brand Plaque (Top-Left) */}
-        <div 
-          className="rpg-panel" 
-          style={{ 
-            padding: '6px 12px', 
-            borderRadius: 0,
-            boxShadow: '4px 4px 0 rgba(0,0,0,0.6)',
-            pointerEvents: 'auto'
-          }}
-        >
-          <span className="font-serif" style={{ fontSize: '1.05rem', fontWeight: 600, color: 'var(--accent)', fontStyle: 'italic', display: 'flex', alignItems: 'center', gap: '6px' }}>
-            ⚔️ Sentinel Civic
-          </span>
-        </div>
 
         {/* Floating Backpack Trigger Button (Top-Right) or Sign In button */}
         {isAuthenticated ? (

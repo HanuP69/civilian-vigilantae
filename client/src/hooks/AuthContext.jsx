@@ -10,7 +10,9 @@ export function AuthProvider({ children }) {
   const fetchProfile = useCallback(async (authToken) => {
     if (!authToken) return null;
     try {
-      const res = await fetch(`/api/users/me?uid=${authToken}`);
+      const res = await fetch(`/api/users/me?uid=${authToken}`, {
+        headers: { 'Authorization': `Bearer ${authToken}` }
+      });
       if (!res.ok) throw new Error('Failed to fetch profile');
       const data = await res.json();
       setUser(data);

@@ -126,6 +126,12 @@ function TicketPage() {
               <span>{ticket.department.toUpperCase()}</span>
             </div>
           )}
+          {ticket.reporter_name && (
+            <div className="flex flex-col gap-1">
+              <span className="text-muted font-pixel" style={{ fontSize: '0.45rem', letterSpacing: '0.1em' }}>REPORTER HERO</span>
+              <span>{ticket.reporter_name.toUpperCase()}</span>
+            </div>
+          )}
         </div>
       </header>
 

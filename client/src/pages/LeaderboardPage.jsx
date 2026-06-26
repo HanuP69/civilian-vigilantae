@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { fetchLeaderboard } from '../services/api';
 import { useToast } from '../hooks/useToast.jsx';
 import { motion } from 'framer-motion';
+import { CustomAvatar, parseCustomAvatar } from '../components/CustomAvatar';
 
 const BADGE_DISPLAY = {
   'Neighborhood Watch': { emoji: '🛡️', name: 'Neighborhood Watch' },
@@ -18,7 +19,7 @@ const getBadgeDisplay = (badge) => {
   return BADGE_DISPLAY[badge] || { emoji: '🏅', name: badge };
 };
 
-const Avatar = ({ seed, name }) => {
+const Avatar = ({ photoUrl, name }) => {
   const [error, setError] = useState(false);
   const avatarStyle = {
     width: 48,
@@ -33,6 +34,14 @@ const Avatar = ({ seed, name }) => {
     flexShrink: 0
   };
 
+  if (photoUrl && photoUrl.startsWith('custom:')) {
+    return (
+      <div className="pixel-avatar" style={avatarStyle}>
+        <CustomAvatar {...parseCustomAvatar(photoUrl)} size={40} />
+      </div>
+    );
+  }
+
   if (error) {
     const initial = (name || '?').charAt(0).toUpperCase();
     return (
@@ -43,7 +52,7 @@ const Avatar = ({ seed, name }) => {
   }
   return (
     <img
-      src={`https://api.dicebear.com/7.x/pixel-art/svg?seed=${encodeURIComponent(seed || name)}`}
+      src={`https://api.dicebear.com/7.x/pixel-art/svg?seed=${encodeURIComponent(photoUrl || name)}`}
       alt={name}
       loading="lazy"
       onError={() => setError(true)}
@@ -140,7 +149,7 @@ function LeaderboardPage() {
                 #{rank}
               </div>
 
-              <Avatar seed={name} name={name} />
+              <Avatar photoUrl={user.photo_url} name={name} />
 
               <div className="flex flex-col flex-1 gap-1" style={{ minWidth: 0 }}>
                 <span className="font-medium truncate" style={{ color: 'var(--ink-primary)', fontSize: '1.1rem' }}>

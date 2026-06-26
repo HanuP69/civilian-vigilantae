@@ -82,7 +82,7 @@ export function computeRecurrenceRisk(resolvedTickets, forecastDays = 14) {
     const resolvedAt =
       ticket.resolved_at instanceof Date
         ? ticket.resolved_at
-        : new Date(ticket.resolved_at);
+        : (ticket.resolved_at?.toDate?.() ?? new Date(ticket.resolved_at));
 
     // Skip tickets with invalid dates
     if (Number.isNaN(resolvedAt.getTime())) continue;

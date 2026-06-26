@@ -74,7 +74,9 @@ export async function registerUser(email, password, displayName) {
   };
 
   await db.collection('users').doc(uid).set(newUser);
-  return newUser;
+  const stripped = { ...newUser };
+  delete stripped.password;
+  return stripped;
 }
 
 export async function loginUser(email, password) {
@@ -88,7 +90,9 @@ export async function loginUser(email, password) {
   });
 
   if (!user) throw new Error('Invalid email or password');
-  return ensureUser(user.uid);
+  const u = await ensureUser(user.uid);
+  delete u.password;
+  return u;
 }
 
 export async function ensureUser(uid) {
@@ -122,9 +126,13 @@ export async function ensureUser(uid) {
     if (needsUpdate) {
       const merged = { ...data, ...updates };
       await db.collection('users').doc(uid).update(updates);
-      return merged;
+      const stripped = { ...merged };
+      delete stripped.password;
+      return stripped;
     }
-    return data;
+    const stripped = { ...data };
+    delete stripped.password;
+    return stripped;
   }
 
   const newUser = {
@@ -152,7 +160,9 @@ export async function ensureUser(uid) {
     joined_at: new Date().toISOString(),
   };
   await db.collection('users').doc(uid).set(newUser);
-  return newUser;
+  const stripped = { ...newUser };
+  delete stripped.password;
+  return stripped;
 }
 
 export async function awardXP(uid, action, ticketIdOrWard = null) {

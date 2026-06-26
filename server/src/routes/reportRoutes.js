@@ -3,7 +3,7 @@ import multer from 'multer';
 import { classifyMedia } from '../services/classificationService.js';
 import { processReport } from '../agent/orchestrator.js';
 import { broadcast } from '../services/sseService.js';
-import { awardXP } from '../services/userService.js';
+import { awardXP, getUser } from '../services/userService.js';
 import { requireAuth } from '../middleware/authMiddleware.js';
 import rateLimit from 'express-rate-limit';
 import { storage } from '../config/firebase.js';
@@ -20,6 +20,21 @@ router.post('/', requireAuth, reportLimiter, upload.single('media'), async (req,
     const reporter_id = req.user.id;
     const latitude = parseFloat(lat);
     const longitude = parseFloat(lng);
+
+    let finalReporterName = 'Anonymous';
+    if (reporter_id) {
+      try {
+        const user = await getUser(reporter_id);
+        if (user && user.display_name) {
+          finalReporterName = user.display_name;
+        }
+      } catch (err) {
+        console.error('[Report] Failed to resolve reporter name:', err);
+      }
+    }
+    if (finalReporterName === 'Anonymous' && reporter_name) {
+      finalReporterName = reporter_name;
+    }
 
     let classificationResult = null;
     let cloudVisionResult = null;
@@ -51,7 +66,7 @@ router.post('/', requireAuth, reportLimiter, upload.single('media'), async (req,
       id: report_id || undefined,
       text, lat: latitude, lng: longitude,
       reporter_id: reporter_id,
-      reporter_name: reporter_name || 'Anonymous',
+      reporter_name: finalReporterName,
       address: address || '',
       media_urls: mediaUrls, media_type: mediaType,
       mediaBase64, mediaMimeType,
@@ -63,7 +78,7 @@ router.post('/', requireAuth, reportLimiter, upload.single('media'), async (req,
     });
 
     if (result.ticketId && reporter_id !== 'anonymous') {
-      await awardXP(reporter_id, result.merged ? 'vote' : 'report');
+      await awardXP(reporter_id, result.merged ? 'vote' : 'report', result.ticketId);
     }
 
     res.json({

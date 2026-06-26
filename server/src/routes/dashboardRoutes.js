@@ -18,7 +18,7 @@ router.get('/recurrence', async (req, res) => {
     snap.forEach(doc => {
       const t = doc.data();
       if (t.status === 'resolved' && t.resolved_at) {
-        resolved.push({ resolved_at: new Date(t.resolved_at), category: t.category, ward: t.ward });
+        resolved.push({ resolved_at: t.resolved_at?.toDate?.() ?? new Date(t.resolved_at), category: t.category, ward: t.ward });
       }
     });
     const risks = computeRecurrenceRisk(resolved, 14);

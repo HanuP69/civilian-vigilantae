@@ -69,7 +69,7 @@ export const toolHandlers = {
     ticketsSnap.forEach(doc => {
       const t = doc.data();
       if (t.status === 'resolved') return;
-      const created = new Date(t.created_at);
+      const created = t.created_at?.toDate?.() ?? new Date(t.created_at);
       if (now - created < windowMs) {
         recentTickets.push({ id: t.id, lat: t.lat, lng: t.lng, timestamp: created, category: t.category });
       }
@@ -174,7 +174,10 @@ export const toolHandlers = {
 
     const status = t.status;
     if (newUp >= 5 && status === 'resolved') update.status = 'reopened';
-    else if (newDown >= 5 && status !== 'resolved') update.status = 'resolved';
+    else if (newDown >= 5 && status !== 'resolved') {
+      update.status = 'resolved';
+      update.resolved_at = new Date().toISOString();
+    }
     else if (newUp >= 3 && status === 'reported') update.status = 'verified';
 
     await db.collection('tickets').doc(ticket_id).update(update);
@@ -189,9 +192,9 @@ export const toolHandlers = {
     const ts = t.created_at?.toDate?.() ?? new Date(t.created_at);
     const elapsedHours = Number.isNaN(ts.getTime()) ? 0 : (Date.now() - ts.getTime()) / 3600000;
     const params = DEFAULT_PARAMS[t.category] || DEFAULT_PARAMS.other;
-    const slaDeadline = t.sla_deadline ? new Date(t.sla_deadline) : null;
+    const slaDeadline = t.sla_deadline ? (t.sla_deadline.toDate?.() ?? new Date(t.sla_deadline)) : null;
     const slaHours = slaDeadline
-      ? (slaDeadline.getTime() - new Date(t.created_at).getTime()) / 3600000
+      ? (slaDeadline.getTime() - ts.getTime()) / 3600000
       : params.lambda;
 
     // Localized Weibull MLE Parameter Estimation
@@ -205,7 +208,9 @@ export const toolHandlers = {
     resolvedSnap.forEach(rd => {
       const ticketData = rd.data();
       if (ticketData.resolved_at && ticketData.created_at) {
-        const durationH = (new Date(ticketData.resolved_at).getTime() - new Date(ticketData.created_at).getTime()) / 3600000;
+        const resTs = ticketData.resolved_at?.toDate?.() ?? new Date(ticketData.resolved_at);
+        const creTs = ticketData.created_at?.toDate?.() ?? new Date(ticketData.created_at);
+        const durationH = (resTs.getTime() - creTs.getTime()) / 3600000;
         if (durationH > 0) intervals.push(durationH);
       }
     });
@@ -242,14 +247,15 @@ export const toolHandlers = {
     const ts = t.created_at?.toDate?.() ?? new Date(t.created_at);
     const elapsedHours = Number.isNaN(ts.getTime()) ? 0 : (Date.now() - ts.getTime()) / 3600000;
     const slaHours = DEFAULT_PARAMS[t.category]?.lambda || 168;
+    const nextSeverity = t.severity === 'low' ? 'medium' : (t.severity === 'medium' ? 'high' : 'critical');
     const score = computePriority({
-      severity: t.severity === 'low' ? 'medium' : (t.severity === 'medium' ? 'high' : 'critical'),
+      severity: nextSeverity,
       reportCount: (t.child_reports?.length || 0) + 1,
       verificationUp: t.verification_up || 0, verificationDown: t.verification_down || 0,
       elapsedHours, slaHours, category: t.category,
     });
     await db.collection('tickets').doc(ticket_id).update({
-      status: 'in_progress', priority_score: score, updated_at: new Date().toISOString(),
+      status: 'in_progress', severity: nextSeverity, priority_score: score, updated_at: new Date().toISOString(),
     });
     broadcast('ticket_updated', { ticket_id, event: 'escalated', reason, priority_score: score });
     return { ticket_id, escalated: true, reason, priority_score: score };
@@ -274,7 +280,7 @@ export const toolHandlers = {
     ticketsSnap.forEach(doc => {
       const t = doc.data();
       if (t.status === 'resolved' && t.resolved_at && t.ward === ward && t.category === category) {
-        resolved.push({ resolved_at: new Date(t.resolved_at), category: t.category, ward: t.ward });
+        resolved.push({ resolved_at: t.resolved_at?.toDate?.() ?? new Date(t.resolved_at), category: t.category, ward: t.ward });
       }
     });
     if (resolved.length < 2) {
@@ -301,7 +307,9 @@ export const toolHandlers = {
       if (t.priority_score !== undefined) scores.push(t.priority_score);
       if (t.status === 'resolved' && t.resolved_at && t.created_at) {
         resolvedCount++;
-        totalDurations += (new Date(t.resolved_at).getTime() - new Date(t.created_at).getTime()) / 3600000;
+        const resTs = t.resolved_at?.toDate?.() ?? new Date(t.resolved_at);
+        const creTs = t.created_at?.toDate?.() ?? new Date(t.created_at);
+        totalDurations += (resTs.getTime() - creTs.getTime()) / 3600000;
       }
     });
 

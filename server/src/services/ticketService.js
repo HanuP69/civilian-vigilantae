@@ -42,11 +42,25 @@ export async function getDashboardStats() {
   const now = Date.now();
   const weekAgo = now - 7 * 24 * 60 * 60 * 1000;
   const resolved = tickets.filter(t => t.status === 'resolved');
-  const resolvedThisWeek = resolved.filter(t => new Date(t.resolved_at) > weekAgo);
-  const activeReporters = new Set(tickets.filter(t => new Date(t.created_at) > weekAgo).map(t => t.reporter_id));
+  const resolvedThisWeek = resolved.filter(t => {
+    const resTs = t.resolved_at?.toDate?.() ?? new Date(t.resolved_at);
+    return resTs > weekAgo;
+  });
+  const activeReporters = new Set(
+    tickets
+      .filter(t => {
+        const creTs = t.created_at?.toDate?.() ?? new Date(t.created_at);
+        return creTs > weekAgo;
+      })
+      .map(t => t.reporter_id)
+  );
 
   const avgResolution = resolved.length > 0
-    ? resolved.reduce((s, t) => s + (new Date(t.resolved_at) - new Date(t.created_at)) / 3600000, 0) / resolved.length
+    ? resolved.reduce((s, t) => {
+        const resTs = t.resolved_at?.toDate?.() ?? new Date(t.resolved_at);
+        const creTs = t.created_at?.toDate?.() ?? new Date(t.created_at);
+        return s + (resTs - creTs) / 3600000;
+      }, 0) / resolved.length
     : 0;
 
   const byCategory = {};
@@ -62,7 +76,9 @@ export async function getDashboardStats() {
     byDept[t.department].total++;
     if (t.status === 'resolved') {
       byDept[t.department].resolved++;
-      byDept[t.department].totalTime += (new Date(t.resolved_at) - new Date(t.created_at)) / 3600000;
+      const resTs = t.resolved_at?.toDate?.() ?? new Date(t.resolved_at);
+      const creTs = t.created_at?.toDate?.() ?? new Date(t.created_at);
+      byDept[t.department].totalTime += (resTs - creTs) / 3600000;
     }
   }
 

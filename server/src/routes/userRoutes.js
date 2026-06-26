@@ -26,10 +26,9 @@ router.post('/login', async (req, res) => {
   }
 });
 
-router.get('/me', async (req, res) => {
+router.get('/me', requireAuth, async (req, res) => {
   try {
-    const uid = req.query.uid || req.headers['x-user-id'] || req.query.userId;
-    if (!uid) return res.status(400).json({ error: 'uid required' });
+    const uid = req.user.id;
     const user = await getUser(uid);
     if (!user) return res.status(404).json({ error: 'Not found' });
     res.json(user);

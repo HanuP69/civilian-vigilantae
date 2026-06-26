@@ -25,7 +25,15 @@ export function useAgentStream(reportId, initialSteps = []) {
     if (initialSteps.length > 0 && initialSteps !== prevInitialRef.current) {
       prevInitialRef.current = initialSteps;
       if (!sawLiveRef.current) {
-        setSteps(prev => mergeAgentTrace(prev, initialSteps));
+        setSteps(prev => {
+          const next = mergeAgentTrace(prev, initialSteps);
+          const hasComplete = next.some(step => step && COMPLETE_STEPS.includes(step.step) && step.status === 'success');
+          if (hasComplete && !completeRef.current) {
+            completeRef.current = true;
+            setIsComplete(true);
+          }
+          return next;
+        });
       }
     }
   }, [reportId, initialSteps]);

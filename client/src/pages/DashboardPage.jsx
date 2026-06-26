@@ -299,7 +299,7 @@ function DashboardPage() {
   const [loading, setLoading] = useState(true);
   const [expandedRisk, setExpandedRisk] = useState(null);
   const [activeInfo, setActiveInfo] = useState({});
-  const [selectedWard, setSelectedWard] = useState(null);
+  const [selectedWardName, setSelectedWardName] = useState(null);
   const [viewMode, setViewMode] = useState('map');
   const { toast } = useToast();
 
@@ -348,10 +348,14 @@ function DashboardPage() {
   }, [tickets, recurrence]);
 
   useEffect(() => {
-    if (wardMetrics.length > 0 && !selectedWard) {
-      setSelectedWard(wardMetrics[0]);
+    if (wardMetrics.length > 0 && !selectedWardName) {
+      setSelectedWardName(wardMetrics[0].name);
     }
-  }, [wardMetrics, selectedWard]);
+  }, [wardMetrics, selectedWardName]);
+
+  const selectedWard = useMemo(() => {
+    return wardMetrics.find(w => w.name === selectedWardName) || wardMetrics[0] || null;
+  }, [wardMetrics, selectedWardName]);
 
   const categoryBreakdown = stats?.byCategory || {};
   const catKeys = Object.keys(categoryBreakdown);
@@ -636,7 +640,7 @@ function DashboardPage() {
 
         {viewMode === 'map' ? (
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 'var(--space-5)', alignItems: 'center' }}>
-            <WardHexmap wardMetrics={wardMetrics} activeWard={selectedWard} setActiveWard={setSelectedWard} />
+            <WardHexmap wardMetrics={wardMetrics} activeWard={selectedWard} setActiveWard={(w) => setSelectedWardName(w ? w.name : null)} />
             
             {selectedWard && (
               <div className="hex-details-card rpg-panel" style={{ animation: 'fadeIn 0.25s ease-out', borderRadius: 0 }}>
