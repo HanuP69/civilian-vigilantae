@@ -1128,16 +1128,19 @@ tr:hover td { background: var(--bg-surface); }
 }
 
 .chart-card-title {
-  font-size: 1.125rem;
-  font-family: var(--font-serif);
-  font-weight: 500;
-  color: var(--ink-primary);
+  font-family: var(--font-pixel);
+  font-size: 0.6rem;
+  font-weight: 600;
+  letter-spacing: 1px;
+  color: var(--accent);
 }
 
 .chart-card-subtitle {
-  font-size: 0.75rem;
+  font-size: 0.45rem;
   color: var(--ink-muted);
-  font-family: var(--font-mono);
+  font-family: var(--font-pixel);
+  text-transform: uppercase;
+  margin-top: 4px;
 }
 
 .chart-card-body {
@@ -1209,7 +1212,8 @@ tr:hover td { background: var(--bg-surface); }
   gap: var(--space-4);
   padding: var(--space-4);
   background: var(--bg-surface);
-  border-radius: var(--radius-md);
+  border: 1px solid var(--border);
+  border-radius: 0;
   cursor: pointer;
   transition: background var(--transition-fast);
 }
@@ -1224,14 +1228,14 @@ tr:hover td { background: var(--bg-surface); }
 
 .dept-bar-mini {
   height: 4px;
-  border-radius: 2px;
+  border-radius: 0;
   background: var(--bg-surface);
   overflow: hidden;
   width: 60px;
 }
 .dept-bar-mini-fill {
   height: 100%;
-  border-radius: 2px;
+  border-radius: 0;
   transition: width 0.8s ease-out;
 }
 
@@ -1242,7 +1246,7 @@ tr:hover td { background: var(--bg-surface); }
   padding: var(--space-3) var(--space-4);
   background: oklch(0.25 0.04 260);
   border: 1px solid var(--accent-muted);
-  border-radius: var(--radius-sm);
+  border-radius: 0;
   margin-bottom: var(--space-5);
   font-family: var(--font-mono);
   font-size: 0.75rem;
@@ -1525,34 +1529,28 @@ tr:hover td { background: var(--bg-surface); }
 
 .grafana-kpi-card {
   padding: var(--space-4) var(--space-5);
-  background: linear-gradient(180deg, var(--bg-secondary) 0%, var(--bg-surface) 100%);
-  border: 1px solid var(--border-subtle);
-  border-radius: var(--radius-lg);
+  background: linear-gradient(135deg, oklch(0.24 0.03 50) 0%, oklch(0.18 0.02 50) 100%);
+  border: 4px solid oklch(0.12 0.01 50);
+  border-radius: 0;
   position: relative;
   overflow: hidden;
-  box-shadow: var(--shadow-sm);
+  box-shadow: 
+    inset 2px 2px 0 oklch(0.40 0.04 50),
+    inset -2px -2px 0 oklch(0.10 0.01 50),
+    4px 4px 0 oklch(0 0 0 / 0.5);
   display: flex;
   flex-direction: column;
   justify-content: space-between;
   height: 120px;
 }
 
-.grafana-kpi-card::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 4px;
-  height: 100%;
-  background: var(--accent);
-}
-
-.grafana-kpi-card.success::before { background: var(--success); }
-.grafana-kpi-card.danger::before { background: var(--error); }
-.grafana-kpi-card.warning::before { background: var(--warning); }
+.grafana-kpi-card.success { border-color: var(--success); }
+.grafana-kpi-card.danger { border-color: var(--error); }
+.grafana-kpi-card.warning { border-color: var(--warning); }
 
 .grafana-kpi-title {
-  font-size: 0.72rem;
+  font-family: var(--font-pixel);
+  font-size: 0.5rem;
   text-transform: uppercase;
   letter-spacing: 0.08em;
   color: var(--ink-muted);
@@ -1560,8 +1558,8 @@ tr:hover td { background: var(--bg-surface); }
 }
 
 .grafana-kpi-val {
-  font-family: var(--font-serif);
-  font-size: 1.75rem;
+  font-family: var(--font-pixel);
+  font-size: 1.25rem;
   color: var(--ink-primary);
   font-weight: 700;
 }
@@ -1637,8 +1635,8 @@ tr:hover td { background: var(--bg-surface); }
 
 .grafana-heatmap-card {
   padding: 14px var(--space-4);
-  border-radius: var(--radius-md);
-  border: 1px solid var(--border-subtle);
+  border-radius: 0;
+  border: 1px solid var(--border);
   background: linear-gradient(135deg, var(--bg-secondary) 0%, var(--bg-surface) 100%);
   display: flex;
   flex-direction: column;
@@ -1695,10 +1693,10 @@ tr:hover td { background: var(--bg-surface); }
 
 .hex-details-card {
   background: linear-gradient(180deg, var(--bg-surface) 0%, var(--bg-elevated) 100%);
-  border: 1px solid var(--border-subtle);
-  border-radius: var(--radius-lg);
+  border: 2px solid var(--border);
+  border-radius: 0;
   padding: var(--space-5);
-  box-shadow: var(--shadow-md);
+  box-shadow: 4px 4px 0 oklch(0 0 0 / 0.5);
   min-width: 250px;
 }
 
@@ -1721,14 +1719,15 @@ tr:hover td { background: var(--bg-surface); }
 }
 
 .doughnut-center-val {
-  font-family: var(--font-serif);
-  font-size: 2rem;
+  font-family: var(--font-pixel);
+  font-size: 1.25rem;
   color: var(--ink-primary);
   font-weight: 700;
 }
 
 .doughnut-center-lbl {
-  font-size: 0.6rem;
+  font-family: var(--font-pixel);
+  font-size: 0.45rem;
   text-transform: uppercase;
   letter-spacing: 0.08em;
   color: var(--ink-muted);
@@ -1737,12 +1736,12 @@ tr:hover td { background: var(--bg-surface); }
 /* Tab/Toggle buttons */
 .btn-toggle {
   background: transparent;
-  border: 1px solid var(--border-subtle);
+  border: 1px solid var(--border);
   padding: 6px var(--space-3);
   font-size: 0.72rem;
   color: var(--ink-muted);
   font-weight: 600;
-  border-radius: var(--radius-sm);
+  border-radius: 0;
   cursor: pointer;
   transition: all var(--transition-fast);
 }
@@ -1756,6 +1755,82 @@ tr:hover td { background: var(--bg-surface); }
   background: var(--accent) !important;
   color: #000000 !important;
   border-color: var(--accent) !important;
+}
+
+/* Retro RPG Stone Bevel Panel */
+.rpg-panel {
+  background: linear-gradient(135deg, oklch(0.24 0.03 50) 0%, oklch(0.18 0.02 50) 100%) !important;
+  border: 4px solid oklch(0.12 0.01 50) !important;
+  box-shadow: 
+    inset 2px 2px 0 oklch(0.40 0.04 50),
+    inset -2px -2px 0 oklch(0.10 0.01 50),
+    4px 4px 0 oklch(0 0 0 / 0.5) !important;
+  border-radius: 0 !important;
+}
+
+/* Custom RPG Scrollbar */
+.rpg-scrollbar::-webkit-scrollbar {
+  width: 10px;
+}
+.rpg-scrollbar::-webkit-scrollbar-track {
+  background: oklch(0.14 0.01 50);
+  border-left: 2px solid oklch(0.12 0.01 50);
+}
+.rpg-scrollbar::-webkit-scrollbar-thumb {
+  background: oklch(0.32 0.04 50);
+  border: 2px solid oklch(0.12 0.01 50);
+  box-shadow: inset 1px 1px 0 oklch(0.48 0.05 50);
+}
+.rpg-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: oklch(0.38 0.05 50);
+}
+
+/* RPG Speech Bubble / Dialog Box */
+.rpg-dialog-bubble {
+  position: absolute;
+  bottom: 64px;
+  width: 190px;
+  background: linear-gradient(135deg, oklch(0.24 0.03 50) 0%, oklch(0.18 0.02 50) 100%) !important;
+  border: 4px solid oklch(0.12 0.01 50) !important;
+  box-shadow: 
+    inset 2px 2px 0 oklch(0.40 0.04 50),
+    inset -2px -2px 0 oklch(0.10 0.01 50),
+    4px 4px 0 oklch(0 0 0 / 0.5) !important;
+  padding: 8px 10px;
+  color: var(--ink-primary);
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  text-align: center;
+  white-space: normal;
+  word-wrap: break-word;
+  z-index: 20;
+}
+
+.rpg-dialog-bubble::after {
+  content: '';
+  position: absolute;
+  bottom: -12px;
+  left: 50%;
+  transform: translateX(-50%);
+  border-width: 12px 8px 0;
+  border-style: solid;
+  border-color: oklch(0.12 0.01 50) transparent;
+  display: block;
+  width: 0;
+}
+
+.rpg-dialog-bubble::before {
+  content: '';
+  position: absolute;
+  bottom: -6px;
+  left: 50%;
+  transform: translateX(-50%);
+  border-width: 8px 6px 0;
+  border-style: solid;
+  border-color: oklch(0.18 0.02 50) transparent;
+  display: block;
+  width: 0;
+  z-index: 21;
 }
 
 

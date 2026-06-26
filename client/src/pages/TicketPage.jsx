@@ -88,42 +88,42 @@ function TicketPage() {
     <div className="ticket-page-container animate-fade-up" style={{ maxWidth: 900, margin: '0 auto', paddingBottom: 'var(--space-10)' }}>
       <header style={{ marginBottom: 'var(--space-8)', borderBottom: '1px solid var(--accent-muted)', paddingBottom: 'var(--space-6)' }}>
         <div className="flex items-center gap-3" style={{ marginBottom: 'var(--space-4)', flexWrap: 'wrap' }}>
-          <span className={statusClass}>{capitalize(ticket.status)}</span>
-          <span className={severityClass}>{capitalize(ticket.severity)}</span>
+          <span className={`${statusClass} font-pixel`} style={{ borderRadius: 0, fontSize: '0.45rem', padding: '2px 4px' }}>{capitalize(ticket.status)}</span>
+          <span className={`${severityClass} font-pixel`} style={{ borderRadius: 0, fontSize: '0.45rem', padding: '2px 4px' }}>{capitalize(ticket.severity)}</span>
           {ticket.category && (
             <span
-              className="badge badge-outline"
-              style={{ color: CATEGORY_COLORS[ticket.category] || 'var(--ink-muted)' }}
+              className="badge badge-outline font-pixel"
+              style={{ color: CATEGORY_COLORS[ticket.category] || 'var(--ink-muted)', borderRadius: 0, fontSize: '0.45rem', padding: '2px 4px' }}
             >
-              {CATEGORY_LABELS[ticket.category] || capitalize(ticket.category)}
+              {CATEGORY_LABELS[ticket.category]?.toUpperCase() || capitalize(ticket.category).toUpperCase()}
             </span>
           )}
         </div>
-        <h1 className="font-serif animate-reveal" style={{ fontSize: 'clamp(2rem, 5vw, 3.5rem)', lineHeight: 1.1, marginBottom: 'var(--space-5)', color: 'var(--ink-primary)' }}>
-          {ticket.title || ticket.ai_title || 'Untitled Ticket'}
+        <h1 className="font-serif animate-reveal" style={{ fontSize: 'clamp(2rem, 5vw, 3.5rem)', lineHeight: 1.1, marginBottom: 'var(--space-5)', color: 'var(--ink-primary)', fontWeight: 600 }}>
+          {ticket.title || ticket.ai_title || 'Untitled Quest'}
         </h1>
 
         <div className="flex gap-6 text-sm text-secondary animate-fade-up stagger-1" style={{ flexWrap: 'wrap', rowGap: 'var(--space-3)' }}>
           <div className="flex flex-col gap-1">
-            <span className="text-muted text-xs" style={{ letterSpacing: '0.1em', textTransform: 'uppercase' }}>Reported</span>
+            <span className="text-muted font-pixel" style={{ fontSize: '0.45rem', letterSpacing: '0.1em' }}>QUEST DISPATCHED</span>
             <span>{ticket.created_at ? timeAgo(ticket.created_at) : '—'}</span>
           </div>
           {ticket.ward && (
             <div className="flex flex-col gap-1">
-              <span className="text-muted text-xs" style={{ letterSpacing: '0.1em', textTransform: 'uppercase' }}>Ward</span>
-              <span>{ticket.ward}</span>
+              <span className="text-muted font-pixel" style={{ fontSize: '0.45rem', letterSpacing: '0.1em' }}>WARD REALM</span>
+              <span>{ticket.ward.toUpperCase()}</span>
             </div>
           )}
           {ticket.address && !ticket.address.toLowerCase().startsWith(ticket.ward?.toLowerCase()) && (
             <div className="flex flex-col gap-1">
-              <span className="text-muted text-xs" style={{ letterSpacing: '0.1em', textTransform: 'uppercase' }}>Address</span>
+              <span className="text-muted font-pixel" style={{ fontSize: '0.45rem', letterSpacing: '0.1em' }}>COORDINATES</span>
               <span>{ticket.address}</span>
             </div>
           )}
           {ticket.department && (
             <div className="flex flex-col gap-1">
-              <span className="text-muted text-xs" style={{ letterSpacing: '0.1em', textTransform: 'uppercase' }}>Department</span>
-              <span>{ticket.department}</span>
+              <span className="text-muted font-pixel" style={{ fontSize: '0.45rem', letterSpacing: '0.1em' }}>ASSIGNED GUILD</span>
+              <span>{ticket.department.toUpperCase()}</span>
             </div>
           )}
         </div>
@@ -133,15 +133,15 @@ function TicketPage() {
 
         <div className="flex flex-col gap-8">
           <section>
-            <h3 className="section-title">Description</h3>
+            <h3 className="section-title font-pixel" style={{ fontSize: '0.65rem', color: 'var(--accent)' }}>[ 📜 QUEST LOG DETAIL ]</h3>
             <p className="text-secondary" style={{ fontSize: '1.125rem', lineHeight: 1.8, fontWeight: 300 }}>
-              {ticket.description || ticket.raw_text || 'No description provided for this incident.'}
+              {ticket.description || ticket.raw_text || 'No description provided for this quest.'}
             </p>
           </section>
 
           {ticket.media_urls && ticket.media_urls.length > 0 && (
             <section style={{ borderTop: '1px solid var(--border-subtle)', paddingTop: 'var(--space-6)' }}>
-              <h3 className="section-title">Attachments</h3>
+              <h3 className="section-title font-pixel" style={{ fontSize: '0.65rem', color: 'var(--accent)' }}>[ 📷 VISUAL EVIDENCE ]</h3>
               <div className="flex flex-col gap-4">
                 {ticket.media_urls.map((url, i) => {
                   const type = ticket.media_type || (
@@ -149,17 +149,17 @@ function TicketPage() {
                     /\.(mp3|wav|webm|ogg|m4a)$/i.test(url) ? 'audio' : 'image'
                   );
                   if (type === 'video') return (
-                    <div key={i} style={{ borderRadius: 'var(--radius-md)', overflow: 'hidden', background: 'var(--bg-secondary)', border: '1px solid var(--border-subtle)' }}>
+                    <div key={i} style={{ borderRadius: 0, overflow: 'hidden', background: 'var(--bg-secondary)', border: '1px solid var(--border-subtle)' }}>
                       <video
                         src={url}
                         controls
-                        style={{ width: '100%', maxHeight: 400, display: 'block', borderRadius: 'var(--radius-md)' }}
+                        style={{ width: '100%', maxHeight: 400, display: 'block', borderRadius: 0 }}
                       />
                     </div>
                   );
                   if (type === 'audio') return (
-                    <div key={i} className="panel flex items-center gap-4" style={{ padding: 'var(--space-4)' }}>
-                      <div style={{ width: 40, height: 40, borderRadius: '50%', background: 'var(--accent-muted)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                    <div key={i} className="panel rpg-panel flex items-center gap-4" style={{ padding: 'var(--space-4)', borderRadius: 0 }}>
+                      <div style={{ width: 40, height: 40, borderRadius: 0, background: 'var(--accent-muted)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
                       </div>
                       <audio src={url} controls style={{ flex: 1, minWidth: 0 }} />
@@ -167,7 +167,7 @@ function TicketPage() {
                   );
                   // image (default)
                   return (
-                    <a key={i} href={url} target="_blank" rel="noopener noreferrer" style={{ display: 'block', borderRadius: 'var(--radius-md)', overflow: 'hidden', border: '1px solid var(--border-subtle)' }}>
+                    <a key={i} href={url} target="_blank" rel="noopener noreferrer" style={{ display: 'block', borderRadius: 0, overflow: 'hidden', border: '1px solid var(--border-subtle)' }}>
                       <img
                         src={url}
                         alt={`Attachment ${i + 1}`}
@@ -183,14 +183,14 @@ function TicketPage() {
 
           {ticket.agent_trace && ticket.agent_trace.length > 0 && (
             <section style={{ marginTop: 'var(--space-6)', paddingTop: 'var(--space-6)', borderTop: '1px solid var(--border-subtle)' }}>
-              <h3 className="section-title">Intelligence Trace</h3>
+              <h3 className="section-title font-pixel" style={{ fontSize: '0.65rem', color: 'var(--accent)' }}>[ 🧠 SENTINEL REASONING TRACE ]</h3>
               <AgentTrace trace={ticket.agent_trace} />
             </section>
           )}
 
           {(ticket.related_tickets || ticket.related_info) && (
             <section style={{ marginTop: 'var(--space-4)' }}>
-              <h3 className="section-title">Contextual Data</h3>
+              <h3 className="section-title font-pixel" style={{ fontSize: '0.65rem', color: 'var(--accent)' }}>[ 🔗 CONTEXTUAL ANOMALIES ]</h3>
               {ticket.related_info && (
                 <p className="text-secondary" style={{ fontStyle: 'italic', marginBottom: 'var(--space-4)' }}>{ticket.related_info}</p>
               )}
@@ -199,7 +199,7 @@ function TicketPage() {
                   {ticket.related_tickets.map((rt, i) => (
                     <Link key={rt.id || i} to={`/ticket/${rt.id}`} className="link-row" style={{ textDecoration: 'none' }}>
                       <span className="text-sm font-medium">{rt.title || rt.id}</span>
-                      {rt.status && <span className={`badge badge-status-${rt.status}`} style={{ background: 'transparent', border: '1px solid currentColor' }}>{capitalize(rt.status)}</span>}
+                      {rt.status && <span className={`badge badge-status-${rt.status}`} style={{ background: 'transparent', border: '1px solid currentColor', borderRadius: 0 }}>{capitalize(rt.status)}</span>}
                     </Link>
                   ))}
                 </div>
@@ -211,22 +211,23 @@ function TicketPage() {
         <div className="flex flex-col gap-6">
 
           {ticket.priority_score != null && !isNaN(ticket.priority_score) && (
-            <div className="panel" style={{ borderColor: 'var(--accent-muted)' }}>
-              <h4 className="label" style={{ marginBottom: 'var(--space-2)' }}>Urgency Score</h4>
+            <div className="panel rpg-panel" style={{ borderColor: 'var(--accent-muted)', borderRadius: 0 }}>
+              <h4 className="label font-pixel" style={{ fontSize: '0.45rem', marginBottom: 'var(--space-2)' }}>THREAT RATING</h4>
               <div className="flex items-end justify-between" style={{ marginBottom: 'var(--space-3)' }}>
-                <span className="font-serif" style={{ fontSize: '2.5rem', lineHeight: 1, color: ticket.priority_score > 70 ? 'var(--error)' : 'var(--accent)' }}>
+                <span className="font-pixel" style={{ fontSize: '1.25rem', lineHeight: 1, color: ticket.priority_score > 70 ? 'var(--error)' : 'var(--accent)' }}>
                   {Math.round(ticket.priority_score)}
                 </span>
-                <span className="text-sm text-secondary" style={{ paddingBottom: '4px' }}>
-                  {ticket.priority_score > 70 ? '🔴 Critical' : ticket.priority_score > 40 ? '🟡 Moderate' : '🟢 Low'} · out of 100
+                <span className="font-pixel text-secondary" style={{ fontSize: '0.45rem', paddingBottom: '4px' }}>
+                  {ticket.priority_score > 70 ? '🔴 CRITICAL' : ticket.priority_score > 40 ? '🟡 MODERATE' : '🟢 LOW'}
                 </span>
               </div>
-              <div className="priority-bar" style={{ height: '2px' }}>
+              <div className="priority-bar" style={{ height: '3px', borderRadius: 0 }}>
                 <div
                   className="priority-bar-fill"
                   style={{
                     width: `${Math.round(ticket.priority_score)}%`,
                     background: ticket.priority_score > 70 ? 'var(--error)' : ticket.priority_score > 40 ? 'var(--warning)' : 'var(--accent)',
+                    borderRadius: 0,
                   }}
                 />
               </div>
@@ -234,40 +235,40 @@ function TicketPage() {
           )}
 
           {slaDeadline && (
-            <div className="panel">
-              <h4 className="label" style={{ marginBottom: 'var(--space-3)' }}>SLA Deadline</h4>
-              <div className="text-sm text-primary" style={{ marginBottom: 'var(--space-3)' }}>{slaDeadline.toLocaleString()}</div>
+            <div className="panel rpg-panel" style={{ borderRadius: 0 }}>
+              <h4 className="label font-pixel" style={{ fontSize: '0.45rem', marginBottom: 'var(--space-3)' }}>TIME-LIMIT DEADLINE</h4>
+              <div className="font-mono text-sm text-primary" style={{ marginBottom: 'var(--space-3)' }}>{slaDeadline.toLocaleString()}</div>
               {slaRemaining != null && slaRemaining > 0 ? (
-                <span className="badge badge-outline" style={{ color: 'var(--accent)' }}>
-                  {slaHours}h {slaMinutes}m remaining
+                <span className="badge badge-outline font-pixel" style={{ color: 'var(--accent)', borderRadius: 0, fontSize: '0.45rem', padding: '2px 4px' }}>
+                  {slaHours}H {slaMinutes}M REMAINING
                 </span>
               ) : (
-                <span className="badge badge-outline" style={{ color: 'var(--error)' }}>
-                  Overdue
+                <span className="badge badge-outline font-pixel" style={{ color: 'var(--error)', borderRadius: 0, fontSize: '0.45rem', padding: '2px 4px' }}>
+                  OVERDUE
                 </span>
               )}
             </div>
           )}
 
-          <div className="panel">
-            <h4 className="label" style={{ marginBottom: 'var(--space-4)' }}>Community Verification</h4>
+          <div className="panel rpg-panel" style={{ borderRadius: 0 }}>
+            <h4 className="label font-pixel" style={{ fontSize: '0.45rem', marginBottom: 'var(--space-4)' }}>COMMUNITY CONSENSUS</h4>
             <div className="flex flex-col gap-3">
               <button
-                className="verify-btn verify-btn-up flex justify-between"
-                style={{ width: '100%', color: 'var(--warning)', borderColor: 'var(--warning)' }}
+                className="verify-btn verify-btn-up flex justify-between font-pixel"
+                style={{ width: '100%', color: 'var(--warning)', borderColor: 'var(--warning)', borderRadius: 0, fontSize: '0.55rem' }}
                 onClick={() => handleVote('still_issue')}
                 disabled={voting}
               >
-                <span>Still an issue</span>
+                <span>⚠️ STILL AN ANOMALY</span>
                 {ticket.verification_up != null && <span style={{ opacity: 0.8 }}>{ticket.verification_up}</span>}
               </button>
               <button
-                className="verify-btn verify-btn-down flex justify-between"
-                style={{ width: '100%', color: 'var(--success)', borderColor: 'var(--success)' }}
+                className="verify-btn verify-btn-down flex justify-between font-pixel"
+                style={{ width: '100%', color: 'var(--success)', borderColor: 'var(--success)', borderRadius: 0, fontSize: '0.55rem' }}
                 onClick={() => handleVote('looks_resolved')}
                 disabled={voting}
               >
-                <span>Looks resolved</span>
+                <span>⚔️ MARK AS PURGED</span>
                 {ticket.verification_down != null && <span style={{ opacity: 0.8 }}>{ticket.verification_down}</span>}
               </button>
             </div>

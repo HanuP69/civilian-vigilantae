@@ -40,11 +40,12 @@ function AgentReveal({ steps, isComplete, result, startedAt, onClose }) {
       transition={{ duration: 0.3 }}
     >
       <motion.div
-        className="agent-reveal-panel"
+        className="agent-reveal-panel rpg-panel rpg-scrollbar"
         initial={{ scale: 0.96, y: 24 }}
         animate={{ scale: 1, y: 0 }}
         exit={{ scale: 0.96, y: 24 }}
         transition={{ duration: 0.5, ease }}
+        style={{ borderRadius: 0 }}
       >
         <div className="agent-reveal-header">
           <div className="flex items-center gap-3">
@@ -107,13 +108,14 @@ function AgentReveal({ steps, isComplete, result, startedAt, onClose }) {
         <AnimatePresence>
           {isComplete && (
             <motion.div
-              className="agent-result-card"
+              className="agent-result-card rpg-panel"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, ease, delay: 0.1 }}
+              style={{ borderRadius: 0, border: '1px solid var(--success)' }}
             >
               <div className="flex items-center gap-3">
-                <div className="agent-result-badge">✓</div>
+                <div className="agent-result-badge" style={{ borderRadius: 0 }}>✓</div>
                 <div className="flex flex-col">
                   <span className="font-serif" style={{ fontSize: '1.5rem', color: 'var(--ink-primary)' }}>
                     {merged ? 'Merged into existing report' : 'Report dispatched'}
@@ -133,9 +135,9 @@ function AgentReveal({ steps, isComplete, result, startedAt, onClose }) {
               </div>
               <div className="flex gap-3" style={{ marginTop: 'var(--space-5)' }}>
                 {finalTicketId && (
-                  <button className="btn btn-primary" onClick={() => navigate(`/ticket/${finalTicketId}`)}>View Ticket</button>
+                  <button className="btn btn-primary" style={{ borderRadius: 0 }} onClick={() => navigate(`/ticket/${finalTicketId}`)}>View Ticket</button>
                 )}
-                <button className="btn btn-secondary" onClick={onClose}>Report Another</button>
+                <button className="btn btn-secondary" style={{ borderRadius: 0 }} onClick={onClose}>Report Another</button>
               </div>
             </motion.div>
           )}

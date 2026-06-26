@@ -4,67 +4,72 @@ import SentinelSprite from './SentinelSprite.jsx';
 
 /**
  * Pipeline milestone definitions in walk order.
- * Each maps to a column (0 = left, 1 = right) and row (0, 1, 2).
  */
 const MILESTONES = [
   {
     key: 'classify_issue',
     label: 'CLS',
     fullLabel: 'Classify',
-    col: 0, row: 0,
     getSpeech: (out) => out
-      ? `${out.category || '?'} · ${out.severity || '?'}${out.confidence != null ? ` (${Math.round(out.confidence * 100)}%)` : ''}`
-      : 'Scanning report…',
+      ? `Consensus: ${out.category || '?'} · ${out.severity || '?'}${out.confidence != null ? ` (${Math.round(out.confidence * 100)}%)` : ''}`
+      : 'Scanning report for categories…',
   },
   {
     key: 'find_cluster',
     label: 'FND',
     fullLabel: 'Dedup',
-    col: 1, row: 0,
-    getSpeech: (out) => out?.found
-      ? `Duplicate! ${out.cluster_size} reports merged`
-      : out ? '✨ Unique — no duplicates' : 'Searching clusters…',
+    getSpeech: (out) => {
+      if (!out) return 'Searching databases for duplicates…';
+      return out.found
+        ? `Duplicate detected! Merging ${out.cluster_size} reports.`
+        : '✨ Unique report. No duplicates found.';
+    },
   },
   {
     key: 'geo_resolve',
     label: 'GEO',
     fullLabel: 'Locate',
-    col: 0, row: 1,
     getSpeech: (out) => out?.ward
-      ? `${out.ward}, Lucknow`
-      : 'Pinpointing location…',
+      ? `Located in Ward: ${out.ward}`
+      : 'Resolving geolocation telemetry…',
   },
   {
     key: 'compute_priority',
     label: 'PRI',
     fullLabel: 'Priority',
-    col: 1, row: 1,
     getSpeech: (out) => out?.priority_score != null
-      ? `Score: ${Math.round(out.priority_score)}/100`
-      : 'Computing priority…',
+      ? `Threat priority computed: ${Math.round(out.priority_score)}/100`
+      : 'Calculating SLA threat index…',
   },
   {
     key: 'create_ticket',
     label: 'TKT',
     fullLabel: 'Create',
-    col: 0, row: 2,
     alt: 'merge_into_ticket',
     getSpeech: (out, stepName) => {
       const id = out?.ticket_id;
-      if (!id) return 'Creating ticket…';
-      return stepName === 'merge_into_ticket' ? `Merged → ${id}` : `Created ${id}`;
+      if (!id) return 'Generating registry ticket…';
+      return stepName === 'merge_into_ticket' ? `Merged into Ticket: ${id}` : `Created Ticket: ${id}`;
     },
   },
   {
     key: 'notify_reporters',
     label: 'NOT',
     fullLabel: 'Notify',
-    col: 1, row: 2,
-    getSpeech: () => 'Notified ✓',
+    getSpeech: () => 'SLA alerts dispatched to Guild Wards ✓',
   },
 ];
 
 const WALK_ORDER = MILESTONES.map(m => m.key);
+
+const NODE_COORDS = [
+  { x: 70, y: 55 },   // CLS (Classify)
+  { x: 260, y: 55 },  // FND (Dedup)
+  { x: 450, y: 55 },  // GEO (Locate)
+  { x: 450, y: 165 }, // PRI (Priority)
+  { x: 260, y: 165 }, // TKT (Create)
+  { x: 70, y: 165 },  // NOT (Notify)
+];
 
 function milestoneState(steps, key, alt) {
   const match = steps.find(s => s && (s.step === key || (alt && s.step === alt)));
@@ -82,119 +87,201 @@ function stepActualName(steps, key, alt) {
   return steps.find(s => s && (s.step === key || (alt && s.step === alt)))?.step || key;
 }
 
-/**
- * ZigzagPath — mascot walks a clean 2-col, 3-row grid.
- *
- * Layout:
- *   [CLS] ─────── [FND]
- *     │                │
- *   [GEO] ─────── [PRI]
- *     │                │
- *   [TKT] ─────── [NOT]
- *
- * The mascot is rendered inline next to the current active node
- * (on the opposite side from the connector), with a speech bubble above.
- */
 function ZigzagPath({ steps, isComplete }) {
-  // Current milestone index the mascot is at
+  // Find current step index (first pending or last successful)
   const currentIdx = useMemo(() => {
+    let lastDone = -1;
     for (let i = 0; i < WALK_ORDER.length; i++) {
       const m = MILESTONES[i];
       const state = milestoneState(steps, m.key, m.alt);
-      if (state === 'active' || state === 'done') return i;
+      if (state === 'active') return i;
+      if (state === 'done') lastDone = i;
     }
-    return -1; // not started
+    return lastDone;
   }, [steps]);
 
-  // The milestone to show a speech bubble for
-  const speechMs = useMemo(() => {
-    if (currentIdx < 0) return null;
-    return MILESTONES[currentIdx];
+  const activeCoord = currentIdx >= 0 ? NODE_COORDS[currentIdx] : NODE_COORDS[0];
+  const speechMs = currentIdx >= 0 ? MILESTONES[currentIdx] : null;
+
+  // Compute SVG active path up to current index
+  const activePathD = useMemo(() => {
+    if (currentIdx <= 0) return '';
+    const points = NODE_COORDS.slice(0, currentIdx + 1);
+    return 'M ' + points.map(p => `${p.x} ${p.y}`).join(' L ');
   }, [currentIdx]);
 
-  // Which connectors are filled (both source and target must be done)
-  const filledConnectors = useMemo(() => {
-    const set = new Set();
-    for (let i = 0; i < WALK_ORDER.length - 1; i++) {
-      const fromM = MILESTONES.find(ms => ms.key === WALK_ORDER[i]);
-      const toM = MILESTONES.find(ms => ms.key === WALK_ORDER[i + 1]);
-      const fromState = milestoneState(steps, fromM.key, fromM.alt);
-      const toState = milestoneState(steps, toM.key, toM.alt);
-      if (fromState === 'done' && (toState === 'done' || toState === 'active')) {
-        set.add(i);
-      }
-    }
-    return set;
-  }, [steps]);
-
   return (
-    <div className="zzp">
-      {/* Grid of nodes + connectors */}
-      <div className="zzp-grid">
-        {MILESTONES.map((m, i) => {
+    <div style={{
+      width: '100%',
+      maxWidth: '520px',
+      height: '240px',
+      margin: '0 auto var(--space-6) auto',
+      position: 'relative',
+      background: 'rgba(0, 0, 0, 0.25)',
+      border: '2px solid var(--border)',
+      boxShadow: 'inset 2px 2px 8px rgba(0,0,0,0.5)',
+      overflow: 'hidden'
+    }}>
+      {/* Maze Grid lines in background */}
+      <svg style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', pointerEvents: 'none' }}>
+        <defs>
+          <pattern id="maze-grid" width="20" height="20" patternUnits="userSpaceOnUse">
+            <path d="M 20 0 L 0 0 0 20" fill="none" stroke="rgba(255,255,255,0.02)" strokeWidth="1" />
+          </pattern>
+        </defs>
+        <rect width="100%" height="100%" fill="url(#maze-grid)" />
+
+        {/* Inactive connection path (gray track) */}
+        <path
+          d="M 70 55 L 260 55 L 450 55 L 450 165 L 260 165 L 70 165"
+          fill="none"
+          stroke="oklch(0.2 0.01 260)"
+          strokeWidth="6"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+
+        {/* Active connection path (glowing blue-gold energy pipe) */}
+        {activePathD && (
+          <>
+            <path
+              d={activePathD}
+              fill="none"
+              stroke="var(--accent)"
+              strokeWidth="8"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              opacity="0.35"
+              style={{ filter: 'blur(4px)' }}
+            />
+            <path
+              d={activePathD}
+              fill="none"
+              stroke="var(--accent)"
+              strokeWidth="3"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+          </>
+        )}
+
+        {/* Nodes */}
+        {MILESTONES.map((m, idx) => {
+          const coord = NODE_COORDS[idx];
           const state = milestoneState(steps, m.key, m.alt);
-          const isCurrent = i === currentIdx;
-          const filledRight = filledConnectors.has(i);
-          const filledDown = i + 2 < MILESTONES.length
-            && m.col === MILESTONES[i + 2]?.col
-            && milestoneState(steps, m.key, m.alt) === 'done'
-            && milestoneState(steps, MILESTONES[i + 2].key, MILESTONES[i + 2].alt) !== 'idle';
+          const isActive = idx === currentIdx;
+
+          let nodeFill = 'oklch(0.18 0.01 260)';
+          let nodeStroke = 'var(--border)';
+          let textColor = 'var(--ink-muted)';
+
+          if (state === 'done') {
+            nodeFill = 'oklch(0.25 0.05 155 / 0.8)';
+            nodeStroke = 'var(--success)';
+            textColor = 'var(--success)';
+          } else if (state === 'active') {
+            nodeFill = 'oklch(0.32 0.05 85 / 0.8)';
+            nodeStroke = 'var(--accent)';
+            textColor = 'var(--accent)';
+          } else if (state === 'error') {
+            nodeFill = 'oklch(0.25 0.05 25 / 0.8)';
+            nodeStroke = 'var(--error)';
+            textColor = 'var(--error)';
+          }
 
           return (
-            <div key={m.key} className={`zzp-cell zzp-cell-${m.col === 0 ? 'left' : 'right'}`}>
-              {/* Node */}
-              <div className={`zzp-node zzp-node-${state} ${isCurrent ? 'zzp-node-current' : ''}`}>
-                <span className="zzp-node-icon">{state === 'done' ? '✓' : m.label}</span>
-                <span className={`zzp-node-label ${state === 'idle' ? 'text-muted' : ''}`}>{m.fullLabel}</span>
-              </div>
+            <g key={m.key}>
+              {/* Outer square box */}
+              <rect
+                x={coord.x - 24}
+                y={coord.y - 24}
+                width="48"
+                height="48"
+                fill={nodeFill}
+                stroke={nodeStroke}
+                strokeWidth={isActive ? '3' : '2'}
+                style={{
+                  filter: isActive ? 'drop-shadow(0px 0px 6px var(--accent))' : 'none',
+                  transition: 'all 0.3s ease'
+                }}
+              />
 
-              {/* Connector → right (horizontal) */}
-              {m.col === 0 && i + 1 < MILESTONES.length && MILESTONES[i + 1].col === 1 && m.row === MILESTONES[i + 1].row && (
-                <div className={`zzp-hline ${filledRight ? 'zzp-hline-done' : ''}`} />
-              )}
+              {/* Node Icon / Check */}
+              <text
+                x={coord.x}
+                y={coord.y}
+                textAnchor="middle"
+                dominantBaseline="central"
+                fill={textColor}
+                style={{
+                  fontFamily: 'var(--font-mono)',
+                  fontSize: '11px',
+                  fontWeight: 'bold'
+                }}
+              >
+                {state === 'done' ? '✓' : m.label}
+              </text>
 
-              {/* Connector ↓ (vertical) */}
-              {filledDown && (
-                <div className="zzp-vline zzp-vline-done" />
-              )}
-            </div>
+              {/* Sub-label under the node */}
+              <text
+                x={coord.x}
+                y={coord.y + 36}
+                textAnchor="middle"
+                fill={state === 'idle' ? 'var(--ink-muted)' : 'var(--ink-secondary)'}
+                style={{
+                  fontFamily: 'var(--font-sans)',
+                  fontSize: '10px',
+                  fontWeight: state === 'active' ? 'bold' : 'normal'
+                }}
+              >
+                {m.fullLabel}
+              </text>
+            </g>
           );
         })}
-      </div>
+      </svg>
 
-      {/* Mascot row — positioned below the grid at the current node's column */}
-      <div className="zzp-mascot-row">
-        <motion.div
-          className="zzp-mascot-pos"
-          animate={{
-            gridColumn: currentIdx >= 0 ? (MILESTONES[currentIdx].col === 0 ? 1 : 3) : 1,
-          }}
-          transition={{ type: 'spring', stiffness: 200, damping: 22 }}
-        >
-          <AnimatePresence mode="wait">
-            {speechMs && (
-              <motion.div
-                key={speechMs.key}
-                className="zzp-bubble"
-                initial={{ opacity: 0, y: 6, scale: 0.9 }}
-                animate={{ opacity: 1, y: 0, scale: 1 }}
-                exit={{ opacity: 0, y: -4, scale: 0.9 }}
-                transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
-              >
-                {speechMs.getSpeech(
-                  stepOutput(steps, speechMs.key, speechMs.alt),
-                  stepActualName(steps, speechMs.key, speechMs.alt)
-                )}
-              </motion.div>
-            )}
-          </AnimatePresence>
-          <SentinelSprite
-            scale={2}
-            flip={currentIdx >= 0 ? MILESTONES[currentIdx].col === 1 : false}
-            celebrating={isComplete}
-          />
-        </motion.div>
-      </div>
+      {/* Mascot sprite with speech bubble */}
+      <motion.div
+        style={{
+          position: 'absolute',
+          left: 0,
+          top: 0,
+          zIndex: 10,
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          pointerEvents: 'none'
+        }}
+        animate={{
+          x: activeCoord.x - 32,
+          y: activeCoord.y - 4
+        }}
+        transition={{ type: 'spring', stiffness: 120, damping: 14 }}
+      >
+        <AnimatePresence mode="wait">
+          {speechMs && (
+            <motion.div
+              key={speechMs.key}
+              className="rpg-dialog-bubble"
+              initial={{ opacity: 0, scale: 0.8, y: 10 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.8, y: -10 }}
+              transition={{ duration: 0.2 }}
+            >
+              {speechMs.getSpeech(
+                stepOutput(steps, speechMs.key, speechMs.alt),
+                stepActualName(steps, speechMs.key, speechMs.alt)
+              )}
+            </motion.div>
+          )}
+        </AnimatePresence>
+        <SentinelSprite
+          scale={1.5}
+          flip={currentIdx >= 3} // Face left when returning on the bottom row
+          celebrating={isComplete}
+        />
+      </motion.div>
     </div>
   );
 }

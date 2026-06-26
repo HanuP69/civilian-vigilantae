@@ -376,7 +376,7 @@ function DashboardPage() {
     datasets: [{
       data: catKeys.map(k => categoryBreakdown[k]),
       backgroundColor: resolvePalette(catKeys.map(k => CATEGORY_COLORS[k] || 'var(--accent)')),
-      borderRadius: 4,
+      borderRadius: 0,
       borderSkipped: false,
     }],
   };
@@ -395,9 +395,9 @@ function DashboardPage() {
   const sparkConfig = (data, colorVar) => ({
     data: {
       labels: data.map((_, i) => i),
-      datasets: [{ data, borderColor: resolveVar(colorVar), backgroundColor: resolveVar(colorVar), borderWidth: 2, pointRadius: 0, tension: 0.4, fill: false }],
+      datasets: [{ data, borderColor: resolveVar(colorVar), backgroundColor: resolveVar(colorVar), borderWidth: 2, pointRadius: 0, tension: 0, fill: false }],
     },
-    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false }, tooltip: { enabled: false } }, scales: { x: { display: false }, y: { display: false } }, elements: { line: { borderCapStyle: 'round' } } },
+    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false }, tooltip: { enabled: false } }, scales: { x: { display: false }, y: { display: false } }, elements: { line: { borderCapStyle: 'square' } } },
   });
 
   const velocityData = {
@@ -421,7 +421,7 @@ function DashboardPage() {
       pointHoverBackgroundColor: '#ffffff',
       pointHoverBorderColor: resolveVar('var(--success)'),
       pointHoverBorderWidth: 3,
-      tension: 0.35,
+      tension: 0,
     }],
   };
 
@@ -460,27 +460,27 @@ function DashboardPage() {
       <div className="flex flex-col gap-5" aria-busy="true" aria-label="Loading dashboard">
         <div className="kpi-row">
           {[1, 2, 3, 4, 5].map(i => (
-            <div key={i} className="skeleton" style={{ height: 110, borderRadius: 'var(--radius-lg)' }} />
+            <div key={i} className="skeleton" style={{ height: 110, borderRadius: 0 }} />
           ))}
         </div>
-        <div className="skeleton" style={{ height: 300, borderRadius: 'var(--radius-lg)' }} />
+        <div className="skeleton" style={{ height: 300, borderRadius: 0 }} />
       </div>
     );
   }
 
   const kpis = [
-    { label: 'Total Issues', value: stats?.total, spark: createdSpark, sparkColor: 'var(--accent)', panelKey: 'total_issues' },
-    { label: 'Resolved / 7d', value: stats?.resolvedThisWeek, spark: resolvedSpark, sparkColor: 'var(--success)', panelKey: 'resolved_7d', success: true },
-    { label: 'Avg Resolution', value: stats?.avgResolutionHours != null ? Math.round(stats.avgResolutionHours) : null, suffix: 'h', panelKey: 'avg_resolution' },
-    { label: 'Active Reporters', value: stats?.activeReporters, panelKey: 'active_reporters' },
-    { label: 'SLA at Risk', value: slaAtRisk, danger: slaAtRisk > 0, panelKey: 'sla_risk' },
+    { label: 'QUESTS IN JOURNAL', value: stats?.total, spark: createdSpark, sparkColor: 'var(--accent)', panelKey: 'total_issues' },
+    { label: 'QUESTS COMPLETED', value: stats?.resolvedThisWeek, spark: resolvedSpark, sparkColor: 'var(--success)', panelKey: 'resolved_7d', success: true },
+    { label: 'AVG RESOLUTION', value: stats?.avgResolutionHours != null ? Math.round(stats.avgResolutionHours) : null, suffix: 'h', panelKey: 'avg_resolution' },
+    { label: 'GUILD SENTINELS', value: stats?.activeReporters, panelKey: 'active_reporters' },
+    { label: 'EXPIRING QUESTS', value: slaAtRisk, danger: slaAtRisk > 0, panelKey: 'sla_risk' },
   ];
 
   return (
     <motion.div className="flex flex-col gap-6" variants={container} initial="hidden" animate="show">
       <div className="flex items-center justify-between">
-        <h2>Operations Dashboard</h2>
-        <span className="font-mono text-xs text-muted">{tickets.length} tickets tracked · live</span>
+        <h2 className="font-pixel" style={{ fontSize: '0.9rem', color: 'var(--ink-primary)' }}>⚔️ Guild Operations Ledger</h2>
+        <span className="font-pixel text-muted" style={{ fontSize: '0.45rem' }}>{tickets.length} QUESTS TRACKED · LIVE</span>
       </div>
 
       <div className="grafana-kpi-grid">
@@ -505,7 +505,7 @@ function DashboardPage() {
                   </button>
                 </div>
                 {isOpen ? (
-                  <div className="text-xs text-muted" style={{ lineHeight: 1.3, animation: 'slideDown 0.2s ease-out', overflowY: 'auto', maxHeight: '68px' }}>
+                  <div className="text-xs text-muted rpg-scrollbar" style={{ lineHeight: 1.3, animation: 'slideDown 0.2s ease-out', overflowY: 'auto', maxHeight: '68px' }}>
                     <span style={{ color: 'var(--accent)', fontWeight: 600 }}>{EXPLANATIONS[kpi.panelKey].title}:</span>{' '}
                     {EXPLANATIONS[kpi.panelKey].text}
                     <div className="formula-box" style={{ marginTop: '4px' }}>
@@ -530,7 +530,7 @@ function DashboardPage() {
 
       <div className="dash-grid">
         <InteractivePanel
-          title="Issues by Category"
+          title="[ 📦 QUEST CLASSES ]"
           subtitle={`${catKeys.length} categories`}
           panelKey="category"
           activeInfo={activeInfo}
@@ -541,7 +541,7 @@ function DashboardPage() {
           <Bar data={categoryData} options={categoryOpts} />
         </InteractivePanel>
         <InteractivePanel
-          title="Status Distribution"
+          title="[ ⏳ QUEST LIFECYCLE ]"
           subtitle="lifecycle"
           panelKey="status"
           activeInfo={activeInfo}
@@ -553,14 +553,14 @@ function DashboardPage() {
             <Doughnut data={statusData} options={statusOpts} />
             <div className="doughnut-center-label">
               <span className="doughnut-center-val">{stats?.total || 0}</span>
-              <span className="doughnut-center-lbl font-mono">Total Issues</span>
+              <span className="doughnut-center-lbl font-pixel" style={{ fontSize: '0.45rem', marginTop: '4px' }}>QUEST JOURNAL</span>
             </div>
           </div>
         </InteractivePanel>
       </div>
 
       <InteractivePanel
-        title="Resolution Velocity"
+        title="[ ⚡ GUILD DISPATCH VELOCITY ]"
         subtitle="resolved tickets · last 30 days"
         panelKey="velocity"
         activeInfo={activeInfo}
@@ -573,10 +573,10 @@ function DashboardPage() {
       </InteractivePanel>
 
       {/* Grafana-style Hotspot Heatmap Panel with Hexmap Toggle */}
-      <motion.div variants={itemAnim} className="card" style={{ marginBottom: 'var(--space-6)', position: 'relative' }}>
+      <motion.div variants={itemAnim} className="card rpg-panel" style={{ marginBottom: 'var(--space-6)', position: 'relative', borderRadius: 0 }}>
         <div className="flex items-center justify-between" style={{ marginBottom: 'var(--space-4)', flexWrap: 'wrap', gap: 'var(--space-2)' }}>
           <div className="flex items-center gap-3">
-            <h3 style={{ margin: 0 }}>Ward Hotspot Heatmap</h3>
+            <h3 className="font-pixel" style={{ fontSize: '0.65rem', margin: 0, color: 'var(--accent)' }}>[ 🗺️ WARD THREAT HEXMAP ]</h3>
             <button className="btn-info-icon" onClick={() => toggleInfo('ward_heatmap')} aria-label="Formula details for Heatmap">ⓘ</button>
             <div className="flex items-center gap-1.5" style={{ marginLeft: 'var(--space-2)' }}>
               <button 
@@ -593,7 +593,7 @@ function DashboardPage() {
               </button>
             </div>
           </div>
-          <span className="text-xs text-muted font-mono">Real-time civic density</span>
+          <span className="font-pixel text-muted" style={{ fontSize: '0.45rem' }}>REAL-TIME CIVIC DENSITY</span>
         </div>
 
         {activeInfo.ward_heatmap && (
@@ -607,7 +607,7 @@ function DashboardPage() {
               height: '100%', 
               backgroundColor: 'rgba(21, 22, 29, 0.96)', 
               backdropFilter: 'blur(4px)',
-              borderRadius: 'var(--radius-lg)',
+              borderRadius: 0,
               zIndex: 30,
               display: 'flex',
               flexDirection: 'column',
@@ -624,7 +624,7 @@ function DashboardPage() {
                 </span>
                 <button className="btn-close-inline" onClick={() => toggleInfo('ward_heatmap')}>✕</button>
               </div>
-              <p className="text-secondary text-xs" style={{ lineHeight: 1.4, margin: 0, overflowY: 'auto', maxHeight: '140px' }}>
+              <p className="text-secondary text-xs rpg-scrollbar" style={{ lineHeight: 1.4, margin: 0, overflowY: 'auto', maxHeight: '140px' }}>
                 {EXPLANATIONS.ward_heatmap.text}
               </p>
             </div>
@@ -639,40 +639,40 @@ function DashboardPage() {
             <WardHexmap wardMetrics={wardMetrics} activeWard={selectedWard} setActiveWard={setSelectedWard} />
             
             {selectedWard && (
-              <div className="hex-details-card" style={{ animation: 'fadeIn 0.25s ease-out' }}>
+              <div className="hex-details-card rpg-panel" style={{ animation: 'fadeIn 0.25s ease-out', borderRadius: 0 }}>
                 <div style={{ borderBottom: '1px solid var(--border-subtle)', paddingBottom: 'var(--space-2)', marginBottom: 'var(--space-4)' }}>
-                  <h4 style={{ margin: 0, fontSize: '1.1rem', color: 'var(--accent)', fontFamily: 'var(--font-serif)', fontWeight: 600 }}>{selectedWard.name}</h4>
-                  <span style={{ fontSize: '0.65rem', color: 'var(--ink-muted)', textTransform: 'uppercase', fontFamily: 'var(--font-mono)', letterSpacing: '0.05em' }}>Ward Severity Status</span>
+                  <h4 className="font-pixel" style={{ margin: 0, fontSize: '0.65rem', color: 'var(--accent)', fontWeight: 600 }}>{selectedWard.name}</h4>
+                  <span className="font-pixel" style={{ fontSize: '0.45rem', color: 'var(--ink-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', marginTop: '4px', display: 'block' }}>WARD SEVERITY STATUS</span>
                 </div>
                 
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <span style={{ fontSize: '0.75rem', color: 'var(--ink-muted)' }}>Active Issues</span>
+                    <span className="font-pixel" style={{ fontSize: '0.45rem', color: 'var(--ink-muted)' }}>ACTIVE QUESTS</span>
                     <span style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--ink-primary)' }} className="font-mono">{selectedWard.active}</span>
                   </div>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <span style={{ fontSize: '0.75rem', color: 'var(--ink-muted)' }}>Critical Priority (Urgent)</span>
+                    <span className="font-pixel" style={{ fontSize: '0.45rem', color: 'var(--ink-muted)' }}>CRITICAL THREATS</span>
                     <span style={{ fontSize: '0.85rem', fontWeight: 600, color: selectedWard.highUrgency > 0 ? 'var(--error)' : 'var(--ink-primary)' }} className="font-mono">{selectedWard.highUrgency}</span>
                   </div>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <span style={{ fontSize: '0.75rem', color: 'var(--ink-muted)' }}>Total Historical Reports</span>
+                    <span className="font-pixel" style={{ fontSize: '0.45rem', color: 'var(--ink-muted)' }}>HISTORICAL LOG</span>
                     <span style={{ fontSize: '0.85rem', fontWeight: 500, color: 'var(--ink-secondary)' }} className="font-mono">{selectedWard.total}</span>
                   </div>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <span style={{ fontSize: '0.75rem', color: 'var(--ink-muted)' }}>Max Recurrence Risk</span>
+                    <span className="font-pixel" style={{ fontSize: '0.45rem', color: 'var(--ink-muted)' }}>RECURRENCE RISK</span>
                     <span style={{ fontSize: '0.85rem', fontWeight: 600, color: selectedWard.maxRisk > 0.7 ? 'var(--error)' : selectedWard.maxRisk > 0.4 ? 'var(--warning)' : 'var(--success)' }} className="font-mono">
                       {selectedWard.maxRisk ? `${Math.round(selectedWard.maxRisk * 100)}%` : '—'}
                     </span>
                   </div>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: '1px dashed var(--border-subtle)', paddingTop: 'var(--space-3)', marginTop: 'var(--space-1)' }}>
-                    <span style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--ink-secondary)' }}>Calculated Risk Index</span>
+                    <span className="font-pixel" style={{ fontSize: '0.45rem', fontWeight: 600, color: 'var(--ink-secondary)' }}>THREAT INDEX</span>
                     <span style={{ fontSize: '1rem', fontWeight: 700, color: ((selectedWard.active * 1.5) + (selectedWard.highUrgency * 3.0)) > 8 ? 'var(--error)' : ((selectedWard.active * 1.5) + (selectedWard.highUrgency * 3.0)) > 3 ? 'var(--warning)' : 'var(--success)' }} className="font-mono">
                       {((selectedWard.active * 1.5) + (selectedWard.highUrgency * 3.0)).toFixed(1)}
                     </span>
                   </div>
                   
-                  <div style={{ background: 'oklch(0.12 0.01 260)', borderLeft: '2.5px solid var(--accent)', padding: 'var(--space-3)', borderRadius: 'var(--radius-sm)', fontSize: '0.72rem', color: 'var(--ink-secondary)', marginTop: 'var(--space-2)', lineHeight: 1.4 }}>
-                    <span style={{ fontWeight: 700, color: 'var(--accent)' }}>Recommended Action:</span>{' '}
+                  <div style={{ background: 'oklch(0.12 0.01 260)', borderLeft: '2.5px solid var(--accent)', padding: 'var(--space-3)', borderRadius: 0, fontSize: '0.72rem', color: 'var(--ink-secondary)', marginTop: 'var(--space-2)', lineHeight: 1.4 }}>
+                    <span className="font-pixel" style={{ fontSize: '0.45rem', fontWeight: 700, color: 'var(--accent)', display: 'block', marginBottom: '4px' }}>RECOMMENDED ACTION:</span>{' '}
                     {selectedWard.active === 0 ? 'No active threats. Maintain regular civil sweeps.' :
                      selectedWard.highUrgency > 1 || ((selectedWard.active * 1.5) + (selectedWard.highUrgency * 3.0)) > 8 ? 'Dispatch emergency maintenance crew immediately to resolve critical breaches.' :
                      'Schedule department audit of outstanding tickets in next 48-hour routine cycle.'}
@@ -733,13 +733,13 @@ function DashboardPage() {
       </motion.div>
 
       {departments.length > 0 && (
-        <motion.div variants={itemAnim} className="card" style={{ display: 'flex', flexDirection: 'column', position: 'relative' }}>
+        <motion.div variants={itemAnim} className="card rpg-panel" style={{ display: 'flex', flexDirection: 'column', position: 'relative', borderRadius: 0 }}>
           <div className="flex items-center justify-between" style={{ marginBottom: 'var(--space-4)' }}>
             <div className="flex items-center gap-2">
-              <h3>Department Performance</h3>
+              <h3 className="font-pixel" style={{ fontSize: '0.65rem', margin: 0, color: 'var(--accent)' }}>[ 🛡️ DEPARTMENT GUILD AUDIT ]</h3>
               <button className="btn-info-icon" onClick={() => toggleInfo('departments')} aria-label="Formula details for Departments">ⓘ</button>
             </div>
-            <span className="text-xs text-muted">SLA audit</span>
+            <span className="font-pixel text-muted" style={{ fontSize: '0.45rem' }}>SLA AUDIT</span>
           </div>
 
           {activeInfo.departments && (
@@ -753,7 +753,7 @@ function DashboardPage() {
                 height: '100%', 
                 backgroundColor: 'rgba(21, 22, 29, 0.96)', 
                 backdropFilter: 'blur(4px)',
-                borderRadius: 'var(--radius-lg)',
+                borderRadius: 0,
                 zIndex: 30,
                 display: 'flex',
                 flexDirection: 'column',
@@ -770,7 +770,7 @@ function DashboardPage() {
                   </span>
                   <button className="btn-close-inline" onClick={() => toggleInfo('departments')}>✕</button>
                 </div>
-                <p className="text-secondary text-xs" style={{ lineHeight: 1.4, margin: 0, overflowY: 'auto', maxHeight: '140px' }}>
+                <p className="text-secondary text-xs rpg-scrollbar" style={{ lineHeight: 1.4, margin: 0, overflowY: 'auto', maxHeight: '140px' }}>
                   {EXPLANATIONS.departments.text}
                 </p>
               </div>
@@ -784,18 +784,18 @@ function DashboardPage() {
             <table>
               <thead>
                 <tr>
-                  <th>Department</th>
-                  <th>Total</th>
-                  <th>Resolved</th>
-                  <th>Rate</th>
-                  <th>Avg Hours</th>
+                  <th className="font-pixel" style={{ fontSize: '0.45rem' }}>DEPARTMENT GUILD</th>
+                  <th className="font-pixel" style={{ fontSize: '0.45rem' }}>QUESTS ASSIGNED</th>
+                  <th className="font-pixel" style={{ fontSize: '0.45rem' }}>RESOLVED</th>
+                  <th className="font-pixel" style={{ fontSize: '0.45rem' }}>SUCCESS RATE</th>
+                  <th className="font-pixel" style={{ fontSize: '0.45rem' }}>AVG RESOLVE SPEED</th>
                 </tr>
               </thead>
               <tbody>
                 {departments.map((dept, i) => (
                   <tr key={dept.name} style={i === 0 ? { background: 'oklch(0.25 0.06 85 / 0.15)' } : undefined}>
                     <td className="font-medium" style={{ color: 'var(--ink-primary)' }}>
-                      {dept.name}{i === 0 && <span className="badge" style={{ marginLeft: 'var(--space-2)', background: 'var(--rank-gold)', color: '#000', fontSize: '0.6rem' }}>TOP</span>}
+                      {dept.name}{i === 0 && <span className="badge font-pixel" style={{ marginLeft: 'var(--space-2)', background: 'var(--rank-gold)', color: '#000', fontSize: '0.45rem', borderRadius: 0, padding: '2px 4px' }}>TOP</span>}
                     </td>
                     <td>{dept.total}</td>
                     <td>{dept.resolved}</td>
@@ -804,8 +804,8 @@ function DashboardPage() {
                         <span style={{ color: dept.resolution_rate >= 70 ? 'var(--success)' : dept.resolution_rate >= 40 ? 'var(--warning)' : 'var(--error)' }}>
                           {dept.resolution_rate != null ? `${Math.round(dept.resolution_rate)}%` : '—'}
                         </span>
-                        <div className="dept-bar-mini">
-                          <div className="dept-bar-mini-fill" style={{ width: `${dept.resolution_rate || 0}%`, background: dept.resolution_rate >= 70 ? 'var(--success)' : dept.resolution_rate >= 40 ? 'var(--warning)' : 'var(--error)' }} />
+                        <div className="dept-bar-mini" style={{ borderRadius: 0 }}>
+                          <div className="dept-bar-mini-fill" style={{ width: `${dept.resolution_rate || 0}%`, background: dept.resolution_rate >= 70 ? 'var(--success)' : dept.resolution_rate >= 40 ? 'var(--warning)' : 'var(--error)', borderRadius: 0 }} />
                         </div>
                       </div>
                     </td>
@@ -819,13 +819,13 @@ function DashboardPage() {
       )}
 
       {recurrence.length > 0 && (
-        <motion.div variants={itemAnim} className="card" style={{ display: 'flex', flexDirection: 'column', position: 'relative' }}>
+        <motion.div variants={itemAnim} className="card rpg-panel" style={{ display: 'flex', flexDirection: 'column', position: 'relative', borderRadius: 0 }}>
           <div className="flex items-center justify-between" style={{ marginBottom: 'var(--space-4)' }}>
             <div className="flex items-center gap-2">
-              <h3>Recurrence Risk Forecast</h3>
+              <h3 className="font-pixel" style={{ fontSize: '0.65rem', margin: 0, color: 'var(--accent)' }}>[ 🔮 RECURRENCE FORECAST ORACLE ]</h3>
               <button className="btn-info-icon" onClick={() => toggleInfo('recurrence')} aria-label="Formula details for Recurrence Risk">ⓘ</button>
             </div>
-            <span className="text-xs text-muted">weibull analysis</span>
+            <span className="font-pixel text-muted" style={{ fontSize: '0.45rem' }}>WEIBULL ANALYSIS</span>
           </div>
 
           {activeInfo.recurrence && (
@@ -839,7 +839,7 @@ function DashboardPage() {
                 height: '100%', 
                 backgroundColor: 'rgba(21, 22, 29, 0.96)', 
                 backdropFilter: 'blur(4px)',
-                borderRadius: 'var(--radius-lg)',
+                borderRadius: 0,
                 zIndex: 30,
                 display: 'flex',
                 flexDirection: 'column',
@@ -856,7 +856,7 @@ function DashboardPage() {
                   </span>
                   <button className="btn-close-inline" onClick={() => toggleInfo('recurrence')}>✕</button>
                 </div>
-                <p className="text-secondary text-xs" style={{ lineHeight: 1.4, margin: 0, overflowY: 'auto', maxHeight: '180px' }}>
+                <p className="text-secondary text-xs rpg-scrollbar" style={{ lineHeight: 1.4, margin: 0, overflowY: 'auto', maxHeight: '180px' }}>
                   {EXPLANATIONS.recurrence.text}
                 </p>
               </div>
@@ -867,8 +867,8 @@ function DashboardPage() {
           )}
 
           <div className="method-banner" style={{ marginBottom: 'var(--space-4)' }}>
-            <span style={{ color: 'var(--accent)', fontWeight: 700 }}>weibull survival model</span>
-            <span>· forecasting 14-day recurrence probability from inter-arrival intervals</span>
+            <span className="font-pixel" style={{ color: 'var(--accent)', fontWeight: 700, fontSize: '0.55rem' }}>WEIBULL SURVIVAL MODEL</span>
+            <span style={{ marginLeft: '6px' }}>· forecasting 14-day recurrence probability from inter-arrival intervals</span>
           </div>
           <div className="flex flex-col gap-3">
             {recurrence.slice(0, 10).map((item, i) => {
@@ -880,20 +880,20 @@ function DashboardPage() {
                   <div className="recurrence-row" onClick={() => setExpandedRisk(isOpen ? null : key)}>
                     <div className="flex flex-col" style={{ minWidth: 180 }}>
                       <span className="text-sm font-medium">{item.ward}</span>
-                      <span className="recurrence-meta">{CATEGORY_LABELS[item.category] || capitalize(item.category)}</span>
+                      <span className="recurrence-meta font-pixel" style={{ fontSize: '0.45rem' }}>{CATEGORY_LABELS[item.category] || capitalize(item.category)}</span>
                     </div>
                     <div style={{ flex: 1 }}>
                       <div className="flex justify-between text-xs" style={{ marginBottom: '4px' }}>
                         <span className="text-muted">{item.recommendedAction || item.recommendation}</span>
                         <span className="font-mono font-semibold" style={{ color }}>{Math.round((item.probability || 0) * 100)}%</span>
                       </div>
-                      <div className="priority-bar">
+                      <div className="priority-bar" style={{ borderRadius: 0 }}>
                         <motion.div
                           className="priority-bar-fill"
                           initial={{ width: 0 }}
                           animate={{ width: `${Math.max(Math.round((item.probability || 0) * 100), 2)}%` }}
                           transition={{ duration: 1, ease: 'easeOut', delay: 0.2 }}
-                          style={{ background: color }}
+                          style={{ background: color, borderRadius: 0 }}
                         />
                       </div>
                     </div>
@@ -909,21 +909,21 @@ function DashboardPage() {
                       <div className="flex gap-8" style={{ padding: 'var(--space-5)', flexWrap: 'wrap', alignItems: 'center' }}>
                         <div className="flex flex-col gap-4" style={{ minWidth: 160 }}>
                           <div className="flex flex-col gap-1">
-                            <span className="label">Scale (λ)</span>
+                            <span className="label font-pixel" style={{ fontSize: '0.45rem' }}>SCALE FACTOR (λ)</span>
                             <span className="font-mono text-base font-semibold">{item.lambda}h</span>
                           </div>
                           <div className="flex flex-col gap-1">
-                            <span className="label">Shape (k)</span>
+                            <span className="label font-pixel" style={{ fontSize: '0.45rem' }}>SHAPE METRIC (k)</span>
                             <span className="font-mono text-base font-semibold">{item.k}</span>
                           </div>
                           <div className="flex flex-col gap-1">
-                            <span className="label">Last resolved</span>
+                            <span className="label font-pixel" style={{ fontSize: '0.45rem' }}>LAST RESOLVED</span>
                             <span className="font-mono text-sm font-medium">
                               {item.lastResolved ? new Date(item.lastResolved).toLocaleDateString() : '—'}
                             </span>
                           </div>
                           <div className="flex flex-col gap-1">
-                            <span className="label">Hours Elapsed</span>
+                            <span className="label font-pixel" style={{ fontSize: '0.45rem' }}>ELAPSED TIME</span>
                             <span className="font-mono text-sm font-medium text-secondary">
                               {item.lastResolved 
                                 ? `${Math.round(Math.max((new Date() - new Date(item.lastResolved)) / 3600000, 0))} hours` 
@@ -952,8 +952,8 @@ function InteractivePanel({ title, subtitle, panelKey, activeInfo, onToggleInfo,
   return (
     <motion.div 
       variants={itemAnim} 
-      className="card chart-card" 
-      style={{ display: 'flex', flexDirection: 'column', position: 'relative' }}
+      className="card rpg-panel chart-card" 
+      style={{ display: 'flex', flexDirection: 'column', position: 'relative', borderRadius: 0 }}
     >
       <div className="chart-card-header" style={{ marginBottom: 'var(--space-3)' }}>
         <div className="flex flex-col gap-1">
@@ -983,7 +983,7 @@ function InteractivePanel({ title, subtitle, panelKey, activeInfo, onToggleInfo,
             height: '100%', 
             backgroundColor: 'rgba(21, 22, 29, 0.96)', 
             backdropFilter: 'blur(4px)',
-            borderRadius: 'var(--radius-lg)',
+            borderRadius: 0,
             zIndex: 30,
             display: 'flex',
             flexDirection: 'column',
@@ -1000,7 +1000,7 @@ function InteractivePanel({ title, subtitle, panelKey, activeInfo, onToggleInfo,
               </span>
               <button className="btn-close-inline" onClick={() => onToggleInfo(panelKey)}>✕</button>
             </div>
-            <p className="text-secondary text-xs" style={{ lineHeight: 1.4, margin: 0, overflowY: 'auto', maxHeight: '140px' }}>
+            <p className="text-secondary text-xs rpg-scrollbar" style={{ lineHeight: 1.4, margin: 0, overflowY: 'auto', maxHeight: '140px' }}>
               {explanation}
             </p>
           </div>
@@ -1052,7 +1052,7 @@ function WeibullCurve({ lambda, k, lastResolved }) {
         borderWidth: 2.5,
         pointRadius: 0,
         pointHitRadius: 10,
-        tension: 0.35,
+        tension: 0,
       },
       {
         label: 'Current Status Line',

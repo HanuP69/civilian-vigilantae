@@ -91,7 +91,7 @@ function AgentTrace({ trace = [] }) {
                 padding: 'var(--space-3) var(--space-4)',
                 cursor: 'pointer',
                 background: 'var(--bg-secondary)',
-                borderRadius: 'var(--radius-md)',
+                borderRadius: 0,
               }}
             >
               <div className="flex items-center justify-between">
@@ -141,7 +141,7 @@ function AgentTrace({ trace = [] }) {
                       style={{
                         background: 'var(--bg-primary)',
                         padding: 'var(--space-3)',
-                        borderRadius: 'var(--radius-sm)',
+                        borderRadius: 0,
                         marginTop: 'var(--space-3)',
                         border: '1px solid var(--border)'
                       }}

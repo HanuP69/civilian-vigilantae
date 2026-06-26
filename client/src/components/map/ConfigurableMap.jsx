@@ -38,21 +38,46 @@ function getMarkerColor(priorityScore) {
 
 function createLeafletIcon(priorityScore, isActive) {
   const color = getMarkerColor(priorityScore);
-  const scale = isActive ? 'scale(1.3)' : 'scale(1)';
+  const scale = isActive ? 'scale(1.25)' : 'scale(1)';
   return L.divIcon({
     className: 'custom-leaflet-marker',
     html: `<div style="
-      width: 14px; height: 14px; 
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 20px; 
+      height: 20px; 
       background-color: ${color}; 
       border: 2px solid ${isActive ? '#ffffff' : '#0f172a'}; 
-      border-radius: 50%;
-      box-shadow: 2px 2px 6px rgba(0,0,0,0.5);
+      box-shadow: 2px 2px 0 oklch(0 0 0 / 0.5);
       transform: ${scale};
-      transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-    "></div>`,
-    iconSize: [14, 14],
-    iconAnchor: [7, 7]
+      transition: transform 0.2s ease;
+      font-family: 'Press Start 2P', cursive, monospace;
+      font-size: 10px;
+      font-weight: 900;
+      color: #000000;
+    ">!</div>`,
+    iconSize: [20, 20],
+    iconAnchor: [10, 10]
   });
+}
+
+function createGoogleMarkerIcon(priorityScore, isActive) {
+  const color = getMarkerColor(priorityScore);
+  const size = isActive ? 26 : 20;
+  const strokeColor = isActive ? '#ffffff' : '#0f172a';
+  const svg = `
+    <svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 20 20">
+      <rect x="2" y="2" width="16" height="16" fill="${color}" stroke="${strokeColor}" stroke-width="2" />
+      <text x="10" y="14" font-family="'Press Start 2P', monospace" font-size="11" font-weight="bold" fill="#000000" text-anchor="middle">!</text>
+    </svg>
+  `;
+  return {
+    url: 'data:image/svg+xml;utf8,' + encodeURIComponent(svg),
+    size: { width: size, height: size },
+    origin: { x: 0, y: 0 },
+    anchor: { x: size / 2, y: size / 2 }
+  };
 }
 
 function MapController({ tickets, clusterGroups, recurrence, slaByWard, layer, center, zoom, wardCenters, onMapReady }) {
@@ -213,24 +238,18 @@ function ConfigurableMap({
           position,
           map,
           title: ticket.title || ticket.ai_title || 'Report',
-          icon: {
-            path: window.google.maps.SymbolPath.CIRCLE,
-            scale: activeTicketId === ticket.id ? 9 : 7,
-            fillColor: getMarkerColor(ticket.priority_score),
-            fillOpacity: 0.95,
-            strokeColor: activeTicketId === ticket.id ? '#ffffff' : '#0f172a',
-            strokeWeight: activeTicketId === ticket.id ? 3 : 2,
-          },
+          icon: createGoogleMarkerIcon(ticket.priority_score, activeTicketId === ticket.id),
           zIndex: activeTicketId === ticket.id ? 1000 : 0,
         });
 
         marker.addListener('click', () => {
           onMarkerClick(ticket);
           const content = `
-            <div style="font-family: var(--font-sans); min-width: 180px;">
-              <strong>${ticket.title || ticket.ai_title || 'Report'}</strong><br/>
-              <span style="color:${categoryColors[ticket.category] || 'var(--ink-muted)'}; font-size:0.75rem;">${categoryLabels[ticket.category] || capitalize(ticket.category)}</span>
-              <div style="margin: 6px 0; font-size: 0.75rem;">${ticket.verification_up > 0 ? `✓ ${ticket.verification_up} verified · ` : ''}${ticket.ward || '—'}</div>
+            <div style="font-family: 'Press Start 2P', monospace; min-width: 180px; padding: 4px; line-height: 1.4;">
+              <strong style="font-size: 8px; color: var(--ink-primary); display: block; margin-bottom: 4px;">${ticket.title || ticket.ai_title || 'Untitled Quest'}</strong>
+              <span style="color:${categoryColors[ticket.category] || 'var(--ink-muted)'}; font-size: 6px; display: block; margin-bottom: 6px;">${(categoryLabels[ticket.category] || capitalize(ticket.category)).toUpperCase()}</span>
+              <div style="font-size: 6px; color: var(--ink-secondary); margin-bottom: 6px;">${ticket.verification_up > 0 ? `✓ ${ticket.verification_up} VOTES · ` : ''}${(ticket.ward || '—').toUpperCase()}</div>
+              <a href="/ticket/${ticket.id}" style="color: var(--accent); font-size: 6px; text-decoration: underline;">ENTER QUEST →</a>
             </div>
           `;
           infoWindow.setContent(content);
@@ -362,16 +381,16 @@ function ConfigurableMap({
                   }}
                 >
                   <Popup>
-                    <div style={{ fontFamily: 'var(--font-sans)', minWidth: 180 }}>
-                      <strong>{ticket.title || ticket.ai_title || 'Report'}</strong><br/>
-                      <span style={{ color: categoryColors[ticket.category] || 'var(--ink-muted)', fontSize: '0.75rem' }}>
-                        {categoryLabels[ticket.category] || capitalize(ticket.category)}
+                    <div className="font-sans" style={{ minWidth: 180, padding: '4px' }}>
+                      <strong className="font-pixel" style={{ fontSize: '0.55rem', color: 'var(--ink-primary)', display: 'block', marginBottom: '4px' }}>{ticket.title || ticket.ai_title || 'Untitled Quest'}</strong>
+                      <span className="font-pixel" style={{ color: categoryColors[ticket.category] || 'var(--ink-muted)', fontSize: '0.45rem', display: 'block', marginBottom: '6px' }}>
+                        {categoryLabels[ticket.category]?.toUpperCase() || capitalize(ticket.category).toUpperCase()}
                       </span>
-                      <div style={{ margin: '6px 0', fontSize: '0.75rem' }}>
-                        {ticket.verification_up > 0 ? `✓ ${ticket.verification_up} verified · ` : ''}{ticket.ward || '—'}
+                      <div className="font-pixel text-secondary" style={{ fontSize: '0.45rem', marginBottom: '8px' }}>
+                        {ticket.verification_up > 0 ? `✓ ${ticket.verification_up} VOTE${ticket.verification_up > 1 ? 'S' : ''} · ` : ''}{ticket.ward?.toUpperCase() || '—'}
                       </div>
-                      <Link to={`/ticket/${ticket.id}`} style={{ display: 'inline-block', marginTop: '4px', fontWeight: 600 }}>
-                        View Details →
+                      <Link to={`/ticket/${ticket.id}`} className="font-pixel" style={{ display: 'inline-block', color: 'var(--accent)', fontSize: '0.45rem', textDecoration: 'underline' }}>
+                        ENTER QUEST →
                       </Link>
                     </div>
                   </Popup>

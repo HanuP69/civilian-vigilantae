@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { fetchTickets, fetchRecurrenceRisk } from '../services/api';
 import { useSSE } from '../hooks/useSSE';
@@ -8,10 +8,10 @@ import { timeAgo, capitalize } from '../utils/formatters';
 import ConfigurableMap from '../components/map/ConfigurableMap';
 
 const LAYERS = [
-  { key: 'reports', label: 'Reports' },
-  { key: 'clusters', label: 'Clusters' },
-  { key: 'recurrence', label: 'Recurrence' },
-  { key: 'sla', label: 'SLA' },
+  { key: 'reports', label: 'ACTIVE QUESTS' },
+  { key: 'clusters', label: 'THREAT SWARMS' },
+  { key: 'recurrence', label: 'SPAWN DENSITY' },
+  { key: 'sla', label: 'TIME-LIMIT QUESTS' },
 ];
 
 
@@ -37,6 +37,17 @@ function HomePage() {
   const { events } = useSSE();
   const { toast } = useToast();
   const navigate = useNavigate();
+
+  const feedRef = useRef(null);
+  const scrollFeed = (direction) => {
+    if (feedRef.current) {
+      const scrollAmount = 180;
+      feedRef.current.scrollBy({
+        top: direction === 'up' ? -scrollAmount : scrollAmount,
+        behavior: 'smooth'
+      });
+    }
+  };
 
   useEffect(() => {
     setLoading(true);
@@ -179,10 +190,11 @@ function HomePage() {
     <div className="home-container" style={{ paddingBottom: 'var(--space-10)' }}>
       {/* Hero — editorial strip, not a landing page */}
       <section aria-label="Introduction" style={{
-        display: 'grid',
-        gridTemplateColumns: '1fr auto',
-        alignItems: 'end',
-        gap: 'var(--space-8)',
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'flex-end',
+        flexWrap: 'wrap',
+        gap: 'var(--space-4)',
         marginBottom: 'var(--space-8)',
         paddingBottom: 'var(--space-6)',
         borderBottom: '1px solid var(--border-subtle)',
@@ -194,17 +206,16 @@ function HomePage() {
             gap: 'var(--space-3)',
             marginBottom: 'var(--space-4)',
           }}>
-            <span style={{
-              fontFamily: 'var(--font-mono)',
-              fontSize: '0.6875rem',
+            <span className="font-pixel" style={{
+              fontSize: '0.5rem',
               color: 'var(--accent)',
               textTransform: 'uppercase',
               letterSpacing: '0.12em',
-              padding: '3px 8px',
+              padding: '4px 8px',
               border: '1px solid var(--accent-muted)',
-              borderRadius: 'var(--radius-sm)',
+              borderRadius: 0,
             }}>
-              Live · Lucknow
+              LIVE · LUCKNOW REALM
             </span>
             <span style={{
               width: 6, height: 6, borderRadius: '50%',
@@ -214,65 +225,65 @@ function HomePage() {
               display: 'inline-block',
             }} />
           </div>
-          <h1 className="animate-reveal hero-heading" style={{ fontStyle: 'normal', letterSpacing: '-0.03em' }}>
-            Infrastructure issues,<br />
-            <span style={{ color: 'var(--accent)', fontStyle: 'italic' }}>tracked in the open.</span>
+          <h1 className="animate-reveal hero-heading" style={{ fontStyle: 'normal', letterSpacing: '-0.03em', fontFamily: 'var(--font-serif)' }}>
+            Lucknow Realm Incidents,<br />
+            <span style={{ color: 'var(--accent)', fontStyle: 'italic' }}>resolved by active sentinels.</span>
           </h1>
         </div>
         <div className="animate-fade-up stagger-2" style={{ textAlign: 'right' }}>
-          <Link to="/report" className="btn btn-primary btn-lg" style={{
-            padding: 'var(--space-3) var(--space-6)',
-            fontSize: '0.9375rem',
-            borderRadius: 'var(--radius-full)',
+          <Link to="/report" className="btn btn-primary btn-lg pixel-border" style={{
+            padding: 'var(--space-3) var(--space-5)',
+            borderRadius: 0,
             gap: 'var(--space-2)',
+            fontFamily: 'var(--font-pixel)',
+            fontSize: '0.65rem',
           }}>
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
-            Report an issue
+            ⚔️ SUBMIT NEW QUEST
           </Link>
-          <p className="text-xs text-muted" style={{ marginTop: 'var(--space-2)' }}>
-            {tickets.length > 0 ? `${tickets.length} active incidents` : 'Be the first to report'}
+          <p className="font-pixel text-muted" style={{ fontSize: '0.45rem', marginTop: 'var(--space-2)' }}>
+            {tickets.length > 0 ? `${tickets.length} ACTIVE INCIDENTS` : 'BE THE FIRST TO DEPLOY'}
           </p>
         </div>
       </section>
 
-      <div className="hero-panel animate-fade-up stagger-2" style={{ marginBottom: 'var(--space-6)' }}>
+      <div className="hero-panel animate-fade-up stagger-2 pixel-border" style={{ marginBottom: 'var(--space-6)', borderRadius: 0 }}>
         <div className="hero-panel-row">
-          <span className="info-pill">⚡ AI triage in seconds</span>
-          <span className="info-pill">🧭 Auto-deduped by location and time</span>
-          <span className="info-pill">📈 Live ward risk signals</span>
+          <span className="info-pill font-pixel" style={{ fontSize: '0.45rem', borderRadius: 0 }}>⚡ AUTOMATIC QUEST TRIAGE</span>
+          <span className="info-pill font-pixel" style={{ fontSize: '0.45rem', borderRadius: 0 }}>🧭 GEOSPATIAL DEDUPLICATION</span>
+          <span className="info-pill font-pixel" style={{ fontSize: '0.45rem', borderRadius: 0 }}>📈 LIVE SPAWN RISK DETECTOR</span>
         </div>
         <div className="flex items-center justify-between" style={{ gap: 'var(--space-4)', flexWrap: 'wrap' }}>
           <div>
-            <h3 className="section-title" style={{ marginBottom: 'var(--space-2)' }}>A faster path from report to action</h3>
-            <p className="text-secondary">Citizens can submit issues in seconds, and the platform turns them into visible, prioritized civic work.</p>
+            <h3 className="section-title font-pixel" style={{ fontSize: '0.7rem', marginBottom: 'var(--space-2)' }}>RAPID GUILD DISPATCH AND RESOLUTION</h3>
+            <p className="text-secondary">Sentinels log anomalies across the Lucknow realm, automatically generating categorized, prioritized quest orders for the local guilds.</p>
           </div>
           <div className="flex gap-3" style={{ flexWrap: 'wrap' }}>
-            <div className="summary-card" style={{ minWidth: 140 }}>
-              <div className="font-serif" style={{ fontSize: '1.35rem' }}>{urgentTickets}</div>
-              <div className="text-xs text-muted">high urgency</div>
+            <div className="summary-card pixel-border" style={{ minWidth: 140, borderRadius: 0 }}>
+              <div className="font-pixel" style={{ fontSize: '1rem', color: 'var(--error)' }}>{urgentTickets}</div>
+              <div className="font-pixel text-muted" style={{ fontSize: '0.45rem', marginTop: '6px' }}>HIGH THREATS</div>
             </div>
-            <div className="summary-card" style={{ minWidth: 140 }}>
-              <div className="font-serif" style={{ fontSize: '1.35rem' }}>{verifiedCount}</div>
-              <div className="text-xs text-muted">verified issues</div>
+            <div className="summary-card pixel-border" style={{ minWidth: 140, borderRadius: 0 }}>
+              <div className="font-pixel" style={{ fontSize: '1rem', color: 'var(--success)' }}>{verifiedCount}</div>
+              <div className="font-pixel text-muted" style={{ fontSize: '0.45rem', marginTop: '6px' }}>VERIFIED QUESTS</div>
             </div>
-            <div className="summary-card" style={{ minWidth: 180 }}>
-              <div className="font-serif" style={{ fontSize: '1.1rem' }}>{topRisk ? `${topRisk.ward}` : '—'}</div>
-              <div className="text-xs text-muted">{topRisk ? `${Math.round((topRisk.probability || 0) * 100)}% recurrence risk` : 'no major hotspot'}</div>
+            <div className="summary-card pixel-border" style={{ minWidth: 180, borderRadius: 0 }}>
+              <div className="font-pixel" style={{ fontSize: '0.75rem', color: 'var(--accent)', textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap' }}>{topRisk ? `${topRisk.ward}` : '—'}</div>
+              <div className="font-pixel text-muted" style={{ fontSize: '0.45rem', marginTop: '6px' }}>{topRisk ? `${Math.round((topRisk.probability || 0) * 100)}% SPAWN RISK` : 'NO HOTSPOT'}</div>
             </div>
           </div>
         </div>
         <div className="how-it-works-grid">
-          <div className="how-it-card">
-            <h4>1. Report</h4>
-            <p className="text-secondary">Upload media, describe the issue, and confirm the location in a guided flow.</p>
+          <div className="how-it-card pixel-border" style={{ borderRadius: 0 }}>
+            <h4 className="font-pixel" style={{ fontSize: '0.55rem', marginBottom: 'var(--space-2)', color: 'var(--accent)' }}>1. DISCOVER</h4>
+            <p className="text-secondary">Capture anomaly coordinates, upload visual proof, and write descriptions to log the quest.</p>
           </div>
-          <div className="how-it-card">
-            <h4>2. Understand</h4>
-            <p className="text-secondary">The agent classifies, deduplicates, and prioritizes the report automatically.</p>
+          <div className="how-it-card pixel-border" style={{ borderRadius: 0 }}>
+            <h4 className="font-pixel" style={{ fontSize: '0.55rem', marginBottom: 'var(--space-2)', color: 'var(--accent)' }}>2. TRIAGE</h4>
+            <p className="text-secondary">The Guild Sentinel AI dynamically analyzes, groups, and assigns difficulty tiers to the quest.</p>
           </div>
-          <div className="how-it-card">
-            <h4>3. Act</h4>
-            <p className="text-secondary">Track status, verify community impact, and spot wards that need attention.</p>
+          <div className="how-it-card pixel-border" style={{ borderRadius: 0 }}>
+            <h4 className="font-pixel" style={{ fontSize: '0.55rem', marginBottom: 'var(--space-2)', color: 'var(--accent)' }}>3. SOLVE</h4>
+            <p className="text-secondary">Deploy to locations, verify solutions, earn gold/XP, and purge threats from the map.</p>
           </div>
         </div>
       </div>
@@ -280,7 +291,7 @@ function HomePage() {
       <div className="animate-fade-up stagger-2 home-grid">
         {/* LEFT: Map full height */}
         <div className="home-map-col">
-          <div className="map-wrapper" style={{ height: '100%', minHeight: 520 }}>
+          <div className="map-wrapper pixel-border" style={{ height: '100%', minHeight: 520, borderRadius: 0 }}>
             <ConfigurableMap
               provider={mapProvider}
               center={[26.8467, 80.9462]}
@@ -305,17 +316,18 @@ function HomePage() {
                   key={l.key}
                   role="tab"
                   aria-selected={layer === l.key}
-                  className={`layer-chip ${layer === l.key ? 'active' : ''}`}
+                  className={`layer-chip font-pixel ${layer === l.key ? 'active' : ''}`}
+                  style={{ fontSize: '0.45rem', borderRadius: 0, border: '1px solid var(--border)' }}
                   onClick={() => setLayer(l.key)}
                 >
                   {l.label}
                 </button>
               ))}
             </div>
-            <div className="layer-legend" aria-hidden="true">
+            <div className="layer-legend" aria-hidden="true" style={{ borderRadius: 0, border: '1px solid var(--border)' }}>
               {legendItems().map((item, i) => (
-                <div className="legend-item" key={i}>
-                  <span className="legend-swatch" style={{ background: item.color }} />
+                <div className="legend-item font-pixel" key={i} style={{ fontSize: '0.45rem' }}>
+                  <span className="legend-swatch" style={{ background: item.color, borderRadius: 0 }} />
                   <span>{item.label}</span>
                 </div>
               ))}
@@ -324,60 +336,85 @@ function HomePage() {
         </div>
 
         {/* RIGHT: Compact filter row + feed */}
-        <div className="flex flex-col gap-4 home-feed-col">
+        <div className="flex flex-col gap-4 home-feed-col rpg-panel" style={{ padding: 'var(--space-4)', height: '100%' }}>
+          <div className="flex justify-between items-center" style={{ borderBottom: '1px solid var(--border)', paddingBottom: '8px' }}>
+            <span className="font-pixel" style={{ fontSize: '0.55rem', color: 'var(--accent)' }}>⚔️ QUEST LEDGER BOARD</span>
+            <div className="flex gap-2">
+              <button 
+                onClick={() => scrollFeed('up')} 
+                className="btn btn-secondary font-pixel" 
+                style={{ padding: '4px 8px', fontSize: '0.45rem', borderRadius: 0, border: '1px solid var(--border)', background: 'var(--bg-surface)' }}
+                aria-label="Scroll feed up"
+              >
+                ▲
+              </button>
+              <button 
+                onClick={() => scrollFeed('down')} 
+                className="btn btn-secondary font-pixel" 
+                style={{ padding: '4px 8px', fontSize: '0.45rem', borderRadius: 0, border: '1px solid var(--border)', background: 'var(--bg-surface)' }}
+                aria-label="Scroll feed down"
+              >
+                ▼
+              </button>
+            </div>
+          </div>
+
           {/* Filter chips row */}
           <div style={{ display: 'flex', gap: 'var(--space-2)', flexWrap: 'wrap', alignItems: 'center' }}>
             <select
               value={filters.status}
               onChange={e => handleFilter('status', e.target.value)}
-              className="filter-chip-select"
+              className="filter-chip-select font-pixel"
+              style={{ borderRadius: 0, fontSize: '0.45rem' }}
             >
-              <option value="">All statuses</option>
-              <option value="reported">Reported</option>
-              <option value="verified">Verified</option>
-              <option value="in_progress">In Progress</option>
-              <option value="resolved">Resolved</option>
-              <option value="reopened">Reopened</option>
+              <option value="">ALL STATUSES</option>
+              <option value="reported">REPORTED</option>
+              <option value="verified">VERIFIED</option>
+              <option value="in_progress">IN PROGRESS</option>
+              <option value="resolved">RESOLVED</option>
+              <option value="reopened">REOPENED</option>
             </select>
             <select
               value={filters.category}
               onChange={e => handleFilter('category', e.target.value)}
-              className="filter-chip-select"
+              className="filter-chip-select font-pixel"
+              style={{ borderRadius: 0, fontSize: '0.45rem' }}
             >
-              <option value="">All categories</option>
+              <option value="">ALL CATEGORIES</option>
               {Object.entries(CATEGORY_LABELS).map(([k, v]) => (
-                <option key={k} value={k}>{v}</option>
+                <option key={k} value={k}>{v.toUpperCase()}</option>
               ))}
             </select>
             <select
               value={filters.ward}
               onChange={e => handleFilter('ward', e.target.value)}
-              className="filter-chip-select"
+              className="filter-chip-select font-pixel"
+              style={{ borderRadius: 0, fontSize: '0.45rem' }}
             >
-              <option value="">All wards</option>
-              {WARD_LIST.map(w => (<option key={w} value={w}>{w}</option>))}
+              <option value="">ALL WARDS</option>
+              {WARD_LIST.map(w => (<option key={w} value={w}>{w.toUpperCase()}</option>))}
             </select>
-            <span className="text-xs text-muted" style={{ marginLeft: 'auto', whiteSpace: 'nowrap' }}>
-              {tickets.length} incident{tickets.length !== 1 ? 's' : ''}
+            <span className="font-pixel text-muted" style={{ marginLeft: 'auto', whiteSpace: 'nowrap', fontSize: '0.45rem' }}>
+              {tickets.length} QUEST{tickets.length !== 1 ? 'S' : ''}
             </span>
           </div>
 
           {/* Feed */}
-          <div className="flex flex-col gap-3" style={{ overflowY: 'auto', flex: 1 }}>
+          <div ref={feedRef} className="flex flex-col gap-3 rpg-scrollbar" style={{ overflowY: 'auto', flex: 1 }}>
             {loading ? (
               <div aria-busy="true" aria-label="Loading reports" className="flex flex-col gap-3">
-                {[1, 2, 3, 4].map(i => (<div key={i} className="skeleton" style={{ height: 110, borderRadius: 'var(--radius-lg)' }} />))}
+                {[1, 2, 3, 4].map(i => (<div key={i} className="skeleton" style={{ height: 110, borderRadius: 0 }} />))}
               </div>
             ) : tickets.length === 0 ? (
-              <div className="empty-state flex flex-col gap-4">
-                <p className="font-serif" style={{ fontSize: '1.25rem' }}>No incidents found.</p>
-                <Link to="/report" className="btn btn-primary" style={{ alignSelf: 'center' }}>Report an Issue</Link>
+              <div className="empty-state flex flex-col gap-4 pixel-border" style={{ borderRadius: 0 }}>
+                <p className="font-pixel" style={{ fontSize: '0.65rem' }}>NO QUESTS FOUND.</p>
+                <Link to="/report" className="btn btn-primary pixel-border" style={{ alignSelf: 'center', borderRadius: 0, fontFamily: 'var(--font-pixel)', fontSize: '0.55rem' }}>SUBMIT QUEST</Link>
               </div>
             ) : (
               tickets.map((ticket) => (
                 <div
                   key={ticket.id}
-                  className="home-ticket-card clickable-card"
+                  className="home-ticket-card clickable-card pixel-border"
                   role="button"
                   tabIndex={0}
                   onClick={() => navigate(`/ticket/${ticket.id}`)}
@@ -385,27 +422,28 @@ function HomePage() {
                   style={{
                     borderColor: ticket.priority_score > 70 ? 'var(--error)' : ticket.priority_score > 40 ? 'var(--warning)' : 'var(--border)',
                     background: activeTicketId === ticket.id ? 'var(--bg-elevated)' : 'var(--bg-secondary)',
+                    borderRadius: 0,
                   }}
                   onMouseEnter={() => handleHover(ticket)}
                   onMouseLeave={() => setActiveTicketId(null)}
                 >
                   <div className="flex justify-between items-start" style={{ marginBottom: 'var(--space-2)' }}>
-                    <span className="font-serif" style={{ fontSize: '1.0625rem', fontWeight: 500, color: 'var(--ink-primary)', lineHeight: 1.3 }}>
-                      {ticket.title || ticket.ai_title || 'Untitled Report'}
+                    <span className="font-serif" style={{ fontSize: '1.0625rem', fontWeight: 600, color: 'var(--ink-primary)', lineHeight: 1.3 }}>
+                      {ticket.title || ticket.ai_title || 'Untitled Quest'}
                     </span>
-                    <span className="text-xs text-muted" style={{ marginLeft: 'var(--space-3)', whiteSpace: 'nowrap', flexShrink: 0 }}>{timeAgo(ticket.created_at)}</span>
+                    <span className="font-pixel text-muted" style={{ marginLeft: 'var(--space-3)', whiteSpace: 'nowrap', flexShrink: 0, fontSize: '0.45rem' }}>{timeAgo(ticket.created_at).toUpperCase()}</span>
                   </div>
                   <div className="flex items-center gap-2" style={{ flexWrap: 'wrap' }}>
-                    <span className="badge badge-outline" style={{ color: CATEGORY_COLORS[ticket.category] || 'var(--ink-secondary)' }}>
+                    <span className="badge badge-outline font-pixel" style={{ color: CATEGORY_COLORS[ticket.category] || 'var(--ink-secondary)', borderRadius: 0, fontSize: '0.45rem', padding: '2px 4px' }}>
                       {CATEGORY_LABELS[ticket.category] || capitalize(ticket.category)}
                     </span>
-                    <span className={severityClass(ticket.severity)}>{capitalize(ticket.severity)}</span>
-                    <span className={statusClass(ticket.status)}>{capitalize(ticket.status)}</span>
-                    <span className="text-xs text-muted" style={{ marginLeft: 'auto' }}>{ticket.ward || '—'}</span>
+                    <span className={`${severityClass(ticket.severity)} font-pixel`} style={{ borderRadius: 0, fontSize: '0.45rem', padding: '2px 4px' }}>{capitalize(ticket.severity)}</span>
+                    <span className={`${statusClass(ticket.status)} font-pixel`} style={{ borderRadius: 0, fontSize: '0.45rem', padding: '2px 4px' }}>{capitalize(ticket.status)}</span>
+                    <span className="font-pixel text-muted" style={{ marginLeft: 'auto', fontSize: '0.45rem' }}>{ticket.ward?.toUpperCase() || '—'}</span>
                   </div>
                   {ticket.priority_score != null && !isNaN(ticket.priority_score) && (
-                    <div className="priority-bar" style={{ height: '2px', marginTop: 'var(--space-3)' }}>
-                      <div className="priority-bar-fill" style={{ width: `${Math.round(ticket.priority_score)}%`, background: ticket.priority_score > 70 ? 'var(--error)' : ticket.priority_score > 40 ? 'var(--warning)' : 'var(--accent)' }} />
+                    <div className="priority-bar" style={{ height: '3px', marginTop: 'var(--space-3)', borderRadius: 0 }}>
+                      <div className="priority-bar-fill" style={{ width: `${Math.round(ticket.priority_score)}%`, background: ticket.priority_score > 70 ? 'var(--error)' : ticket.priority_score > 40 ? 'var(--warning)' : 'var(--accent)', borderRadius: 0 }} />
                     </div>
                   )}
                 </div>

@@ -23,7 +23,7 @@ const Avatar = ({ seed, name }) => {
   const avatarStyle = {
     width: 48,
     height: 48,
-    borderRadius: '50%',
+    borderRadius: 0,
     border: '2px solid var(--border)',
     background: 'var(--bg-surface)',
     display: 'flex',
@@ -121,12 +121,10 @@ function LeaderboardPage() {
             <motion.div
               key={user.id || user.uid || i}
               variants={itemAnim}
-              className="card flex items-center gap-4"
+              className="card rpg-panel flex items-center gap-4"
               style={{
                 padding: 'var(--space-3) var(--space-4)',
-                background: rank <= 3 ? 'var(--bg-elevated)' : 'var(--bg-secondary)',
-                borderColor: rank <= 3 ? rankColor : 'var(--border)',
-                borderRadius: 'var(--radius-md)'
+                borderRadius: 0
               }}
             >
               <div

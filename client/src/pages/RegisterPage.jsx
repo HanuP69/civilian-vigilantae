@@ -44,7 +44,7 @@ function RegisterPage() {
 
   return (
     <div className="flex items-center justify-center" style={{ minHeight: 'calc(100vh - 200px)' }}>
-      <div className="card" style={{ width: '100%', maxWidth: '420px', padding: 'var(--space-6) var(--space-7)', position: 'relative' }}>
+      <div className="card rpg-panel" style={{ width: '100%', maxWidth: '420px', padding: 'var(--space-6) var(--space-7)', position: 'relative', borderRadius: 0 }}>
         <InteractiveCommunity isPasswordFocused={isPasswordFocused} isSuccess={isSuccess} />
         
         <div style={{ textAlign: 'center', marginBottom: 'var(--space-6)' }}>
@@ -66,7 +66,7 @@ function RegisterPage() {
               style={{
                 background: 'var(--bg-surface)',
                 border: '1px solid var(--border)',
-                borderRadius: 'var(--radius-md)',
+                borderRadius: 0,
                 padding: '12px 14px',
                 color: 'var(--ink-primary)',
                 outline: 'none',
@@ -88,7 +88,7 @@ function RegisterPage() {
               style={{
                 background: 'var(--bg-surface)',
                 border: '1px solid var(--border)',
-                borderRadius: 'var(--radius-md)',
+                borderRadius: 0,
                 padding: '12px 14px',
                 color: 'var(--ink-primary)',
                 outline: 'none',
@@ -112,7 +112,7 @@ function RegisterPage() {
               style={{
                 background: 'var(--bg-surface)',
                 border: '1px solid var(--border)',
-                borderRadius: 'var(--radius-md)',
+                borderRadius: 0,
                 padding: '12px 14px',
                 color: 'var(--ink-primary)',
                 outline: 'none',
@@ -136,7 +136,7 @@ function RegisterPage() {
               style={{
                 background: 'var(--bg-surface)',
                 border: '1px solid var(--border)',
-                borderRadius: 'var(--radius-md)',
+                borderRadius: 0,
                 padding: '12px 14px',
                 color: 'var(--ink-primary)',
                 outline: 'none',
@@ -153,7 +153,7 @@ function RegisterPage() {
             disabled={submitting || isSuccess}
             style={{
               padding: '12px 20px',
-              borderRadius: 'var(--radius-md)',
+              borderRadius: 0,
               width: '100%',
               justifyContent: 'center',
               fontWeight: 600,

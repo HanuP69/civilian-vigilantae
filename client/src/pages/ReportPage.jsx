@@ -243,11 +243,11 @@ function ReportPage() {
         <p className="text-secondary font-sans animate-fade-up stagger-1" style={{ fontSize: '1.125rem' }}>Help us improve the city by reporting infrastructure or civic concerns.</p>
       </header>
 
-      <div className="hero-panel animate-fade-up stagger-2" style={{ marginBottom: 'var(--space-6)' }}>
+      <div className="hero-panel rpg-panel animate-fade-up stagger-2" style={{ marginBottom: 'var(--space-6)', borderRadius: 0 }}>
         <div className="hero-panel-row">
-          <span className="info-pill">🤖 AI classifies your issue</span>
-          <span className="info-pill">🧠 Detects duplicates</span>
-          <span className="info-pill">📍 Prioritizes by ward and urgency</span>
+          <span className="info-pill" style={{ borderRadius: 0 }}>🤖 AI classifies your issue</span>
+          <span className="info-pill" style={{ borderRadius: 0 }}>🧠 Detects duplicates</span>
+          <span className="info-pill" style={{ borderRadius: 0 }}>📍 Prioritizes by ward and urgency</span>
         </div>
         <p className="text-secondary" style={{ marginTop: 'var(--space-2)' }}>
           Report a civic issue in minutes. The system understands the problem, checks for similar reports, and helps it reach the right people faster.
@@ -263,6 +263,7 @@ function ReportPage() {
               aria-label={`Go to step ${i + 1}: ${s}`}
               className={`report-step-node ${i === step ? 'active' : ''} ${i < step ? 'done' : ''}`}
               disabled={!!result}
+              style={{ borderRadius: 0 }}
             >
               {i < step ? '✓' : i + 1}
             </button>
@@ -275,7 +276,7 @@ function ReportPage() {
               {s}
             </button>
             {i < STEPS.length - 1 && (
-              <div className={`report-step-connector ${i < step ? 'done' : ''}`} />
+              <div className={`report-step-connector ${i < step ? 'done' : ''}`} style={{ borderRadius: 0 }} />
             )}
           </div>
         ))}
@@ -289,49 +290,49 @@ function ReportPage() {
               <span className="text-xs text-muted">optional · powers AI classification</span>
             </div>
             <div
-              className={`dropzone ${dragOver ? 'dragover' : ''}`}
+              className={`dropzone rpg-panel ${dragOver ? 'dragover' : ''}`}
               onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
               onDragLeave={() => setDragOver(false)}
               onDrop={handleDrop}
               onClick={() => !file && fileRef.current?.click()}
-              style={{ cursor: file ? 'default' : 'pointer' }}
+              style={{ cursor: file ? 'default' : 'pointer', borderRadius: 0 }}
             >
               {preview && mediaType === 'image' ? (
                 <div style={{ position: 'relative' }}>
-                  <img src={preview} alt="Preview" style={{ maxHeight: 240, borderRadius: 'var(--radius-md)', margin: '0 auto', display: 'block' }} />
+                  <img src={preview} alt="Preview" style={{ maxHeight: 240, borderRadius: 0, margin: '0 auto', display: 'block' }} />
                   <button
                     type="button"
                     className="btn btn-secondary btn-sm"
                     onClick={(e) => { e.stopPropagation(); removeFile(); }}
-                    style={{ position: 'absolute', top: 'var(--space-2)', right: 'var(--space-2)' }}
+                    style={{ position: 'absolute', top: 'var(--space-2)', right: 'var(--space-2)', borderRadius: 0 }}
                   >
                     ✕ Remove
                   </button>
                 </div>
               ) : preview && mediaType === 'video' ? (
                 <div style={{ position: 'relative' }}>
-                  <video src={preview} controls style={{ maxHeight: 240, borderRadius: 'var(--radius-md)', margin: '0 auto', display: 'block', maxWidth: '100%' }} />
+                  <video src={preview} controls style={{ maxHeight: 240, borderRadius: 0, margin: '0 auto', display: 'block', maxWidth: '100%' }} />
                   <button
                     type="button"
                     className="btn btn-secondary btn-sm"
                     onClick={(e) => { e.stopPropagation(); removeFile(); }}
-                    style={{ position: 'absolute', top: 'var(--space-2)', right: 'var(--space-2)' }}
+                    style={{ position: 'absolute', top: 'var(--space-2)', right: 'var(--space-2)', borderRadius: 0 }}
                   >
                     ✕ Remove
                   </button>
                 </div>
               ) : audioUrl && mediaType === 'audio' && !recording ? (
                 <div className="flex flex-col items-center gap-3" onClick={(e) => e.stopPropagation()}>
-                  <div style={{ width: '48px', height: '48px', borderRadius: '50%', background: 'var(--accent-muted)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <div style={{ width: '48px', height: '48px', borderRadius: 0, background: 'var(--accent-muted)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                     <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
                   </div>
                   <audio src={audioUrl} controls style={{ width: '100%', maxWidth: 320 }} />
                   <p className="text-xs text-muted">{file?.name || 'audio file'}</p>
-                  <button className="btn btn-ghost btn-sm" onClick={removeFile}>✕ Remove</button>
+                  <button className="btn btn-ghost btn-sm" onClick={removeFile} style={{ borderRadius: 0 }}>✕ Remove</button>
                 </div>
               ) : (
                 <div className="flex flex-col items-center justify-center">
-                  <div style={{ width: '56px', height: '56px', borderRadius: '50%', background: 'var(--bg-primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 'var(--space-4)' }}>
+                  <div style={{ width: '56px', height: '56px', borderRadius: 0, background: 'var(--bg-primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 'var(--space-4)' }}>
                     <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
                   </div>
                   <p className="font-serif" style={{ fontSize: '1.25rem', marginBottom: 'var(--space-2)' }}>Drag & drop image, video, or audio</p>
@@ -358,16 +359,16 @@ function ReportPage() {
                 {audioUrl && recording === false ? null : recording ? (
                   <button
                     className="btn btn-danger flex justify-center items-center"
-                    style={{ padding: 'var(--space-4)', fontSize: '1.125rem', borderRadius: 'var(--radius-lg)', width: '100%' }}
+                    style={{ padding: 'var(--space-4)', fontSize: '1.125rem', borderRadius: 0, width: '100%' }}
                     onClick={stopRecording}
                   >
-                    <span className="rec-indicator"><span className="rec-dot" /> Recording</span>
+                    <span className="rec-indicator" style={{ borderRadius: 0 }}><span className="rec-dot" style={{ borderRadius: 0 }} /> Recording</span>
                     <span style={{ marginLeft: 'var(--space-3)' }}>Tap to stop</span>
                   </button>
                 ) : (
                   <button
                     className="btn btn-secondary flex justify-center items-center"
-                    style={{ padding: 'var(--space-4)', fontSize: '1.125rem', borderRadius: 'var(--radius-lg)', width: '100%' }}
+                    style={{ padding: 'var(--space-4)', fontSize: '1.125rem', borderRadius: 0, width: '100%' }}
                     onClick={startRecording}
                   >
                     🎙 Record Voice Note instead
@@ -390,9 +391,9 @@ function ReportPage() {
                     placeholder="e.g. Near Hazratganj crossing, Lucknow"
                     value={address}
                     onChange={e => setAddress(e.target.value)}
-                    style={{ flex: 1, fontSize: '1.25rem', padding: 'var(--space-4)', background: 'var(--bg-secondary)' }}
+                    style={{ flex: 1, fontSize: '1.25rem', padding: 'var(--space-4)', background: 'var(--bg-secondary)', borderRadius: 0 }}
                   />
-                  <button className="btn btn-secondary" onClick={getLocation} disabled={detecting} style={{ padding: '0 var(--space-6)' }}>
+                  <button className="btn btn-secondary" onClick={getLocation} disabled={detecting} style={{ padding: '0 var(--space-6)', borderRadius: 0 }}>
                     {detecting ? 'Locating...' : '📍 Auto-detect'}
                   </button>
                 </div>
@@ -401,7 +402,7 @@ function ReportPage() {
                 <p className="text-sm" style={{ color: 'var(--error)' }}>{geoError}</p>
               )}
               {lat != null && !geoError && (
-                <div className="report-location-confirmed">
+                <div className="report-location-confirmed" style={{ borderRadius: 0 }}>
                   <span>✓</span>
                   <span>Location locked · coordinates captured for geo-clustering</span>
                 </div>
@@ -429,7 +430,7 @@ function ReportPage() {
                   placeholder="Describe what happened, the current state, and any potential hazards..."
                   value={description}
                   onChange={e => setDescription(e.target.value)}
-                  style={{ fontSize: '1.125rem', lineHeight: 1.6, padding: 'var(--space-4)', background: 'var(--bg-secondary)', resize: 'vertical' }}
+                  style={{ fontSize: '1.125rem', lineHeight: 1.6, padding: 'var(--space-4)', background: 'var(--bg-secondary)', resize: 'vertical', borderRadius: 0 }}
                 />
               </label>
               <div className="report-example">
@@ -444,6 +445,7 @@ function ReportPage() {
                     type="button"
                     className="report-example-chip"
                     onClick={() => setDescription(ex)}
+                    style={{ borderRadius: 0 }}
                   >
                     {ex}
                   </button>
@@ -452,7 +454,7 @@ function ReportPage() {
             </div>
 
             {classification && (
-              <div className="flex items-center gap-4 panel">
+              <div className="flex items-center gap-4 panel rpg-panel" style={{ borderRadius: 0 }}>
                 <span className="font-serif" style={{ fontSize: '1.25rem', fontWeight: 600, color: 'var(--accent)' }}>AI</span>
                 <div>
                   <p className="label" style={{ marginBottom: '2px' }}>AI Classification</p>
@@ -470,7 +472,7 @@ function ReportPage() {
             <div className="report-review-grid">
               {preview && (
                 <div className="review-field review-field-full" style={{ textAlign: 'center' }}>
-                  <img src={preview} alt="Attached" style={{ maxHeight: 180, borderRadius: 'var(--radius-md)', margin: '0 auto' }} />
+                  <img src={preview} alt="Attached" style={{ maxHeight: 180, borderRadius: 0, margin: '0 auto' }} />
                 </div>
               )}
               {mediaType && (
@@ -502,7 +504,7 @@ function ReportPage() {
             {!result && (
               <button
                 className="btn btn-primary flex justify-center items-center"
-                style={{ padding: 'var(--space-4)', fontSize: '1.25rem', borderRadius: 'var(--radius-lg)' }}
+                style={{ padding: 'var(--space-4)', fontSize: '1.25rem', borderRadius: 0 }}
                 onClick={handleSubmit}
                 disabled={submitting}
               >
@@ -511,19 +513,19 @@ function ReportPage() {
             )}
 
             {result && result.error && (
-              <div className="flex flex-col gap-4 panel" style={{ borderColor: 'var(--error)' }}>
+              <div className="flex flex-col gap-4 panel rpg-panel" style={{ borderColor: 'var(--error)', borderRadius: 0 }}>
                 <p style={{ color: 'var(--error)', fontSize: '1.125rem' }}>{result.error}</p>
                 <div className="flex gap-3">
-                  <button className="btn btn-primary" onClick={() => { setResult(null); }}>Try Again</button>
-                  <button className="btn btn-secondary" onClick={resetForm}>Start Over</button>
+                  <button className="btn btn-primary" onClick={() => { setResult(null); }} style={{ borderRadius: 0 }}>Try Again</button>
+                  <button className="btn btn-secondary" onClick={resetForm} style={{ borderRadius: 0 }}>Start Over</button>
                 </div>
               </div>
             )}
 
             {result && !result.error && (
-              <div className="flex flex-col gap-4 panel" style={{ borderColor: 'var(--success)' }}>
+              <div className="flex flex-col gap-4 panel rpg-panel" style={{ borderColor: 'var(--success)', borderRadius: 0 }}>
                 <div className="flex items-center gap-3">
-                  <div style={{ width: 32, height: 32, borderRadius: '50%', background: 'var(--success)', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.875rem', fontWeight: 600 }}>✓</div>
+                  <div style={{ width: 32, height: 32, borderRadius: 0, background: 'var(--success)', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.875rem', fontWeight: 600 }}>✓</div>
                   <span className="font-serif" style={{ fontSize: '1.5rem', color: 'var(--ink-primary)' }}>
                     {result.merged ? 'Merged into existing report' : 'Report dispatched'}
                   </span>
@@ -533,10 +535,10 @@ function ReportPage() {
                 )}
                 <div className="flex gap-3" style={{ marginTop: 'var(--space-4)' }}>
                   {result.ticket_id && (
-                    <Link to={`/ticket/${result.ticket_id}`} className="btn btn-primary">View Ticket</Link>
+                    <Link to={`/ticket/${result.ticket_id}`} className="btn btn-primary" style={{ borderRadius: 0 }}>View Ticket</Link>
                   )}
-                  <button className="btn btn-secondary" onClick={resetForm}>Report Another</button>
-                  <button className="btn btn-ghost" onClick={() => navigate('/')}>Back to Map</button>
+                  <button className="btn btn-secondary" onClick={resetForm} style={{ borderRadius: 0 }}>Report Another</button>
+                  <button className="btn btn-ghost" onClick={() => navigate('/')} style={{ borderRadius: 0 }}>Back to Map</button>
                 </div>
               </div>
             )}
@@ -548,7 +550,7 @@ function ReportPage() {
         {step > 0 && !result && (
           <button
             className="btn btn-ghost text-secondary"
-            style={{ fontSize: '1.125rem' }}
+            style={{ fontSize: '1.125rem', borderRadius: 0 }}
             onClick={() => setStep(s => s - 1)}
           >
             ← Back
@@ -558,7 +560,7 @@ function ReportPage() {
           <div className="flex flex-col items-end gap-1" style={{ marginLeft: 'auto' }}>
             <button
               className="btn btn-secondary"
-              style={{ fontSize: '1.125rem', padding: 'var(--space-3) var(--space-6)', borderRadius: 'var(--radius-full)' }}
+              style={{ fontSize: '1.125rem', padding: 'var(--space-3) var(--space-6)', borderRadius: 0 }}
               onClick={() => setStep(s => s + 1)}
               disabled={!canNext()}
             >

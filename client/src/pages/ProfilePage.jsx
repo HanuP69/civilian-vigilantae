@@ -410,7 +410,7 @@ function ProfilePage() {
         <div style={{ flex: '0 0 320px', width: '100%', display: 'flex', flexDirection: 'column', gap: 'var(--space-6)' }} className="flex flex-col gap-6">
           
           {/* Hero Profile Details Card */}
-          <div className="card pixel-border" style={{ borderRadius: 0, padding: 'var(--space-5)' }}>
+          <div className="card rpg-panel" style={{ borderRadius: 0, padding: 'var(--space-5)' }}>
             
             {/* Avatar & Level Frame */}
             <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 'var(--space-4)' }}>
@@ -570,7 +570,7 @@ function ProfilePage() {
           </div>
 
           {/* Telemetry Stats Card */}
-          <div className="card pixel-border" style={{ borderRadius: 0, padding: 'var(--space-4)' }}>
+          <div className="card rpg-panel" style={{ borderRadius: 0, padding: 'var(--space-4)' }}>
             <h3 className="font-pixel" style={{ margin: '0 0 var(--space-4) 0', fontSize: '0.65rem', borderBottom: '2px solid var(--border)', paddingBottom: 'var(--space-2)' }}>📊 Telemetry</h3>
             
             <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
@@ -660,7 +660,7 @@ function ProfilePage() {
           </div>
 
           {/* TAB CONTENT PANEL */}
-          <div className="card pixel-border" style={{ borderRadius: 0, padding: 'var(--space-5)', background: 'var(--bg-secondary)', minHeight: 400 }}>
+          <div className="card rpg-panel" style={{ borderRadius: 0, padding: 'var(--space-5)', minHeight: 400 }}>
             
             {/* Quest Journal Tab Content */}
             {activeTab === 'quests' && (
@@ -687,7 +687,7 @@ function ProfilePage() {
                   ))}
                 </div>
 
-                <div className="flex flex-col gap-4">
+                <div className="flex flex-col gap-4 rpg-scrollbar" style={{ maxHeight: '450px', overflowY: 'auto', paddingRight: '8px' }}>
                   {(user.quests || [])
                     .filter(quest => questFilter === 'active' ? !quest.claimed : quest.claimed)
                     .map((quest) => {
@@ -818,7 +818,7 @@ function ProfilePage() {
                 </div>
 
                 {/* Items Grid */}
-                <div className="flex flex-col gap-3">
+                <div className="flex flex-col gap-3 rpg-scrollbar" style={{ maxHeight: '450px', overflowY: 'auto', paddingRight: '8px' }}>
                   {SHOP_ITEMS
                     .filter(item => shopCategory === 'all' || item.type === shopCategory)
                     .map((item) => {
@@ -919,18 +919,16 @@ function ProfilePage() {
           }}
         >
           <div 
-            className="card pixel-border" 
+            className="card rpg-panel" 
             style={{ 
               width: '100%', 
               maxWidth: '380px', 
               padding: 'var(--space-5)', 
-              background: 'var(--bg-secondary)',
               borderRadius: 0,
               display: 'flex',
               flexDirection: 'column',
               alignItems: 'center',
-              gap: 'var(--space-5)',
-              boxShadow: '8px 8px 0 rgba(0,0,0,0.6)'
+              gap: 'var(--space-5)'
             }}
           >
             <h3 className="font-pixel" style={{ margin: 0, fontSize: '0.8rem', color: 'var(--accent)', borderBottom: '2px solid var(--border)', paddingBottom: 'var(--space-2)', width: '100%', textAlign: 'center' }}>
