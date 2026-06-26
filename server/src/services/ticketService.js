@@ -147,9 +147,6 @@ export async function loadSeedData() {
     const data = JSON.parse(readFileSync(seedPath, 'utf-8'));
 
     try {
-      // Test read to check for quota exhaustion or database issues early
-      await db.collection('tickets').limit(1).get();
-
       for (const ticket of data.tickets) await writeSeedDoc('tickets', ticket.id, ticket);
       for (const user of data.users) await writeSeedDoc('users', user.uid, user);
       for (const dept of data.departments) await writeSeedDoc('departments', dept.id, dept);

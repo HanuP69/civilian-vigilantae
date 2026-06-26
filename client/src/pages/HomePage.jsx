@@ -291,7 +291,7 @@ function HomePage() {
           </div>
           <div className="how-it-card pixel-border" style={{ borderRadius: 0 }}>
             <h4 className="font-pixel" style={{ fontSize: '0.55rem', marginBottom: 'var(--space-2)', color: 'var(--accent)' }}>3. SOLVE</h4>
-            <p className="text-secondary">Deploy to locations, verify solutions, earn XP, and purge threats from the map.</p>
+            <p className="text-secondary">Deploy to locations, verify solutions, earn gold/XP, and purge threats from the map.</p>
           </div>
         </div>
       </div>

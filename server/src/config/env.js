@@ -46,6 +46,7 @@ const config = Object.freeze({
   firebaseClientEmail:  process.env.FIREBASE_CLIENT_EMAIL     || '',
   firebasePrivateKey:   normalizePrivateKey(process.env.FIREBASE_PRIVATE_KEY),
   firebaseStorageBucket: process.env.FIREBASE_STORAGE_BUCKET  || '',
+  useMockFirestore:     process.env.USE_MOCK_FIRESTORE === 'true',
 
   // Ollama
   ollamaBaseUrl:        process.env.OLLAMA_BASE_URL       || 'http://localhost:11434',

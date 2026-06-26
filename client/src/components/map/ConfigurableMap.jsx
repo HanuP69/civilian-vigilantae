@@ -347,7 +347,7 @@ function ConfigurableMap({
             <div style="font-family: 'Press Start 2P', monospace; min-width: 180px; padding: 4px; line-height: 1.4;">
               <strong style="font-size: 8px; color: var(--accent); display: block; margin-bottom: 4px;">🧭 ${mission.title}</strong>
               <p style="font-size: 6.5px; color: var(--ink-secondary); margin-bottom: 6px;">${mission.description}</p>
-              <div style="font-size: 6px; color: var(--success); margin-bottom: 6px;">REWARDS: +${mission.xp_reward} XP</div>
+              <div style="font-size: 6px; color: var(--success); margin-bottom: 6px;">REWARDS: +${mission.xp_reward} XP · ${mission.gold_reward} GOLD</div>
               <div style="font-size: 6px; color: var(--ink-muted); margin-bottom: 6px;">PROGRESS: ${mission.current_confirmations}/${mission.target_confirmations} CONFIRMATIONS</div>
               <a href="/missions" style="color: var(--accent); font-size: 6px; text-decoration: underline;">GO TO QUEST BOARD →</a>
             </div>
@@ -542,7 +542,7 @@ function ConfigurableMap({
                           <strong className="font-pixel" style={{ fontSize: '0.55rem', color: 'var(--accent)', display: 'block', marginBottom: '4px' }}>🧭 {mission.title}</strong>
                           <p className="text-secondary" style={{ fontSize: '0.45rem', marginBottom: '6px' }}>{mission.description}</p>
                           <div className="font-pixel text-success" style={{ fontSize: '0.45rem', marginBottom: '6px' }}>
-                            REWARDS: +{mission.xp_reward} XP
+                            REWARDS: +{mission.xp_reward} XP · {mission.gold_reward} GOLD
                           </div>
                           <div className="font-pixel text-muted" style={{ fontSize: '0.45rem', marginBottom: '8px' }}>
                             PROGRESS: {mission.current_confirmations} / {mission.target_confirmations}

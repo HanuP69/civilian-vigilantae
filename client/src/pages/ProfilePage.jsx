@@ -417,7 +417,11 @@ function ProfilePage() {
               </div>
             </div>
 
-
+            {/* Gold Widget */}
+            <div className="pixel-border" style={{ marginTop: 'var(--space-5)', background: 'oklch(0.2 0.01 260)', padding: '10px 14px', textAlign: 'center', borderRadius: 0 }}>
+              <span className="font-pixel" style={{ fontSize: '0.9rem', color: 'var(--rank-gold)', display: 'block' }}>🪙 {user.gold || 0}</span>
+              <span className="font-pixel" style={{ fontSize: '0.45rem', color: 'var(--ink-muted)', marginTop: '4px', display: 'block' }}>GOLD BALANCE</span>
+            </div>
 
           </div>
 
@@ -578,6 +582,7 @@ function ProfilePage() {
 
                           <div className="flex flex-col items-end font-pixel text-right" style={{ color: 'var(--accent)', fontSize: '0.45rem', gap: '2px' }}>
                             <span>+{quest.xpReward} XP</span>
+                            <span>+{quest.goldReward} GLD</span>
                           </div>
                         </div>
 
@@ -674,7 +679,7 @@ function ProfilePage() {
                     .filter(item => shopCategory === 'all' || item.type === shopCategory)
                     .map((item) => {
                       const owned = isItemOwned(item);
-                      const canAfford = true;
+                      const canAfford = (user.gold || 0) >= item.cost;
                       
                       return (
                         <div 
@@ -733,7 +738,7 @@ function ProfilePage() {
                                   fontWeight: 800
                                 }}
                               >
-                                {buying === item.id ? '...' : 'UNLOCK'}
+                                {buying === item.id ? '...' : `BUY 🪙${item.cost}`}
                               </button>
                             )}
                           </div>

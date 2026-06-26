@@ -1050,7 +1050,7 @@ function DashboardPage() {
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 'var(--space-6)', marginBottom: 'var(--space-6)' }}>
           <div style={{ padding: 'var(--space-4)', background: 'var(--bg-primary)', border: '1px solid var(--border-subtle)' }}>
             <div className="flex justify-between items-center" style={{ marginBottom: 'var(--space-3)' }}>
-              <span className="font-pixel text-muted" style={{ fontSize: '0.45rem' }}>TREASURY LIMIT</span>
+              <span className="font-pixel text-muted" style={{ fontSize: '0.45rem' }}>BUDGET LIMIT</span>
               <span className="font-mono" style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--accent)' }}>
                 ₹{(budget / 1000).toFixed(0)}k
               </span>
@@ -1100,7 +1100,7 @@ function DashboardPage() {
           </h4>
           {optimizedLedger.selected.length === 0 ? (
             <p className="text-secondary text-xs" style={{ fontStyle: 'italic' }}>
-              Treasury capacity too low to dispatch any quests. Increase treasury limit.
+              Budget limit too low to allocate any tickets. Increase budget limit.
             </p>
           ) : (
             <div className="rpg-scrollbar" style={{ maxHeight: '250px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 'var(--space-2)' }}>

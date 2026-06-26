@@ -194,7 +194,9 @@ const isTestEnv =
   process.execArgv.includes('--test') || 
   process.argv.some(arg => arg.includes('.test.js') || arg.includes('__tests__'));
 
-if (config.firebaseProjectId && !isTestEnv) {
+const useMock = isTestEnv || config.useMockFirestore;
+
+if (config.firebaseProjectId && !useMock) {
   // Real Firebase Admin SDK — lazy-imported so devs without credentials
   // never hit a missing-module error.
   try {
@@ -221,6 +223,8 @@ if (config.firebaseProjectId && !isTestEnv) {
 } else {
   if (isTestEnv) {
     console.log('[Firebase] Test environment detected — using in-memory mock Firestore for tests');
+  } else if (config.useMockFirestore) {
+    console.log('[Firebase] USE_MOCK_FIRESTORE is true — forcing in-memory mock Firestore');
   } else {
     console.log('[Firebase] No credentials found — using in-memory mock Firestore');
   }
