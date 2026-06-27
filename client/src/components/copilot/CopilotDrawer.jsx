@@ -3,6 +3,44 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../../hooks/AuthContext';
 import { sendCopilotMessage } from '../../services/api';
 
+function parseMarkdown(text) {
+  if (!text) return '';
+  
+  // 1. Escape HTML to prevent XSS
+  let html = text
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;');
+
+  // 2. Bold headers or sections
+  html = html.replace(/\*\*(.*?)\*\*/g, '<strong style="color: var(--ink-primary); font-weight: 600;">$1</strong>');
+
+  // 3. Quest links (opens in a new tab to preserve Copilot drawer context!)
+  html = html.replace(/\[Quest\s+#([\w-]+)\]/g, '<a href="/ticket/$1" target="_blank" rel="noopener noreferrer" style="color: var(--accent); text-decoration: underline; font-family: monospace; font-weight: bold;">[Quest #$1]</a>');
+
+  // 4. Inline code
+  html = html.replace(/`(.*?)`/g, '<code style="background: rgba(255,255,255,0.06); padding: 2px 6px; font-family: monospace; color: var(--accent); font-size: 0.9em;">$1</code>');
+
+  // 5. Headings
+  html = html.replace(/^###\s+(.*)$/gm, '<h4 style="margin: 12px 0 6px; color: var(--accent); font-family: monospace; font-size: 0.8rem;">$1</h4>');
+  html = html.replace(/^##\s+(.*)$/gm, '<h3 style="margin: 14px 0 8px; color: var(--accent); font-family: monospace; font-size: 0.9rem;">$1</h3>');
+  html = html.replace(/^#\s+(.*)$/gm, '<h2 style="margin: 16px 0 10px; color: var(--accent); font-family: monospace; font-size: 1rem;">$1</h2>');
+
+  // 6. Numbered lists
+  html = html.replace(/^\s*(\d+)\.\s+(.*)$/gm, '<div style="margin-left: 8px; margin-bottom: 6px; display: flex; gap: 8px; align-items: flex-start;"><span style="color: var(--accent); font-family: monospace; flex-shrink: 0;">$1.</span><span>$2</span></div>');
+
+  // 7. Bullet lists
+  html = html.replace(/^\s*[-*]\s+(.*)$/gm, '<div style="margin-left: 8px; margin-bottom: 4px; display: flex; gap: 8px; align-items: flex-start;"><span style="color: var(--accent); flex-shrink: 0;">▪</span><span>$1</span></div>');
+
+  // 8. Newlines to breaks
+  html = html.replace(/\n/g, '<br />');
+
+  // 9. Clean up duplicate linebreaks after block tags
+  html = html.replace(/(<\/div>|<\/h2>|<\/h3>|<\/h4>)<br \/>/g, '$1');
+
+  return html;
+}
+
 function CopilotDrawer() {
   const { isAuthenticated } = useAuth();
   const [isOpen, setIsOpen] = useState(false);
@@ -233,12 +271,10 @@ function CopilotDrawer() {
                         fontSize: '0.72rem',
                         lineHeight: 1.5,
                         color: isModel ? 'var(--ink-secondary)' : 'var(--ink-primary)',
-                        whiteSpace: 'pre-wrap',
                         textAlign: 'left'
                       }}
-                    >
-                      {m.content}
-                    </div>
+                      dangerouslySetInnerHTML={{ __html: parseMarkdown(m.content) }}
+                    />
                   </div>
                 );
               })}
