@@ -87,6 +87,7 @@ function Navbar({ isConnected }) {
   const [isOpen, setIsOpen] = useState(false);
   const [hoveredSlot, setHoveredSlot] = useState(null);
   const navigate = useNavigate();
+  const location = useLocation();
 
   const toggleOpen = () => setIsOpen(prev => !prev);
 
@@ -293,14 +294,35 @@ function Navbar({ isConnected }) {
                 overflow: 'visible'
               }}
             >
-              {/* Outer decorative ring */}
-              <div style={{
-                position: 'absolute',
-                inset: '20px',
-                border: '2px dashed oklch(0.35 0.03 50)',
-                borderRadius: '50%',
-                pointerEvents: 'none'
-              }} />
+               {/* Outer decorative ring orbit & connector lines */}
+              <svg style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', pointerEvents: 'none', zIndex: 1 }}>
+                <circle
+                  cx="160"
+                  cy="160"
+                  r={radius}
+                  fill="none"
+                  stroke="oklch(0.25 0.02 50)"
+                  strokeWidth="2"
+                  strokeDasharray="6 6"
+                />
+                {slots.map((slot, index) => {
+                  const coord = coords[index];
+                  const isHovered = hoveredSlot?.name === slot.name;
+                  return (
+                    <line
+                      key={slot.name}
+                      x1="160"
+                      y1="160"
+                      x2={160 + coord.x}
+                      y2={160 + coord.y}
+                      stroke={isHovered ? 'var(--accent)' : 'oklch(0.25 0.02 50)'}
+                      strokeWidth={isHovered ? '3' : '1.5'}
+                      strokeDasharray={isHovered ? 'none' : '4 4'}
+                      style={{ transition: 'all 0.15s ease' }}
+                    />
+                  );
+                })}
+              </svg>
 
               {/* Center Display HUD (100px x 100px) */}
               <div 
@@ -382,6 +404,23 @@ function Navbar({ isConnected }) {
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* Mobile Bottom RPG Hotbar */}
+      <div className="mobile-rpg-hotbar">
+        {slots.slice(0, 6).map((slot) => {
+          const isActive = location.pathname === slot.path;
+          return (
+            <button
+              key={slot.name}
+              onClick={() => handleNav(slot.path, slot.name)}
+              className={`hotbar-item font-pixel ${isActive ? 'active' : ''}`}
+            >
+              <span>{slot.icon}</span>
+              <span>{slot.name.toUpperCase()}</span>
+            </button>
+          );
+        })}
+      </div>
     </>
   );
 }

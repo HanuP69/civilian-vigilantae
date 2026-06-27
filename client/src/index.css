@@ -2507,3 +2507,69 @@ tr:hover td { background: var(--bg-surface); }
   color: var(--accent) !important;
 }
 
+/* Mobile Bottom RPG Hotbar Navigation Bar */
+.mobile-rpg-hotbar {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  .mobile-rpg-hotbar {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 60px;
+    background: oklch(0.12 0.01 260 / 0.95);
+    border-top: 4px double var(--border);
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    z-index: 1200;
+    padding: 0 8px;
+    box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.6);
+  }
+  
+  /* Ensure main view bottom padding handles hotbar height */
+  .app-main {
+    padding-bottom: 80px !important;
+  }
+}
+
+.hotbar-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: none;
+  color: var(--ink-muted);
+  cursor: pointer;
+  padding: 4px;
+  gap: 2px;
+  transition: all var(--transition-fast);
+  flex: 1;
+}
+
+.hotbar-item span:first-child {
+  font-size: 1.15rem;
+  transition: transform 0.15s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.hotbar-item span:last-child {
+  font-family: var(--font-pixel);
+  font-size: 7px;
+  letter-spacing: 0.5px;
+  color: var(--ink-muted);
+}
+
+.hotbar-item:hover span:first-child,
+.hotbar-item.active span:first-child {
+  transform: scale(1.25) translateY(-3px);
+  filter: drop-shadow(0 0 5px var(--accent));
+}
+
+.hotbar-item:hover span:last-child,
+.hotbar-item.active span:last-child {
+  color: var(--accent);
+}
+
