@@ -48,73 +48,62 @@ function SentinelSprite({ scale = 3, flip = false, celebrating = false }) {
       className="sentinel-sprite"
       style={{
         imageRendering: 'pixelated',
+        transform: flip ? 'scaleX(-1)' : 'scaleX(1)',
+        transformOrigin: 'center bottom',
       }}
       animate={bobAnim}
       transition={bobTransition}
     >
       <svg
-        width={12 * s}
-        height={16 * s}
-        viewBox="0 0 12 16"
+        width={16 * s}
+        height={12 * s}
+        viewBox="0 0 16 12"
         fill="none"
         xmlns="http://www.w3.org/2000/svg"
-        style={{ 
-          imageRendering: 'pixelated',
-          transform: flip ? 'scaleX(-1) rotate(90deg)' : 'scaleX(1) rotate(90deg)',
-          transformOrigin: 'center center'
-        }}
+        style={{ imageRendering: 'pixelated' }}
       >
-        {/* === EARS === */}
-        {/* Left ear */}
-        <rect x={2 * p} y={1 * p} width={2 * p} height={2 * p} fill={colors.fur} />
-        <rect x={3 * p} y={2 * p} width={1 * p} height={1 * p} fill={colors.pink} />
-        {/* Right ear */}
-        <rect x={8 * p} y={1 * p} width={2 * p} height={2 * p} fill={colors.fur} />
-        <rect x={8 * p} y={2 * p} width={1 * p} height={1 * p} fill={colors.pink} />
-
-        {/* === HEAD === */}
-        <rect x={2 * p} y={3 * p} width={8 * p} height={4 * p} fill={colors.fur} />
-        <rect x={3 * p} y={3 * p} width={6 * p} height={3 * p} fill={colors.furLight} />
-        {/* Stripes */}
-        <rect x={5 * p} y={3 * p} width={2 * p} height={1 * p} fill={colors.furDark} />
-
-        {/* === CYBER GOGGLES (Visor) === */}
-        <rect x={2 * p} y={4 * p} width={8 * p} height={2 * p} fill="#0d1f2d" />
-        <rect x={3 * p} y={4 * p} width={3 * p} height={1 * p} fill={colors.visor} />
-        <rect x={7 * p} y={4 * p} width={3 * p} height={1 * p} fill={colors.visor} />
-        <rect x={3 * p} y={4 * p} width={1 * p} height={1 * p} fill={colors.visorGlow} />
-        <rect x={7 * p} y={4 * p} width={1 * p} height={1 * p} fill={colors.visorGlow} />
-
-        {/* === SNOUT & NOSE === */}
-        <rect x={4 * p} y={6 * p} width={4 * p} height={1 * p} fill={colors.belly} />
-        <rect x={5 * p} y={5 * p} width={2 * p} height={1 * p} fill={colors.pink} />
-
-        {/* === COLLAR & BELL === */}
-        <rect x={3 * p} y={7 * p} width={6 * p} height={1 * p} fill={colors.collar} />
-        <rect x={5 * p} y={8 * p} width={2 * p} height={1 * p} fill={colors.bell} />
+        {/* === TAIL === */}
+        <rect x={1 * p} y={4 * p} width={2 * p} height={1 * p} fill={colors.fur} />
+        <rect x={0} y={5 * p} width={1 * p} height={3 * p} fill={colors.fur} />
+        <rect x={1 * p} y={7 * p} width={2 * p} height={1 * p} fill={colors.fur} />
 
         {/* === BODY === */}
-        <rect x={3 * p} y={9 * p} width={6 * p} height={4 * p} fill={colors.fur} />
-        <rect x={4 * p} y={9 * p} width={4 * p} height={4 * p} fill={colors.belly} />
+        <rect x={2 * p} y={5 * p} width={8 * p} height={5 * p} fill={colors.fur} />
+        <rect x={3 * p} y={8 * p} width={6 * p} height={2 * p} fill={colors.belly} />
 
-        {/* === TAIL === */}
-        <rect x={9 * p} y={11 * p} width={2 * p} height={1 * p} fill={colors.fur} />
-        <rect x={10 * p} y={9 * p} width={1 * p} height={2 * p} fill={colors.furDark} />
-        <rect x={9 * p} y={8 * p} width={2 * p} height={1 * p} fill={colors.fur} />
+        {/* === HEAD === */}
+        {/* Ears */}
+        <rect x={10 * p} y={1 * p} width={1 * p} height={2 * p} fill={colors.fur} />
+        <rect x={13 * p} y={1 * p} width={1 * p} height={2 * p} fill={colors.fur} />
+        <rect x={10 * p} y={2 * p} width={1 * p} height={1 * p} fill={colors.pink} />
+        <rect x={13 * p} y={2 * p} width={1 * p} height={1 * p} fill={colors.pink} />
+        {/* Head Base */}
+        <rect x={9 * p} y={3 * p} width={6 * p} height={4 * p} fill={colors.fur} />
+        {/* Visor */}
+        <rect x={11 * p} y={3 * p} width={5 * p} height={2 * p} fill="#0d1f2d" />
+        <rect x={12 * p} y={3 * p} width={4 * p} height={1 * p} fill={colors.visor} />
+        <rect x={14 * p} y={3 * p} width={1 * p} height={1 * p} fill={colors.visorGlow} />
+        {/* Snout & Nose */}
+        <rect x={12 * p} y={5 * p} width={4 * p} height={2 * p} fill={colors.belly} />
+        <rect x={15 * p} y={5 * p} width={1 * p} height={1 * p} fill={colors.pink} />
 
-        {/* === LEGS & PAWS === */}
-        {/* Front Left */}
-        <rect x={3 * p} y={13 * p} width={1 * p} height={2 * p} fill={colors.fur} />
-        <rect x={3 * p} y={15 * p} width={1 * p} height={1 * p} fill={colors.belly} />
-        {/* Front Right */}
-        <rect x={5 * p} y={13 * p} width={1 * p} height={2 * p} fill={colors.fur} />
-        <rect x={5 * p} y={15 * p} width={1 * p} height={1 * p} fill={colors.belly} />
-        {/* Back Left */}
-        <rect x={7 * p} y={13 * p} width={1 * p} height={2 * p} fill={colors.fur} />
-        <rect x={7 * p} y={15 * p} width={1 * p} height={1 * p} fill={colors.belly} />
-        {/* Back Right */}
-        <rect x={9 * p} y={13 * p} width={1 * p} height={2 * p} fill={colors.fur} />
-        <rect x={9 * p} y={15 * p} width={1 * p} height={1 * p} fill={colors.belly} />
+        {/* === COLLAR === */}
+        <rect x={9 * p} y={7 * p} width={3 * p} height={1 * p} fill={colors.collar} />
+        <rect x={10 * p} y={8 * p} width={1 * p} height={1 * p} fill={colors.bell} />
+
+        {/* === LEGS === */}
+        {/* Back Leg 1 */}
+        <rect x={3 * p} y={10 * p} width={1 * p} height={2 * p} fill={colors.fur} />
+        <rect x={3 * p} y={11 * p} width={2 * p} height={1 * p} fill={colors.belly} />
+        {/* Back Leg 2 */}
+        <rect x={5 * p} y={10 * p} width={1 * p} height={2 * p} fill={colors.furDark} />
+        <rect x={5 * p} y={11 * p} width={2 * p} height={1 * p} fill={colors.belly} />
+        {/* Front Leg 1 */}
+        <rect x={9 * p} y={10 * p} width={1 * p} height={2 * p} fill={colors.fur} />
+        <rect x={9 * p} y={11 * p} width={2 * p} height={1 * p} fill={colors.belly} />
+        {/* Front Leg 2 */}
+        <rect x={11 * p} y={10 * p} width={1 * p} height={2 * p} fill={colors.furDark} />
+        <rect x={11 * p} y={11 * p} width={2 * p} height={1 * p} fill={colors.belly} />
 
         {/* Celebration sparkles */}
         {celebrating && (

@@ -201,8 +201,7 @@ function ZigzagPath({ steps = [], isComplete }) {
       position: 'relative',
       background: 'linear-gradient(180deg, #4d822b 0%, #3e6d20 100%)', // grass green pasture
       border: '4px solid #284414', // dark forest green border
-      boxShadow: 'inset 0 4px 0 rgba(255,255,255,0.15), 0 8px 0 rgba(0,0,0,0.5), inset 2px 2px 10px rgba(0,0,0,0.4)',
-      overflow: 'hidden'
+      boxShadow: 'inset 0 4px 0 rgba(255,255,255,0.15), 0 8px 0 rgba(0,0,0,0.5), inset 2px 2px 10px rgba(0,0,0,0.4)'
     }}>
       {/* Maze Grid lines & paths in background */}
       <svg style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', pointerEvents: 'none' }}>
@@ -393,7 +392,7 @@ function ZigzagPath({ steps = [], isComplete }) {
         </AnimatePresence>
         <SentinelSprite
           scale={2.0} // Enlarged robot mascot
-          flip={currentIdx < 3} // Face left when walking on the top row (right-to-left)
+          flip={currentIdx >= 3} // Face left when walking on the bottom row (right-to-left)
           celebrating={isComplete}
         />
       </motion.div>
