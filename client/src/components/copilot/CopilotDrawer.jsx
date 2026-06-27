@@ -16,7 +16,7 @@ function parseMarkdown(text) {
   html = html.replace(/\*\*(.*?)\*\*/g, '<strong style="color: var(--ink-primary); font-weight: 600;">$1</strong>');
 
   // 3. Quest links (opens in a new tab to preserve Copilot drawer context!)
-  html = html.replace(/\[Quest\s+#([\w-]+)\]/g, '<a href="/ticket/$1" target="_blank" rel="noopener noreferrer" style="color: var(--accent); text-decoration: underline; font-family: monospace; font-weight: bold;">[Quest #$1]</a>');
+  html = html.replace(/\[(?:Quest|Report)\s+#([\w-]+)\]/g, '<a href="/ticket/$1" target="_blank" rel="noopener noreferrer" style="color: var(--accent); text-decoration: underline; font-family: monospace; font-weight: bold;">[Report #$1]</a>');
 
   // 4. Inline code
   html = html.replace(/`(.*?)`/g, '<code style="background: rgba(255,255,255,0.06); padding: 2px 6px; font-family: monospace; color: var(--accent); font-size: 0.9em;">$1</code>');
@@ -45,7 +45,7 @@ function CopilotDrawer() {
   const { isAuthenticated } = useAuth();
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState([
-    { role: 'model', content: 'Greetings, Marshall. I am the Lucknow Guild Sentinel Copilot. Ask me of the threat index, active swarms, or strategic allocations.' }
+    { role: 'model', content: 'Greetings, Citizen. I am the Sentinel Civic Copilot. Ask me about active reports, spatial recurrence risks, or municipal resource dispatches.' }
   ]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
@@ -118,9 +118,9 @@ function CopilotDrawer() {
       // Keep only last 10 messages for token context limit safety
       const history = messages.slice(-10);
       const res = await sendCopilotMessage(text, history);
-      setMessages(prev => [...prev, { role: 'model', content: res.text || 'The archives are silent, Marshall.' }]);
+      setMessages(prev => [...prev, { role: 'model', content: res.text || 'No active telemetry matches this query.' }]);
     } catch (err) {
-      setMessages(prev => [...prev, { role: 'model', content: `⚠️ FAILED TO CONSULT SPIRITS: ${err.message}` }]);
+      setMessages(prev => [...prev, { role: 'model', content: `⚠️ CO-PILOT ERROR: ${err.message}` }]);
     } finally {
       setLoading(false);
     }
@@ -164,7 +164,7 @@ function CopilotDrawer() {
           letterSpacing: '1px'
         }}
       >
-        🔮 COPILOT EXECUTIVE
+        🔮 CO-PILOT ASSISTANT
       </motion.button>
 
       {/* Slide-out Drawer Panel */}
@@ -207,9 +207,9 @@ function CopilotDrawer() {
             >
               <div>
                 <h3 className="font-pixel" style={{ fontSize: '11px', color: 'var(--accent)', margin: 0 }}>
-                  [ 🔮 SENTINEL COMMAND AI ]
+                  [ 🤖 SENTINEL CIVIC CO-PILOT ]
                 </h3>
-                <span className="font-pixel text-muted" style={{ fontSize: '9px', marginTop: '4px', display: 'block' }}>LUCKNOW GUILD CO-PILOT CONSOLE</span>
+                <span className="font-pixel text-muted" style={{ fontSize: '9px', marginTop: '4px', display: 'block' }}>LUCKNOW HYPERLOCAL CIVIC ASSISTANT</span>
               </div>
               <button 
                 onClick={() => setIsOpen(false)}
@@ -259,7 +259,7 @@ function CopilotDrawer() {
                         marginBottom: '4px' 
                       }}
                     >
-                      {isModel ? '🔮 SENTINEL CO-PILOT' : '🛡️ COMMANDER MARSHALL'}
+                      {isModel ? '🤖 SENTINEL AI' : '👤 CITIZEN SENSOR'}
                     </span>
                     <div 
                       className="rpg-panel"
@@ -280,7 +280,7 @@ function CopilotDrawer() {
               })}
               {loading && (
                 <div style={{ alignSelf: 'flex-start', display: 'flex', gap: '6px', alignItems: 'center' }}>
-                  <span className="font-pixel text-muted animate-pulse" style={{ fontSize: '10px' }}>Consulting spirits...</span>
+                  <span className="font-pixel text-muted animate-pulse" style={{ fontSize: '10px' }}>Analyzing civic database...</span>
                 </div>
               )}
               <div ref={chatEndRef} />
@@ -289,7 +289,7 @@ function CopilotDrawer() {
             {/* Suggestions Panel */}
             {messages.length <= 2 && (
               <div style={{ padding: '0 20px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                <span className="font-pixel text-muted" style={{ fontSize: '9px' }}>SUGGESTED DISPATCH QUERIES:</span>
+                <span className="font-pixel text-muted" style={{ fontSize: '9px' }}>SUGGESTED CO-PILOT QUESTIONS:</span>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
                   {suggestions.map((s, idx) => (
                     <button
