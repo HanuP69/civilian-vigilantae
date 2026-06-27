@@ -195,8 +195,7 @@ function ZigzagPath({ steps = [], isComplete }) {
 
   return (
     <div style={{
-      width: '100%',
-      maxWidth: '600px',
+      width: '600px',
       height: '300px',
       margin: '0 auto var(--space-6) auto',
       position: 'relative',
