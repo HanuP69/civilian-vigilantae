@@ -7,6 +7,39 @@ import { timeAgo, capitalize } from '../utils/formatters';
 import { useToast } from '../hooks/useToast.jsx';
 import AgentTrace from '../components/agent/AgentTrace';
 import { INFRASTRUCTURE_GRAPH } from '../utils/infrastructureGraph';
+import { MapContainer, TileLayer, Marker } from 'react-leaflet';
+import L from 'leaflet';
+import 'leaflet/dist/leaflet.css';
+
+const createTicketIcon = (category) => {
+  const getMarkerColor = (cat) => {
+    switch (cat) {
+      case 'pothole': return '#f59e0b';
+      case 'water_leak': return '#3b82f6';
+      case 'streetlight': return '#eab308';
+      case 'waste': return '#84cc16';
+      case 'road_damage': return '#ef4444';
+      case 'drainage': return '#06b6d4';
+      default: return '#6366f1';
+    }
+  };
+  
+  const color = getMarkerColor(category);
+  const svg = `
+    <svg width="24" height="30" viewBox="0 0 32 40" xmlns="http://www.w3.org/2000/svg">
+      <path d="M6 2h20v4h4v12h-4v8h-4v4h-4v8h-4v-8h-4v-4h-4v-8H2V6h4V2z" fill="#000000" />
+      <path d="M8 4h16v4h4v8h-4v8h-4v4h-4v8h-4v-8H8v-4H4V8h4V4z" fill="${color}" />
+      <rect x="14" y="10" width="4" height="12" fill="#ffffff" />
+      <rect x="14" y="24" width="4" height="4" fill="#ffffff" />
+    </svg>
+  `;
+  return L.divIcon({
+    className: 'custom-ticket-marker',
+    html: `<div style="display: flex; align-items: center; justify-content: center; width: 100%; height: 100%;">${svg}</div>`,
+    iconSize: [24, 30],
+    iconAnchor: [12, 30],
+  });
+};
 
 function TicketPage() {
   const { id } = useParams();
@@ -16,23 +49,7 @@ function TicketPage() {
   const [loading, setLoading] = useState(true);
   const [voting, setVoting] = useState(false);
   const [now, setNow] = useState(Date.now());
-  const [openPanels, setOpenPanels] = useState({
-    consensus: true,
-    rootCause: false,
-    infraCascade: false,
-    priority: false,
-    cluster: false,
-    sla: false,
-    dispatch: false,
-    trace: false,
-  });
-
-  const togglePanel = (panelKey) => {
-    setOpenPanels(prev => ({
-      ...prev,
-      [panelKey]: !prev[panelKey]
-    }));
-  };
+  const [activeExplainTab, setActiveExplainTab] = useState('diagnostics');
 
   useEffect(() => {
     setLoading(true);
@@ -285,31 +302,41 @@ function TicketPage() {
             </section>
           )}
 
-          {/* Phase 6: UI Explainability Panels */}
-          <div className="flex flex-col gap-6" style={{ marginTop: 'var(--space-6)', paddingTop: 'var(--space-6)', borderTop: '1px solid var(--border-subtle)' }}>
-                  {/* 1. Verification Consensus Outcome */}
-            <div className="panel rpg-panel" style={{ borderRadius: 0, padding: 0 }}>
-              <div 
-                onClick={() => togglePanel('consensus')}
-                style={{ 
-                  cursor: 'pointer', 
-                  padding: 'var(--space-3) var(--space-4)', 
-                  display: 'flex', 
-                  alignItems: 'center', 
-                  justifyContent: 'space-between',
-                  borderBottom: openPanels.consensus ? '1px solid var(--border-subtle)' : 'none',
-                  userSelect: 'none'
+          {/* Phase 6: UI Explainability Panels (Tabbed HUD Console) */}
+          <div style={{ display: 'flex', gap: '4px', borderBottom: '2px solid var(--border)', paddingBottom: 'var(--space-3)', marginTop: 'var(--space-6)', width: '100%', maxWidth: '720px' }}>
+            {[
+              { id: 'diagnostics', label: '🧠 AI DIAGNOSTICS' },
+              { id: 'telemetry', label: '📊 TELEMETRY' },
+              ...(ticket.dispatch_plan ? [{ id: 'dispatch', label: '📋 RESPONSE' }] : [])
+            ].map((tab) => (
+              <button
+                key={tab.id}
+                onClick={() => setActiveExplainTab(tab.id)}
+                className="font-pixel"
+                style={{
+                  padding: '8px 14px',
+                  fontSize: '10px',
+                  border: '1px solid var(--border)',
+                  borderRadius: 0,
+                  background: activeExplainTab === tab.id ? 'var(--accent)' : 'var(--bg-surface)',
+                  color: activeExplainTab === tab.id ? '#000' : 'var(--ink-secondary)',
+                  cursor: 'pointer',
+                  fontWeight: activeExplainTab === tab.id ? 800 : 400
                 }}
               >
-                <h3 className="section-title font-pixel" style={{ fontSize: '0.65rem', color: 'var(--success)', margin: 0 }}>
-                  [ ✅ VERIFICATION CONSENSUS OUTCOME ]
-                </h3>
-                <span className="font-pixel text-muted" style={{ fontSize: '0.65rem', color: 'var(--success)' }}>
-                  {openPanels.consensus ? '▾' : '▸'}
-                </span>
-              </div>
-              {openPanels.consensus && (
-                <div style={{ padding: 'var(--space-5)' }}>
+                {tab.label}
+              </button>
+            ))}
+          </div>
+
+          <div className="flex flex-col gap-6" style={{ marginTop: 'var(--space-4)', width: '100%', maxWidth: '720px' }}>
+            {activeExplainTab === 'diagnostics' && (
+              <>
+                {/* 1. Verification Consensus Outcome */}
+                <div className="panel rpg-panel" style={{ borderRadius: 0 }}>
+                  <h3 className="section-title font-pixel" style={{ fontSize: '0.65rem', color: 'var(--success)', marginBottom: 'var(--space-3)' }}>
+                    [ ✅ VERIFICATION CONSENSUS OUTCOME ]
+                  </h3>
                   <div className="flex items-center gap-4" style={{ marginBottom: 'var(--space-2)' }}>
                     <span className="font-pixel" style={{ fontSize: '1.25rem', color: 'var(--success)', lineHeight: 1 }}>
                       {displayScore}%
@@ -325,33 +352,13 @@ function TicketPage() {
                     {displayExplanation}
                   </p>
                 </div>
-              )}
-            </div>
 
-            {/* Root Cause Diagnosis */}
-            {ticket.root_cause && (
-              <div className="panel rpg-panel" style={{ borderRadius: 0, padding: 0 }}>
-                <div 
-                  onClick={() => togglePanel('rootCause')}
-                  style={{ 
-                    cursor: 'pointer', 
-                    padding: 'var(--space-3) var(--space-4)', 
-                    display: 'flex', 
-                    alignItems: 'center', 
-                    justifyContent: 'space-between',
-                    borderBottom: openPanels.rootCause ? '1px solid var(--border-subtle)' : 'none',
-                    userSelect: 'none'
-                  }}
-                >
-                  <h3 className="section-title font-pixel" style={{ fontSize: '0.65rem', color: 'var(--accent)', margin: 0 }}>
-                    [ 🧠 ROOT CAUSE DIAGNOSIS ]
-                  </h3>
-                  <span className="font-pixel text-muted" style={{ fontSize: '0.65rem', color: 'var(--accent)' }}>
-                    {openPanels.rootCause ? '▾' : '▸'}
-                  </span>
-                </div>
-                {openPanels.rootCause && (
-                  <div style={{ padding: 'var(--space-5)' }}>
+                {/* Root Cause Diagnosis */}
+                {ticket.root_cause && (
+                  <div className="panel rpg-panel" style={{ borderRadius: 0 }}>
+                    <h3 className="section-title font-pixel" style={{ fontSize: '0.65rem', color: 'var(--accent)', marginBottom: 'var(--space-3)' }}>
+                      [ 🧠 ROOT CAUSE DIAGNOSIS ]
+                    </h3>
                     <div className="flex items-center gap-4" style={{ marginBottom: 'var(--space-2)' }}>
                       <span className="font-pixel text-sm" style={{ color: 'var(--accent)', display: 'block' }}>
                         Probable Cause: {ticket.root_cause.cause}
@@ -365,36 +372,16 @@ function TicketPage() {
                     </p>
                   </div>
                 )}
-              </div>
-            )}
 
-            {/* Municipal Asset Impact Cascades */}
-            {ticket.category && INFRASTRUCTURE_GRAPH[ticket.category] && (
-              (() => {
-                const graphNode = INFRASTRUCTURE_GRAPH[ticket.category];
-                return (
-                  <div className="panel rpg-panel" style={{ borderRadius: 0, padding: 0 }}>
-                    <div 
-                      onClick={() => togglePanel('infraCascade')}
-                      style={{ 
-                        cursor: 'pointer', 
-                        padding: 'var(--space-3) var(--space-4)', 
-                        display: 'flex', 
-                        alignItems: 'center', 
-                        justifyContent: 'space-between',
-                        borderBottom: openPanels.infraCascade ? '1px solid var(--border-subtle)' : 'none',
-                        userSelect: 'none'
-                      }}
-                    >
-                      <h3 className="section-title font-pixel" style={{ fontSize: '0.65rem', color: 'var(--accent)', margin: 0 }}>
-                        [ 🕸️ INFRASTRUCTURE IMPACT CASCADE ]
-                      </h3>
-                      <span className="font-pixel text-muted" style={{ fontSize: '0.65rem', color: 'var(--accent)' }}>
-                        {openPanels.infraCascade ? '▾' : '▸'}
-                      </span>
-                    </div>
-                    {openPanels.infraCascade && (
-                      <div style={{ padding: 'var(--space-5)' }}>
+                {/* Municipal Asset Impact Cascades */}
+                {ticket.category && INFRASTRUCTURE_GRAPH[ticket.category] && (
+                  (() => {
+                    const graphNode = INFRASTRUCTURE_GRAPH[ticket.category];
+                    return (
+                      <div className="panel rpg-panel" style={{ borderRadius: 0 }}>
+                        <h3 className="section-title font-pixel" style={{ fontSize: '0.65rem', color: 'var(--accent)', marginBottom: 'var(--space-4)' }}>
+                          [ 🕸️ INFRASTRUCTURE IMPACT CASCADE ]
+                        </h3>
                         <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)', position: 'relative' }}>
                           {[
                             { label: 'CIVIC CATEGORY', val: capitalize(ticket.category), icon: graphNode.icon || '📌', color: 'var(--ink-primary)' },
@@ -441,35 +428,19 @@ function TicketPage() {
                           ))}
                         </div>
                       </div>
-                    )}
-                  </div>
-                );
-              })()
+                    );
+                  })()
+                )}
+              </>
             )}
 
-            {/* 2. Why This Priority? */}
-            <div className="panel rpg-panel" style={{ borderRadius: 0, padding: 0 }}>
-              <div 
-                onClick={() => togglePanel('priority')}
-                style={{ 
-                  cursor: 'pointer', 
-                  padding: 'var(--space-3) var(--space-4)', 
-                  display: 'flex', 
-                  alignItems: 'center', 
-                  justifyContent: 'space-between',
-                  borderBottom: openPanels.priority ? '1px solid var(--border-subtle)' : 'none',
-                  userSelect: 'none'
-                }}
-              >
-                <h3 className="section-title font-pixel" style={{ fontSize: '0.65rem', color: 'var(--warning)', margin: 0 }}>
-                  [ ⚖️ WHY THIS PRIORITY? ]
-                </h3>
-                <span className="font-pixel text-muted" style={{ fontSize: '0.65rem', color: 'var(--warning)' }}>
-                  {openPanels.priority ? '▾' : '▸'}
-                </span>
-              </div>
-              {openPanels.priority && (
-                <div style={{ padding: 'var(--space-5)' }}>
+            {activeExplainTab === 'telemetry' && (
+              <>
+                {/* 2. Why This Priority? */}
+                <div className="panel rpg-panel" style={{ borderRadius: 0 }}>
+                  <h3 className="section-title font-pixel" style={{ fontSize: '0.65rem', color: 'var(--warning)', marginBottom: 'var(--space-3)' }}>
+                    [ ⚖️ WHY THIS PRIORITY? ]
+                  </h3>
                   <p className="text-secondary text-sm" style={{ lineHeight: 1.6, marginBottom: 'var(--space-4)' }}>
                     {ticket.priority_explanation || 'Priority calculations loading.'}
                   </p>
@@ -488,32 +459,12 @@ function TicketPage() {
                     </div>
                   )}
                 </div>
-              )}
-            </div>
 
-            {/* 3. Cluster Evidence */}
-            <div className="panel rpg-panel" style={{ borderRadius: 0, padding: 0 }}>
-              <div 
-                onClick={() => togglePanel('cluster')}
-                style={{ 
-                  cursor: 'pointer', 
-                  padding: 'var(--space-3) var(--space-4)', 
-                  display: 'flex', 
-                  alignItems: 'center', 
-                  justifyContent: 'space-between',
-                  borderBottom: openPanels.cluster ? '1px solid var(--border-subtle)' : 'none',
-                  userSelect: 'none'
-                }}
-              >
-                <h3 className="section-title font-pixel" style={{ fontSize: '0.65rem', color: 'var(--accent)', margin: 0 }}>
-                  [ 🗺️ CLUSTER EVIDENCE ]
-                </h3>
-                <span className="font-pixel text-muted" style={{ fontSize: '0.65rem', color: 'var(--accent)' }}>
-                  {openPanels.cluster ? '▾' : '▸'}
-                </span>
-              </div>
-              {openPanels.cluster && (
-                <div style={{ padding: 'var(--space-5)' }}>
+                {/* 3. Cluster Evidence */}
+                <div className="panel rpg-panel" style={{ borderRadius: 0 }}>
+                  <h3 className="section-title font-pixel" style={{ fontSize: '0.65rem', color: 'var(--accent)', marginBottom: 'var(--space-3)' }}>
+                    [ 🗺️ CLUSTER EVIDENCE ]
+                  </h3>
                   <p className="text-secondary text-sm" style={{ lineHeight: 1.6, marginBottom: 'var(--space-3)' }}>
                     {ticket.cluster_explanation || 'Duplicate detection summary details loading.'}
                   </p>
@@ -529,32 +480,12 @@ function TicketPage() {
                     </div>
                   )}
                 </div>
-              )}
-            </div>
 
-            {/* 4. SLA Risk */}
-            <div className="panel rpg-panel" style={{ borderRadius: 0, padding: 0 }}>
-              <div 
-                onClick={() => togglePanel('sla')}
-                style={{ 
-                  cursor: 'pointer', 
-                  padding: 'var(--space-3) var(--space-4)', 
-                  display: 'flex', 
-                  alignItems: 'center', 
-                  justifyContent: 'space-between',
-                  borderBottom: openPanels.sla ? '1px solid var(--border-subtle)' : 'none',
-                  userSelect: 'none'
-                }}
-              >
-                <h3 className="section-title font-pixel" style={{ fontSize: '0.65rem', color: 'var(--error)', margin: 0 }}>
-                  [ 🔮 SLA BREACH RISK FORECAST ]
-                </h3>
-                <span className="font-pixel text-muted" style={{ fontSize: '0.65rem', color: 'var(--error)' }}>
-                  {openPanels.sla ? '▾' : '▸'}
-                </span>
-              </div>
-              {openPanels.sla && (
-                <div style={{ padding: 'var(--space-5)' }}>
+                {/* 4. SLA Risk */}
+                <div className="panel rpg-panel" style={{ borderRadius: 0 }}>
+                  <h3 className="section-title font-pixel" style={{ fontSize: '0.65rem', color: 'var(--error)', marginBottom: 'var(--space-3)' }}>
+                    [ 🔮 SLA BREACH RISK FORECAST ]
+                  </h3>
                   <div className="flex items-center gap-4" style={{ marginBottom: 'var(--space-2)' }}>
                     <span className="font-pixel" style={{ fontSize: '1.25rem', color: 'var(--error)', lineHeight: 1 }}>
                       {ticket.sla_risk_score != null ? `${ticket.sla_risk_score}%` : '0%'}
@@ -572,55 +503,35 @@ function TicketPage() {
                     </div>
                   )}
                 </div>
-              )}
-            </div>
+              </>
+            )}
 
-            {/* 5. Response Plan */}
-            {ticket.dispatch_plan && (
-              <div className="panel rpg-panel" style={{ borderRadius: 0, padding: 0 }}>
-                <div 
-                  onClick={() => togglePanel('dispatch')}
-                  style={{ 
-                    cursor: 'pointer', 
-                    padding: 'var(--space-3) var(--space-4)', 
-                    display: 'flex', 
-                    alignItems: 'center', 
-                    justifyContent: 'space-between',
-                    borderBottom: openPanels.dispatch ? '1px solid var(--border-subtle)' : 'none',
-                    userSelect: 'none'
-                  }}
-                >
-                  <h3 className="section-title font-pixel" style={{ fontSize: '0.65rem', color: 'var(--success)', margin: 0 }}>
-                    [ 📋 RESPONSE PLAN ]
-                  </h3>
-                  <span className="font-pixel text-muted" style={{ fontSize: '0.65rem', color: 'var(--success)' }}>
-                    {openPanels.dispatch ? '▾' : '▸'}
-                  </span>
-                </div>
-                {openPanels.dispatch && (
-                  <div style={{ padding: 'var(--space-5)' }}>
-                    <p className="text-secondary text-sm" style={{ lineHeight: 1.6, marginBottom: 'var(--space-4)' }}>
-                      {ticket.dispatch_plan.explanation}
-                    </p>
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: 'var(--space-3)' }}>
-                      <div style={{ padding: 'var(--space-2)', border: '1px solid var(--border-subtle)', background: 'var(--bg-primary)' }}>
-                        <span className="font-pixel block text-muted" style={{ fontSize: '0.35rem' }}>CREW SIZE</span>
-                        <span className="font-pixel text-sm" style={{ color: 'var(--accent)' }}>{ticket.dispatch_plan.crew_size} Staff</span>
-                      </div>
-                      <div style={{ padding: 'var(--space-2)', border: '1px solid var(--border-subtle)', background: 'var(--bg-primary)' }}>
-                        <span className="font-pixel block text-muted" style={{ fontSize: '0.35rem' }}>ESTIMATED COST</span>
-                        <span className="font-pixel text-sm" style={{ color: 'var(--success)' }}>₹{ticket.dispatch_plan.estimated_cost}</span>
-                      </div>
-                      <div style={{ padding: 'var(--space-2)', border: '1px solid var(--border-subtle)', background: 'var(--bg-primary)' }}>
-                        <span className="font-pixel block text-muted" style={{ fontSize: '0.35rem' }}>ESTIMATED ETA</span>
-                        <span className="font-pixel text-sm" style={{ color: 'var(--accent)' }}>{ticket.dispatch_plan.eta}</span>
-                      </div>
-                    </div>
-                    <div style={{ marginTop: 'var(--space-3)', fontSize: '0.65rem' }} className="font-mono text-muted">
-                      <strong>Supplies:</strong> {ticket.dispatch_plan.materials?.join(', ')}
-                    </div>
+            {activeExplainTab === 'dispatch' && ticket.dispatch_plan && (
+              /* 5. Resolution Plan */
+              <div className="panel rpg-panel" style={{ borderRadius: 0 }}>
+                <h3 className="section-title font-pixel" style={{ fontSize: '0.65rem', color: 'var(--success)', marginBottom: 'var(--space-3)' }}>
+                  [ 📋 RESPONSE PLAN ]
+                </h3>
+                <p className="text-secondary text-sm" style={{ lineHeight: 1.6, marginBottom: 'var(--space-4)' }}>
+                  {ticket.dispatch_plan.explanation}
+                </p>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: 'var(--space-3)' }}>
+                  <div style={{ padding: 'var(--space-2)', border: '1px solid var(--border-subtle)', background: 'var(--bg-primary)' }}>
+                    <span className="font-pixel block text-muted" style={{ fontSize: '0.35rem' }}>CREW SIZE</span>
+                    <span className="font-pixel text-sm" style={{ color: 'var(--accent)' }}>{ticket.dispatch_plan.crew_size} Staff</span>
                   </div>
-                )}
+                  <div style={{ padding: 'var(--space-2)', border: '1px solid var(--border-subtle)', background: 'var(--bg-primary)' }}>
+                    <span className="font-pixel block text-muted" style={{ fontSize: '0.35rem' }}>ESTIMATED COST</span>
+                    <span className="font-pixel text-sm" style={{ color: 'var(--success)' }}>₹{ticket.dispatch_plan.estimated_cost}</span>
+                  </div>
+                  <div style={{ padding: 'var(--space-2)', border: '1px solid var(--border-subtle)', background: 'var(--bg-primary)' }}>
+                    <span className="font-pixel block text-muted" style={{ fontSize: '0.35rem' }}>ESTIMATED ETA</span>
+                    <span className="font-pixel text-sm" style={{ color: 'var(--accent)' }}>{ticket.dispatch_plan.eta}</span>
+                  </div>
+                </div>
+                <div style={{ marginTop: 'var(--space-3)', fontSize: '0.65rem' }} className="font-mono text-muted">
+                  <strong>Supplies:</strong> {ticket.dispatch_plan.materials?.join(', ')}
+                </div>
               </div>
             )}
 
@@ -628,29 +539,8 @@ function TicketPage() {
 
           {ticket.agent_trace && ticket.agent_trace.length > 0 && (
             <section style={{ marginTop: 'var(--space-6)', paddingTop: 'var(--space-6)', borderTop: '1px solid var(--border-subtle)' }}>
-              <div 
-                onClick={() => togglePanel('trace')}
-                style={{ 
-                  cursor: 'pointer', 
-                  display: 'flex', 
-                  alignItems: 'center', 
-                  justifyContent: 'space-between',
-                  userSelect: 'none',
-                  marginBottom: openPanels.trace ? 'var(--space-4)' : 0
-                }}
-              >
-                <h3 className="section-title font-pixel" style={{ fontSize: '0.65rem', color: 'var(--accent)', margin: 0 }}>
-                  [ 🧠 AI EXPLAINABILITY PROCESS ]
-                </h3>
-                <span className="font-pixel text-muted" style={{ fontSize: '0.65rem', color: 'var(--accent)' }}>
-                  {openPanels.trace ? '▾' : '▸'}
-                </span>
-              </div>
-              {openPanels.trace && (
-                <div style={{ marginTop: 'var(--space-4)' }}>
-                  <AgentTrace trace={ticket.agent_trace} />
-                </div>
-              )}
+              <h3 className="section-title font-pixel" style={{ fontSize: '0.65rem', color: 'var(--accent)' }}>[ 🧠 AI EXPLAINABILITY PROCESS ]</h3>
+              <AgentTrace trace={ticket.agent_trace} />
             </section>
           )}
 
@@ -676,46 +566,7 @@ function TicketPage() {
 
         <div className="flex flex-col gap-6">
 
-          {ticket.priority_score != null && !isNaN(ticket.priority_score) && (
-            <div className="panel rpg-panel" style={{ borderColor: 'var(--accent-muted)', borderRadius: 0 }}>
-              <h4 className="label font-pixel" style={{ fontSize: '10px', marginBottom: 'var(--space-2)' }}>PRIORITY RATING</h4>
-              <div className="flex items-end justify-between" style={{ marginBottom: 'var(--space-3)' }}>
-                <span className="font-pixel" style={{ fontSize: '1.25rem', lineHeight: 1, color: ticket.priority_score > 70 ? 'var(--error)' : 'var(--accent)' }}>
-                  {Math.round(ticket.priority_score)}
-                </span>
-                <span className="font-pixel text-secondary" style={{ fontSize: '10px', paddingBottom: '4px' }}>
-                  {ticket.priority_score > 70 ? '🔴 CRITICAL' : ticket.priority_score > 40 ? '🟡 MODERATE' : '🟢 LOW'}
-                </span>
-              </div>
-              <div className="priority-bar" style={{ height: '3px', borderRadius: 0 }}>
-                <div
-                  className="priority-bar-fill"
-                  style={{
-                    width: `${Math.round(ticket.priority_score)}%`,
-                    background: ticket.priority_score > 70 ? 'var(--error)' : ticket.priority_score > 40 ? 'var(--warning)' : 'var(--accent)',
-                    borderRadius: 0,
-                  }}
-                />
-              </div>
-            </div>
-          )}
-
-          {slaDeadline && (
-            <div className="panel rpg-panel" style={{ borderRadius: 0 }}>
-              <h4 className="label font-pixel" style={{ fontSize: '10px', marginBottom: 'var(--space-3)' }}>RESOLUTION DEADLINE</h4>
-              <div className="font-mono text-sm text-primary" style={{ marginBottom: 'var(--space-3)' }}>{slaDeadline.toLocaleString()}</div>
-              {slaRemaining != null && slaRemaining > 0 ? (
-                <span className="badge badge-outline font-pixel" style={{ color: 'var(--accent)', borderRadius: 0, fontSize: '10px', padding: '2px 4px' }}>
-                  {slaHours}H {slaMinutes}M REMAINING
-                </span>
-              ) : (
-                <span className="badge badge-outline font-pixel" style={{ color: 'var(--error)', borderRadius: 0, fontSize: '10px', padding: '2px 4px' }}>
-                  OVERDUE
-                </span>
-              )}
-            </div>
-          )}
-
+          {/* 1. Community Consensus Voting Block (Moved to Top) */}
           <div className="panel rpg-panel" style={{ borderRadius: 0 }}>
             <h4 className="label font-pixel" style={{ fontSize: '10px', marginBottom: 'var(--space-4)' }}>COMMUNITY CONSENSUS</h4>
             <div className="flex flex-col gap-3">
@@ -762,6 +613,74 @@ function TicketPage() {
               )}
             </div>
           </div>
+
+          {/* 2. Interactive Geolocation Minimap */}
+          {ticket.lat != null && ticket.lng != null && (
+            <div className="panel rpg-panel" style={{ borderRadius: 0, padding: 0, overflow: 'hidden', border: '1px solid var(--border)' }}>
+              <h4 className="label font-pixel" style={{ fontSize: '10px', padding: 'var(--space-3) var(--space-4)', marginBottom: 0, borderBottom: '1px solid var(--border-subtle)' }}>
+                🗺️ INCIDENT SITE LOCATION
+              </h4>
+              <div style={{ height: '220px', width: '100%', position: 'relative', zIndex: 1 }}>
+                <MapContainer
+                  center={[ticket.lat, ticket.lng]}
+                  zoom={14}
+                  zoomControl={false}
+                  style={{ height: '100%', width: '100%' }}
+                >
+                  <TileLayer
+                    url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
+                    attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                  />
+                  <Marker position={[ticket.lat, ticket.lng]} icon={createTicketIcon(ticket.category)} />
+                </MapContainer>
+              </div>
+              <div className="text-xs font-mono text-muted" style={{ padding: 'var(--space-2) var(--space-4)', background: 'var(--bg-primary)', fontSize: '0.65rem' }}>
+                📐 {ticket.lat.toFixed(5)}, {ticket.lng.toFixed(5)}
+              </div>
+            </div>
+          )}
+
+          {/* 3. Priority Rating Block */}
+          {ticket.priority_score != null && !isNaN(ticket.priority_score) && (
+            <div className="panel rpg-panel" style={{ borderColor: 'var(--accent-muted)', borderRadius: 0 }}>
+              <h4 className="label font-pixel" style={{ fontSize: '10px', marginBottom: 'var(--space-2)' }}>PRIORITY RATING</h4>
+              <div className="flex items-end justify-between" style={{ marginBottom: 'var(--space-3)' }}>
+                <span className="font-pixel" style={{ fontSize: '1.25rem', lineHeight: 1, color: ticket.priority_score > 70 ? 'var(--error)' : 'var(--accent)' }}>
+                  {Math.round(ticket.priority_score)}
+                </span>
+                <span className="font-pixel text-secondary" style={{ fontSize: '10px', paddingBottom: '4px' }}>
+                  {ticket.priority_score > 70 ? '🔴 CRITICAL' : ticket.priority_score > 40 ? '🟡 MODERATE' : '🟢 LOW'}
+                </span>
+              </div>
+              <div className="priority-bar" style={{ height: '3px', borderRadius: 0 }}>
+                <div
+                  className="priority-bar-fill"
+                  style={{
+                    width: `${Math.round(ticket.priority_score)}%`,
+                    background: ticket.priority_score > 70 ? 'var(--error)' : ticket.priority_score > 40 ? 'var(--warning)' : 'var(--accent)',
+                    borderRadius: 0,
+                  }}
+                />
+              </div>
+            </div>
+          )}
+
+          {/* 4. Resolution Deadline Block */}
+          {slaDeadline && (
+            <div className="panel rpg-panel" style={{ borderRadius: 0 }}>
+              <h4 className="label font-pixel" style={{ fontSize: '10px', marginBottom: 'var(--space-3)' }}>RESOLUTION DEADLINE</h4>
+              <div className="font-mono text-sm text-primary" style={{ marginBottom: 'var(--space-3)' }}>{slaDeadline.toLocaleString()}</div>
+              {slaRemaining != null && slaRemaining > 0 ? (
+                <span className="badge badge-outline font-pixel" style={{ color: 'var(--accent)', borderRadius: 0, fontSize: '10px', padding: '2px 4px' }}>
+                  {slaHours}H {slaMinutes}M REMAINING
+                </span>
+              ) : (
+                <span className="badge badge-outline font-pixel" style={{ color: 'var(--error)', borderRadius: 0, fontSize: '10px', padding: '2px 4px' }}>
+                  OVERDUE
+                </span>
+              )}
+            </div>
+          )}
 
         </div>
       </div>

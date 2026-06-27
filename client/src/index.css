@@ -2240,3 +2240,29 @@ tr:hover td { background: var(--bg-surface); }
     grid-template-columns: 1fr;
   }
 }
+
+/* Ticket Details Minimap Overrides */
+.custom-ticket-marker {
+  background: transparent !important;
+  border: none !important;
+}
+.custom-ticket-marker svg {
+  filter: drop-shadow(0 2px 5px rgba(0, 0, 0, 0.6));
+}
+.leaflet-container {
+  background: var(--bg-primary) !important;
+  font-family: var(--font-mono) !important;
+}
+.leaflet-bar {
+  border: 1px solid var(--border) !important;
+  border-radius: 0 !important;
+}
+.leaflet-bar a {
+  background-color: var(--bg-secondary) !important;
+  color: var(--ink-primary) !important;
+  border-bottom: 1px solid var(--border) !important;
+}
+.leaflet-bar a:hover {
+  background-color: var(--bg-elevated) !important;
+}
+
