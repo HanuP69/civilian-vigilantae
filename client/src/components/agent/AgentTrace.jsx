@@ -101,46 +101,46 @@ function AgentTrace({ trace = [] }) {
                   </span>
                   <div className="flex flex-col">
                     <div className="flex items-center gap-2 flex-wrap">
-                      <span className="text-sm font-semibold" style={{ color: 'var(--ink-primary)' }}>
+                      <span style={{ color: 'var(--ink-primary)', fontSize: '0.95rem', fontWeight: 600 }}>
                         {stepName || 'system_process'}
                       </span>
                       {stepName === 'record_verification' && step.output?.verification_score !== undefined && (
-                        <span style={{ fontSize: '0.55rem', color: 'var(--success)', border: '1px solid var(--success)', padding: '1px 3px', fontFamily: 'var(--font-mono)' }}>
+                        <span style={{ fontSize: '0.65rem', color: 'var(--success)', border: '1px solid var(--success)', padding: '1px 4px', fontFamily: 'var(--font-mono)' }}>
                           SCORE: {Math.round(step.output.verification_score)}%
                         </span>
                       )}
                       {stepName === 'compute_priority' && step.output?.priority_score !== undefined && (
-                        <span style={{ fontSize: '0.55rem', color: 'var(--warning)', border: '1px solid var(--warning)', padding: '1px 3px', fontFamily: 'var(--font-mono)' }}>
+                        <span style={{ fontSize: '0.65rem', color: 'var(--warning)', border: '1px solid var(--warning)', padding: '1px 4px', fontFamily: 'var(--font-mono)' }}>
                           PRIORITY: {Math.round(step.output.priority_score)}
                         </span>
                       )}
                       {stepName === 'check_sla_status' && step.output?.probability !== undefined && (
-                        <span style={{ fontSize: '0.55rem', color: 'var(--error)', border: '1px solid var(--error)', padding: '1px 3px', fontFamily: 'var(--font-mono)' }}>
+                        <span style={{ fontSize: '0.65rem', color: 'var(--error)', border: '1px solid var(--error)', padding: '1px 4px', fontFamily: 'var(--font-mono)' }}>
                           BREACH RISK: {Math.round(step.output.probability * 100)}%
                         </span>
                       )}
                       {stepName === 'classify_issue' && step.output?.confidence !== undefined && (
-                        <span style={{ fontSize: '0.55rem', color: 'var(--accent)', border: '1px solid var(--accent)', padding: '1px 3px', fontFamily: 'var(--font-mono)' }}>
+                        <span style={{ fontSize: '0.65rem', color: 'var(--accent)', border: '1px solid var(--accent)', padding: '1px 4px', fontFamily: 'var(--font-mono)' }}>
                           CONFIDENCE: {Math.round(step.output.confidence * 100)}%
                         </span>
                       )}
                     </div>
-                    <span className="text-xs" style={{ color: 'var(--ink-muted)', wordBreak: 'break-word', display: 'block' }}>
+                    <span style={{ color: 'var(--ink-muted)', wordBreak: 'break-word', display: 'block', fontSize: '0.85rem', marginTop: '2px' }}>
                       {step.reasoning || step.detail || step.result || 'Executing...'}
                     </span>
                   </div>
                 </div>
                 <div className="flex items-center gap-3">
                   {step.duration_ms != null && (
-                    <span className="text-xs" style={{ color: 'var(--accent)', opacity: 0.8 }}>{step.duration_ms}ms</span>
+                    <span style={{ color: 'var(--accent)', opacity: 0.8, fontSize: '0.8rem' }}>{step.duration_ms}ms</span>
                   )}
-                  <span aria-hidden="true" style={{ color: 'var(--ink-muted)', fontSize: '0.7rem' }}>
+                  <span aria-hidden="true" style={{ color: 'var(--ink-muted)', fontSize: '0.75rem' }}>
                     {isExpanded ? '▾' : '▸'}
                   </span>
                   <span
                     style={{
                       color: isError ? 'var(--error)' : isPending ? 'var(--warning)' : 'var(--success)',
-                      fontSize: '0.8rem',
+                      fontSize: '0.85rem',
                       fontWeight: 700
                     }}
                   >
@@ -159,13 +159,15 @@ function AgentTrace({ trace = [] }) {
                     style={{ overflow: 'hidden' }}
                   >
                     <div
-                      className="text-xs flex flex-col gap-2"
+                      className="flex flex-col gap-3 rpg-scrollbar"
                       style={{
                         background: 'var(--bg-primary)',
                         padding: 'var(--space-3)',
                         borderRadius: 0,
                         marginTop: 'var(--space-3)',
-                        border: '1px solid var(--border)'
+                        border: '1px solid var(--border)',
+                        maxHeight: '220px',
+                        overflowY: 'auto'
                       }}
                       onClick={(e) => e.stopPropagation()}
                     >
@@ -178,7 +180,7 @@ function AgentTrace({ trace = [] }) {
                       {step.input && Object.keys(step.input).length > 0 && (
                         <div>
                           <span className="font-semibold block mb-1" style={{ color: 'var(--accent)' }}>&gt; PAYLOAD_IN</span>
-                          <pre style={{ overflowX: 'auto', background: 'transparent', color: 'var(--ink-muted)', maxHeight: 300, overflowY: 'auto' }}>
+                          <pre className="rpg-scrollbar" style={{ overflowX: 'auto', background: 'transparent', color: 'var(--ink-muted)', maxHeight: 150, overflowY: 'auto', fontSize: '0.8rem' }}>
                             {JSON.stringify(step.input, null, 2)}
                           </pre>
                         </div>
@@ -186,7 +188,7 @@ function AgentTrace({ trace = [] }) {
                       {outputWithoutText && Object.keys(outputWithoutText).length > 0 && (
                         <div>
                           <span className="font-semibold block mb-1" style={{ color: 'var(--accent)' }}>&gt; PAYLOAD_OUT</span>
-                          <pre style={{ overflowX: 'auto', background: 'transparent', color: 'var(--ink-muted)', maxHeight: 300, overflowY: 'auto' }}>
+                          <pre className="rpg-scrollbar" style={{ overflowX: 'auto', background: 'transparent', color: 'var(--ink-muted)', maxHeight: 150, overflowY: 'auto', fontSize: '0.8rem' }}>
                             {JSON.stringify(outputWithoutText, null, 2)}
                           </pre>
                         </div>

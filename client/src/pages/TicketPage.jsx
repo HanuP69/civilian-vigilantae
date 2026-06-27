@@ -287,7 +287,7 @@ function TicketPage() {
               <div style={{ padding: '8px 12px', background: 'var(--bg-primary)', borderLeft: '3px solid var(--success)', marginBottom: '10px', fontSize: '0.8rem', color: 'var(--ink-secondary)' }}>
                 <strong>Consensus:</strong> Verified with {displayScore}% confidence, based on: AI analysis, citizen votes, and nearby duplication check.
               </div>
-              <p className="text-secondary text-xs" style={{ lineHeight: 1.6 }}>
+              <p className="text-secondary text-sm" style={{ lineHeight: 1.6 }}>
                 {displayExplanation}
               </p>
             </div>
@@ -306,7 +306,7 @@ function TicketPage() {
                     Confidence: {ticket.root_cause.confidence}%
                   </span>
                 </div>
-                <p className="text-secondary text-xs" style={{ lineHeight: 1.6 }}>
+                <p className="text-secondary text-sm" style={{ lineHeight: 1.6 }}>
                   {ticket.root_cause.explanation}
                 </p>
               </div>
@@ -376,7 +376,7 @@ function TicketPage() {
               <h3 className="section-title font-pixel" style={{ fontSize: '0.65rem', color: 'var(--warning)', marginBottom: 'var(--space-3)' }}>
                 [ ⚖️ WHY THIS PRIORITY? ]
               </h3>
-              <p className="text-secondary text-xs" style={{ lineHeight: 1.6, marginBottom: 'var(--space-4)' }}>
+              <p className="text-secondary text-sm" style={{ lineHeight: 1.6, marginBottom: 'var(--space-4)' }}>
                 {ticket.priority_explanation || 'Priority calculations loading.'}
               </p>
               {ticket.priority_detail && (
@@ -400,7 +400,7 @@ function TicketPage() {
               <h3 className="section-title font-pixel" style={{ fontSize: '0.65rem', color: 'var(--accent)', marginBottom: 'var(--space-3)' }}>
                 [ 🗺️ CLUSTER EVIDENCE ]
               </h3>
-              <p className="text-secondary text-xs" style={{ lineHeight: 1.6, marginBottom: 'var(--space-3)' }}>
+              <p className="text-secondary text-sm" style={{ lineHeight: 1.6, marginBottom: 'var(--space-3)' }}>
                 {ticket.cluster_explanation || 'Duplicate detection summary details loading.'}
               </p>
               {ticket.cluster_detail && ticket.cluster_detail.found && (
@@ -427,7 +427,7 @@ function TicketPage() {
                 </span>
                 <span className="text-xs text-muted">breach likelihood</span>
               </div>
-              <p className="text-secondary text-xs" style={{ lineHeight: 1.6, marginBottom: 'var(--space-3)' }}>
+              <p className="text-secondary text-sm" style={{ lineHeight: 1.6, marginBottom: 'var(--space-3)' }}>
                 {ticket.sla_risk_explanation || 'Weibull time-to-resolution forecasting loading.'}
               </p>
               {ticket.sla_params && (
@@ -445,7 +445,7 @@ function TicketPage() {
                 <h3 className="section-title font-pixel" style={{ fontSize: '0.65rem', color: 'var(--success)', marginBottom: 'var(--space-3)' }}>
                   [ 📋 RESPONSE PLAN ]
                 </h3>
-                <p className="text-secondary text-xs" style={{ lineHeight: 1.6, marginBottom: 'var(--space-4)' }}>
+                <p className="text-secondary text-sm" style={{ lineHeight: 1.6, marginBottom: 'var(--space-4)' }}>
                   {ticket.dispatch_plan.explanation}
                 </p>
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: 'var(--space-3)' }}>
