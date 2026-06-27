@@ -389,16 +389,36 @@ function Navbar({ isConnected }) {
 function AppContent() {
   const { isConnected } = useSSE();
 
+  const hour = new Date().getHours();
+  let timeClass = 'time-night';
+  if (hour >= 6 && hour < 17) {
+    timeClass = 'time-day';
+  } else if (hour >= 17 && hour < 19) {
+    timeClass = 'time-sunset';
+  }
+
   return (
     <div className="app-layout">
       {/* RPG Pixel Backdrop */}
       <div className="rpg-backdrop">
-        <div className="rpg-sky">
+        <div className={`rpg-sky ${timeClass}`}>
           {/* Twinkling Stars */}
           <div className="pixel-star star-1"></div>
           <div className="pixel-star star-2"></div>
           <div className="pixel-star star-3"></div>
           <div className="pixel-star star-4"></div>
+
+          {/* Sun / Moon based on time */}
+          {timeClass === 'time-night' ? (
+            <div className="pixel-moon"></div>
+          ) : (
+            <div className="pixel-sun"></div>
+          )}
+
+          {/* Floating Hot Air Balloon during day/sunset */}
+          {timeClass !== 'time-night' && (
+            <div className="pixel-balloon"></div>
+          )}
 
           {/* Floating Clouds */}
           <div className="pixel-cloud cloud-1"></div>
@@ -408,6 +428,11 @@ function AppContent() {
         
         {/* Horizon Landscape */}
         <div className="rpg-horizon"></div>
+
+        {/* Windmill with rotating sails */}
+        <div className="rpg-windmill"></div>
+        <div className="rpg-windmill-sails"></div>
+
         <div className="rpg-farmhouse"></div>
         <div className="rpg-fence"></div>
         
