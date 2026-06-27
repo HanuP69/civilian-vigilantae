@@ -65,8 +65,10 @@ async function updateVoterReputations(votes, newStatus) {
       const totalVotes = reportsVerified + reportsRejected;
       const accuracy = totalVotes > 0 ? (reportsVerified / totalVotes) : 1.0;
 
-      // Laplace smoothing: trust_score = (reportsVerified + 1) / (totalVotes + 2)
-      const trustScore = Math.round(((reportsVerified + 1) / (totalVotes + 2)) * 100) / 100;
+      // Laplace smoothing scaled by total action volume: trust_score = [(verified + 1)/(total + 2)] * min(actions/20, 1)
+      const laplaceTrust = (reportsVerified + 1) / (totalVotes + 2);
+      const totalActions = totalVotes + (userData.reports_submitted || 0);
+      const trustScore = Math.round(laplaceTrust * Math.min(totalActions / 20, 1) * 100) / 100;
 
       await userRef.update({
         reports_verified: reportsVerified,
@@ -161,6 +163,7 @@ export const toolHandlers = {
       severity: t.severity, reportCount: (t.child_reports?.length || 0) + 1,
       verificationUp: t.verification_up || 0, verificationDown: t.verification_down || 0,
       elapsedHours, slaHours, category: t.category,
+      description: t.description || '', createdAt: t.created_at,
     });
     await db.collection('tickets').doc(ticket_id).update({
       priority_score: result.score,
@@ -185,6 +188,8 @@ export const toolHandlers = {
       elapsedHours: 0,
       slaHours,
       category: category || 'other',
+      description: description || '',
+      createdAt: new Date().toISOString(),
     });
     const ticket = {
       id, title, description, category, severity, status: status || 'reported',
@@ -297,8 +302,9 @@ Respond with a JSON object:
               const verified = u.reports_verified || 0;
               const rejected = (u.reports_rejected || 0) + 2; // Penalize by adding 2 rejections
               const total = verified + rejected;
-              const trustScore = Math.round(((verified + 1) / (total + 2)) * 100) / 100;
-
+              const laplaceTrust = (verified + 1) / (total + 2);
+              const totalActions = total + (u.reports_submitted || 0);
+              const trustScore = Math.round(laplaceTrust * Math.min(totalActions / 20, 1) * 100) / 100;
               await userRef.update({
                 reports_rejected: rejected,
                 trust_score: trustScore,
@@ -401,6 +407,8 @@ Respond with a JSON object:
       elapsedHours,
       slaHours,
       category: t.category || 'other',
+      description: t.description || '',
+      createdAt: t.created_at,
     });
 
     const update = {
@@ -520,6 +528,7 @@ Respond with a JSON object:
       reportCount: (t.child_reports?.length || 0) + 1,
       verificationUp: t.verification_up || 0, verificationDown: t.verification_down || 0,
       elapsedHours, slaHours, category: t.category,
+      description: t.description || '', createdAt: t.created_at,
     });
     await db.collection('tickets').doc(ticket_id).update({
       status: 'in_progress', severity: nextSeverity, priority_score: score, updated_at: new Date().toISOString(),

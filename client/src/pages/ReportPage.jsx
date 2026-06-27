@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { AnimatePresence } from 'framer-motion';
-import { submitReport } from '../services/api';
+import { submitReport, fetchWithTimeout } from '../services/api';
 import { capitalize } from '../utils/formatters';
 import { useToast } from '../hooks/useToast.jsx';
 import { useAgentStream } from '../hooks/useAgentStream.js';
@@ -89,7 +89,7 @@ function ReportPage() {
         setLng(longitude);
         try {
           const mapsKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
-          const res = await fetch(
+          const res = await fetchWithTimeout(
             `https://maps.googleapis.com/maps/api/geocode/json?latlng=${latitude},${longitude}&key=${mapsKey}`,
             { headers: { 'Accept-Language': 'en' } }
           );

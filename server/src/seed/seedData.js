@@ -469,16 +469,22 @@ export function generateUsers() {
     const verifications_made = Math.floor(rand(0, 50));
     const accurate_verifications = Math.floor(rand(0, verifications_made));
     const reports_rejected = verifications_made - accurate_verifications;
+    const reports_submitted = Math.floor(rand(1, 30));
+
+    const totalActions = verifications_made + reports_submitted;
+    const laplaceTrust = (accurate_verifications + 1) / (verifications_made + 2);
+    const trust_score = Math.round(laplaceTrust * Math.min(totalActions / 20, 1) * 100) / 100;
 
     return {
       uid: `user-${i + 1}`, display_name: name,
       email: `${name.toLowerCase().replace(/\s/g, '.')}@example.com`,
       photo_url: null, xp, badges,
-      reports_submitted: Math.floor(rand(1, 30)),
+      reports_submitted,
       verifications_made,
       accurate_verifications,
       reports_verified: accurate_verifications,
       reports_rejected,
+      trust_score,
       joined_at: new Date(Date.now() - rand(30, 180) * 24 * 60 * 60 * 1000).toISOString(),
     };
   });

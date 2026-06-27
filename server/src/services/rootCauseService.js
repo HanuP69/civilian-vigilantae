@@ -15,7 +15,7 @@ export async function analyzeRootCause(category, reports) {
     return {
       cause: 'Isolated Incident',
       confidence: 100,
-      explanation: 'This report does not match any surrounding hotspot swarms, representing an isolated, localized event.',
+      explanation: 'This report does not match any surrounding hotspot clusters, representing an isolated, localized event.',
       evidence: { composition: 'Single report', temporal: 'N/A' }
     };
   }
@@ -155,14 +155,13 @@ export async function analyzeRootCause(category, reports) {
 
   const systemPrompt = `You are the City Command Center Root Cause Analysis Agent.
 You are given a list of citizen complaints and a set of mathematical/spatial EVIDENCE summaries.
-Your job is to explain the underlying root cause using the provided evidence, determining a probable cause and confidence.
+Your job is to explain the underlying root cause using the provided evidence.
 
 Respond ONLY with a valid JSON object matching the following schema. Do NOT include markdown code fence formatting or conversational text.
 
 Schema:
 {
   "cause": "Short Title of the Probable Cause (e.g. Main Pipe Fracture, Circuit Substation Fault, Sewer Line Blockage)",
-  "confidence": ${computedConfidence},
   "explanation": "A concise explanation (2-3 sentences) explaining how the evidence (temporal correlation, asset correlation, and recurrence risk) leads to this diagnosis."
 }`;
 
@@ -205,7 +204,7 @@ ${reportsSummary}
       drainage: { cause: 'Drainage Culvert Sewer Blockage', explanation: `Flooding indicates culvert blockages. Recurrence risk: ${evidenceSummary.recurrence}.` }
     };
     const fb = fallbacks[category] || {
-      cause: `${category.replace('_', ' ').toUpperCase()} Swarm`,
+      cause: `${category.replace('_', ' ').toUpperCase()} Cluster`,
       explanation: 'Clustered reports suggest localized infrastructure stress.'
     };
     return { ...fb, confidence: computedConfidence, evidence: evidenceSummary };

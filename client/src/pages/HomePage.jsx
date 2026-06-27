@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo, useRef } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { fetchTickets, fetchRecurrenceRisk } from '../services/api';
+import { fetchTickets, fetchRecurrenceRisk, fetchMissions } from '../services/api';
 import { useSSE } from '../hooks/useSSE';
 import { useToast } from '../hooks/useToast.jsx';
 import { CATEGORY_LABELS, CATEGORY_COLORS, WARD_LIST, WARD_CENTERS } from '../utils/constants';
@@ -82,9 +82,8 @@ function HomePage() {
   }, []);
 
   useEffect(() => {
-    fetch('/api/missions')
-      .then(res => res.json())
-      .then(data => setMissions(Array.isArray(data) ? data : []))
+    fetchMissions()
+      .then(data => setMissions(data))
       .catch(() => {});
   }, []);
 

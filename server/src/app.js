@@ -24,8 +24,13 @@ loadSeedData().then(async (result) => {
   } else {
     console.log('[Boot] Seed data unavailable; continuing with runtime state');
   }
-  await seedAssets();
-  await updateAllAssetsHealth();
+  
+  // Non-blocking background asset initialization
+  seedAssets()
+    .then(() => updateAllAssetsHealth())
+    .then(() => console.log('[Boot] Background asset seeding and health calculations complete.'))
+    .catch(err => console.error('[Boot] Background asset setup failed:', err.message));
+
   startScheduler();
 }).catch(err => console.warn('[Boot] Seed load skipped:', err.message));
 
@@ -37,11 +42,11 @@ loadSeedData().then(async (result) => {
 /** CORS — allow the configured frontend origin */
 app.use(cors({ origin: config.clientUrl, credentials: true }));
 
-/** Parse JSON bodies (limit raised to 100 MB for media uploads) */
-app.use(express.json({ limit: '100mb' }));
+/** Parse JSON bodies (limit reduced to 10MB for safety) */
+app.use(express.json({ limit: '10mb' }));
 
 /** Parse URL-encoded bodies */
-app.use(express.urlencoded({ extended: true, limit: '100mb' }));
+app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
 /** Serve static uploads */
 const uploadDir = path.join(process.cwd(), 'uploads');

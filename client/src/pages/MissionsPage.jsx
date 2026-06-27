@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
+import { fetchMissions } from '../services/api';
 
 const containerAnim = {
   hidden: { opacity: 0 },
@@ -18,10 +19,9 @@ function MissionsPage() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    fetch('/api/missions')
-      .then(res => res.json())
+    fetchMissions()
       .then(data => {
-        setMissions(Array.isArray(data) ? data : []);
+        setMissions(data);
         setLoading(false);
       })
       .catch(err => {

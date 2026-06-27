@@ -96,7 +96,7 @@ export async function processReport(reportData, onStep) {
 
     const { enrichReasoning } = await import('./enricher.js');
     const clusterReasoning = await enrichReasoning('find_cluster', ctx.clusterResult) || 
-      (found ? `Duplicate alert: matches existing incident swarm #${bestId}.` : 'No duplicate hotspots identified in proximity.');
+      (found ? `Duplicate alert: matches existing incident cluster #${bestId}.` : 'No duplicate hotspots identified in proximity.');
     completeCluster(ctx.clusterResult, clusterReasoning);
 
     if (found) {
@@ -184,6 +184,7 @@ export async function processReport(reportData, onStep) {
         slaHours,
         category: t.category || 'other',
         description: t.description || reportData.text,
+        createdAt: t.created_at,
       });
 
       transaction.update(ticketRef, {
@@ -255,6 +256,7 @@ export async function processReport(reportData, onStep) {
         slaHours,
         category: ctx.classificationResult.category || 'other',
         description: ctx.reportData.text,
+        createdAt: new Date().toISOString(),
       });
 
       const ticket = {
@@ -391,7 +393,7 @@ export async function processReport(reportData, onStep) {
     sla_risk_explanation: ctx.slaResult.explanation || 'SLA probability resolved.',
     sla_params: ctx.slaResult.localized_params || null,
     dispatch_plan: ctx.planResult,
-    cluster_explanation: ctx.clusterResult.found ? 'Swarms detected and resolved.' : 'No duplicate hotspots identified.',
+    cluster_explanation: ctx.clusterResult.found ? 'Clusters detected and resolved.' : 'No duplicate hotspots identified.',
     cluster_detail: ctx.clusterResult,
     root_cause: rootCauseResult,
   });

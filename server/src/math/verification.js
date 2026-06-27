@@ -6,8 +6,8 @@
 
 /**
  * Calculate the consolidated verification score.
- * Formula:
- *   Score = 40% AI confidence + 20% reporter trust + 20% nearby evidence + 20% community votes.
+ * Uses exact Bayesian updating in log-odds space:
+ *   Posterior Log-Odds = Prior Log-Odds (AI) + Reporter Trust Log-Odds + Proximity Density Log-Odds + Community Votes Log-Odds.
  *
  * @param {Object} params
  * @param {number} params.aiConfidence    - AI categorization confidence in [0, 1]

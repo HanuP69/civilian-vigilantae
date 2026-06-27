@@ -1,4 +1,5 @@
 import { createContext, useState, useEffect, useContext, useCallback } from 'react';
+import { fetchWithTimeout } from '../services/api';
 
 const AuthContext = createContext(null);
 
@@ -10,7 +11,7 @@ export function AuthProvider({ children }) {
   const fetchProfile = useCallback(async (authToken) => {
     if (!authToken) return null;
     try {
-      const res = await fetch(`/api/users/me?uid=${authToken}`, {
+      const res = await fetchWithTimeout(`/api/users/me?uid=${authToken}`, {
         headers: { 'Authorization': `Bearer ${authToken}` }
       });
       if (!res.ok) throw new Error('Failed to fetch profile');
@@ -43,7 +44,7 @@ export function AuthProvider({ children }) {
   const login = async (email, password) => {
     setLoading(true);
     try {
-      const res = await fetch('/api/users/login', {
+      const res = await fetchWithTimeout('/api/users/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password })
@@ -65,7 +66,7 @@ export function AuthProvider({ children }) {
   const register = async (email, password, displayName) => {
     setLoading(true);
     try {
-      const res = await fetch('/api/users/register', {
+      const res = await fetchWithTimeout('/api/users/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password, display_name: displayName })

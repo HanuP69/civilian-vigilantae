@@ -424,7 +424,7 @@ function TicketPage() {
                   </p>
                   {ticket.cluster_detail && ticket.cluster_detail.found && (
                     <div className="text-xs font-mono" style={{ padding: 'var(--space-3)', background: 'var(--bg-primary)', border: '1px solid var(--border-subtle)' }}>
-                      <div><strong>Cluster Match:</strong> Swarm ID #{ticket.cluster_detail.ticket_id}</div>
+                      <div><strong>Cluster Match:</strong> Cluster ID #{ticket.cluster_detail.ticket_id}</div>
                       <div><strong>Group Size:</strong> {ticket.cluster_detail.cluster_size} tickets</div>
                       {ticket.cluster_detail.neighbors && ticket.cluster_detail.neighbors.length > 0 && (
                         <div style={{ wordBreak: 'break-all', marginTop: '4px' }}>

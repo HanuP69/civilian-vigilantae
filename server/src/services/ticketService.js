@@ -92,7 +92,12 @@ export async function getDashboardStats() {
     const activeInWard = activeTickets.filter(t => t.ward === w);
     if (activeInWard.length > 0) {
       const avgPriority = activeInWard.reduce((s, t) => s + (t.priority_score || 0), 0) / activeInWard.length;
-      wardHealthScores[w] = Math.max(0, Math.round(100 - avgPriority));
+      const activeCount = activeInWard.length;
+      const verifiedCount = activeInWard.filter(t => t.status === 'verified').length;
+      const recurrenceCount = activeInWard.filter(t => t.cluster_id !== null || (t.child_reports && t.child_reports.length > 0)).length;
+      
+      const deduction = (avgPriority * 0.5) + (activeCount * 2) + (verifiedCount * 1.5) + (recurrenceCount * 2);
+      wardHealthScores[w] = Math.max(0, Math.min(100, Math.round(100 - deduction)));
     } else {
       wardHealthScores[w] = 100;
     }

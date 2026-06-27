@@ -168,11 +168,13 @@ test('weighted community votes update verification, priority, and voter reputati
   // 2. Create users with different trust scores (seeded with 10 actions to satisfy threshold)
   await db.collection('users').doc('voter_high').set({
     uid: 'voter_high', display_name: 'Noble Ranger', trust_score: 0.9,
-    reports_verified: 10, reports_rejected: 0, verification_accuracy: 1.0, xp: 0
+    reports_verified: 10, reports_rejected: 0, verification_accuracy: 1.0, xp: 0,
+    reports_submitted: 10
   });
   await db.collection('users').doc('voter_low').set({
     uid: 'voter_low', display_name: 'Novice Squire', trust_score: 0.1,
-    reports_verified: 10, reports_rejected: 0, verification_accuracy: 1.0, xp: 0
+    reports_verified: 10, reports_rejected: 0, verification_accuracy: 1.0, xp: 0,
+    reports_submitted: 10
   });
 
   // 3. noble ranger upvotes

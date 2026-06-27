@@ -135,9 +135,9 @@ router.post('/chat', requireAuth, async (req, res) => {
       knapsackOutput = `
 [KNAPSACK SOLVER EXECUTION RESULT]
 Target Budget Capacity: ₹${detectedBudget.toLocaleString()}
-Optimal Selected Quests: ${optimal.selected.length} resolved
+Optimal Selected Missions: ${optimal.selected.length} resolved
 Optimal Selection list:
-${optimal.selected.map(t => `- [Quest #${t.id}] Title: "${t.title}", Ward: ${t.ward}, Cost: ₹${(t.estimated_cost || 4000).toLocaleString()}, Priority Score: ${t.priority_score}`).join('\n')}
+${optimal.selected.map(t => `- [Mission #${t.id}] Title: "${t.title}", Ward: ${t.ward}, Cost: ₹${(t.estimated_cost || 4000).toLocaleString()}, Priority Score: ${t.priority_score}`).join('\n')}
 Total Optimal Cost: ₹${optimal.totalCost.toLocaleString()}
 Total Priority Utility gained: +${optimal.totalValue} points
 `;
@@ -145,7 +145,7 @@ Total Priority Utility gained: +${optimal.totalValue} points
 
     // 5. Compile summaries
     const activeSummary = activeTickets.map((t) => 
-      `- [Quest #${t.id}] Title: "${t.title}", Ward: ${t.ward}, Category: ${t.category}, Priority: ${t.priority_score}, Severity: ${t.severity}${t.root_cause ? `, Root Cause: ${t.root_cause.cause} (${t.root_cause.confidence}% confidence)` : ''}`
+      `- [Mission #${t.id}] Title: "${t.title}", Ward: ${t.ward}, Category: ${t.category}, Priority: ${t.priority_score}, Severity: ${t.severity}${t.root_cause ? `, Root Cause: ${t.root_cause.cause} (${t.root_cause.confidence}% confidence)` : ''}`
     ).join('\n');
 
     const recurrenceSummary = risks.filter(r => r.probability > 0.4).map(r => 
@@ -160,7 +160,7 @@ You are fully conversant in the advanced engineering and mathematical literature
 1. **Bayesian Consensus Verification**: Citizen sensor upvotes and downvotes are weighted by their reputation trust, combined with AI vision model classification priors, to resolve a posterior probability verification score.
 2. **Weibull Recurrence Risk**: Analysis of resolved events is fitted using a Weibull distribution MLE to calculate the municipal hazard rate and forecast recurrence probability within the next 14 days.
 3. **DBSCAN Geospatial Clustering**: Incoming duplicate reports are grouped within 50-meter geofenced boundaries using composite DBSCAN spatial metrics.
-4. **Bayesian Priority Index**: Threat priorities are dynamically calculated based on ward population density, average severity, and spatial recurrence history.
+4. **Dynamic Priority Index**: Threat priorities are dynamically calculated based on ward population density, average severity, and spatial recurrence history.
 5. **Multi-Agent Orchestration**: Citizen logs are processed asynchronously via a background team of specialized agents (Intake, Classification, Verification, and Dispatch).
 
 **RULES OF COMMAND**:

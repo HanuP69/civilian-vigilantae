@@ -15,7 +15,7 @@ export const ClusteringAgent = {
 
     ctx.clusterResult = clusterResult;
 
-    const reasoning = await enrichReasoning('find_cluster', clusterResult) || (clusterResult.found ? `Duplicate alert: matches existing incident swarm #${clusterResult.ticket_id}.` : 'No duplicate hotspots identified in proximity.');
+    const reasoning = await enrichReasoning('find_cluster', clusterResult) || (clusterResult.found ? `Duplicate alert: matches existing incident cluster #${clusterResult.ticket_id}.` : 'No duplicate hotspots identified in proximity.');
     completeCluster(clusterResult, reasoning);
   }
 };

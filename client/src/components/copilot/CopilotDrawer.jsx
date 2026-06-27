@@ -85,7 +85,7 @@ function CopilotDrawer() {
           let addressStr = 'Lucknow, India';
           try {
             const mapsKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
-            const res = await fetch(
+            const res = await fetchWithTimeout(
               `https://maps.googleapis.com/maps/api/geocode/json?latlng=${latitude},${longitude}&key=${mapsKey}`,
               { headers: { 'Accept-Language': 'en' } }
             );

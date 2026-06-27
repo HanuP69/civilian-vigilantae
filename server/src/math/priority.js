@@ -11,19 +11,13 @@
  */
 
 // ─── Weights ─────────────────────────────────────────────────────────
-/** @type {number} Severity visual weight */
-const W1 = 0.20;
-/** @type {number} Report volume weight */
-const W2 = 0.25;
-/** @type {number} Community verification weight */
-const W3 = 0.20;
-/** @type {number} SLA urgency weight */
-const W4 = 0.20;
-/** @type {number} Safety criticality weight */
-const W5 = 0.15;
+const W1 = 0.20; // Severity visual weight
+const W2 = 0.25; // Report volume weight
+const W3 = 0.20; // Community verification weight
+const W4 = 0.20; // SLA urgency weight
+const W5 = 0.15; // Safety criticality weight
 
 // ─── Severity mapping ───────────────────────────────────────────────
-/** @type {Record<string, number>} */
 const SEVERITY_MAP = {
   critical: 1.0,
   high: 0.75,
@@ -31,41 +25,72 @@ const SEVERITY_MAP = {
   low: 0.25,
 };
 
-// ─── Safety-critical categories ──────────────────────────────────────
-/** @type {Set<string>} Categories that pose direct public safety risks. */
-const SAFETY_CRITICAL = new Set(['water_leak', 'drainage', 'road_damage']);
+/**
+ * Check safety-critical status using a dynamic Risk Matrix.
+ * Factors in Category Base Risk, Night-time environment, and description keywords.
+ *
+ * @param {string} category
+ * @param {string} description
+ * @param {string|Date|null} createdAt
+ * @returns {number} Safety coefficient (0.5, 0.75, or 1.0)
+ */
+export function computeSafetyRisk(category, description = '', createdAt = null) {
+  // 1. Base Category Risk
+  let risk = 0.3;
+  const cat = (category || '').toLowerCase();
+  if (['water_leak', 'drainage', 'road_damage'].includes(cat)) {
+    risk = 0.8;
+  } else if (['streetlight', 'electricity', 'electrical'].includes(cat)) {
+    risk = 0.5;
+  } else if (cat === 'pothole') {
+    risk = 0.6;
+  }
 
-const SAFETY_KEYWORDS = [
-  'wire', 'electric', 'shock', 'hazard', 'danger', 'fire', 
-  'flood', 'injury', 'accident', 'emergency', 'cave-in', 'open manhole', 'exposed'
-];
+  // 2. Night multiplier (Hour < 6 or >= 18)
+  const date = createdAt ? new Date(createdAt) : new Date();
+  const hour = date.getHours();
+  const isNight = hour < 6 || hour >= 18;
+
+  if (isNight) {
+    // Streetlight failures and electricity grids are extremely risky at night
+    if (['streetlight', 'electricity', 'electrical'].includes(cat)) {
+      risk += 0.4;
+    }
+  }
+
+  // 3. Keyword safety boost
+  const text = (description || '').toLowerCase();
+  const SAFETY_KEYWORDS = [
+    'wire', 'electric', 'shock', 'hazard', 'danger', 'fire', 
+    'flood', 'injury', 'accident', 'emergency', 'cave-in', 'open manhole', 'exposed', 'dark', 'night', 'blindspot'
+  ];
+  const matchCount = SAFETY_KEYWORDS.filter(kw => text.includes(kw)).length;
+  if (matchCount >= 2) {
+    risk += 0.3;
+  } else if (matchCount === 1) {
+    risk += 0.15;
+  }
+
+  // Clamp risk score to [0, 1]
+  const finalRisk = Math.min(Math.max(risk, 0), 1);
+
+  // Return risk coefficient thresholds
+  if (finalRisk >= 0.7) return 1.0;
+  if (finalRisk >= 0.4) return 0.75;
+  return 0.5;
+}
 
 /**
  * Check if an issue is safety-critical based on its category or description text.
+ * Backwards compatibility wrapper.
  *
  * @param {string} category
  * @param {string} description
  * @returns {boolean}
  */
 export function checkIfSafetyCritical(category, description = '') {
-  if (SAFETY_CRITICAL.has(category)) return true;
-
-  const text = (description || '').toLowerCase();
-  const matchCount = SAFETY_KEYWORDS.filter(kw => text.includes(kw)).length;
-  return matchCount >= 2;
+  return computeSafetyRisk(category, description) >= 0.7;
 }
-
-/**
- * @typedef {Object} PriorityInput
- * @property {string} severity         — one of 'critical' | 'high' | 'medium' | 'low'
- * @property {number} reportCount      — total number of reports for this issue / cluster
- * @property {number} verificationUp   — upvotes / confirmations
- * @property {number} verificationDown — downvotes / refutations
- * @property {number} elapsedHours     — hours since the issue was first reported
- * @property {number} slaHours         — target resolution time in hours
- * @property {string} category         — issue category (e.g. 'pothole')
- * @property {string} [description]    — optional report description text
- */
 
 /**
  * Compute a priority score for a civic issue.
@@ -81,6 +106,7 @@ export function computePriority({
   slaHours,
   category,
   description,
+  createdAt,
 }) {
   // ── 1. Severity (S_vis) ──────────────────────────────────────────
   const sVis = SEVERITY_MAP[severity] ?? SEVERITY_MAP.medium;
@@ -102,8 +128,8 @@ export function computePriority({
   const sla = slaHours > 0 ? slaHours : 1;
   const slaRatio = Math.min(elapsed / sla, 1);
 
-  // ── 5. Safety criticality (dynamic) ─────────────────────────────
-  const rSafety = checkIfSafetyCritical(category, description) ? 1.0 : 0.5;
+  // ── 5. Safety criticality (dynamic Risk Matrix) ─────────────────
+  const rSafety = computeSafetyRisk(category, description, createdAt);
 
   // ── Combine ─────────────────────────────────────────────────────
   const raw =
@@ -119,7 +145,7 @@ export function computePriority({
 /**
  * Compute priority score along with its individual weighted components.
  *
- * @param {PriorityInput} input
+ * @param {Object} input
  * @returns {{ score: number, breakdown: { severity: number, volume: number, verification: number, sla_urgency: number, safety: number } }}
  */
 export function computePriorityWithBreakdown(input) {
@@ -139,7 +165,8 @@ export function computePriorityWithBreakdown(input) {
   const sla = input.slaHours > 0 ? input.slaHours : 1;
   const slaRatio = Math.min(elapsed / sla, 1);
 
-  const rSafety = checkIfSafetyCritical(input.category, input.description) ? 1.0 : 0.5;
+  // Dynamic Risk Matrix
+  const rSafety = computeSafetyRisk(input.category, input.description, input.createdAt);
 
   // Compute continuous score first (matches computePriority exactly)
   const raw = W1 * sVis + W2 * nReports + W3 * vRatio + W4 * slaRatio + W5 * rSafety;
