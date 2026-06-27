@@ -109,6 +109,78 @@ function getArcPath(cx, cy, rOut, rIn, startAngleDeg, endAngleDeg) {
   ].join(' ');
 }
 
+const MapIcon = () => (
+  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="square">
+    <path d="M4 4h16v16H4z" />
+    <path d="M6 6h12v12H6z" stroke="var(--accent)" strokeWidth="1.5" />
+    <rect x="8" y="8" width="4" height="4" fill="currentColor" />
+    <rect x="12" y="10" width="3" height="3" fill="currentColor" />
+    <rect x="7" y="14" width="4" height="2" fill="currentColor" />
+  </svg>
+);
+
+const CompassIcon = () => (
+  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="square">
+    <circle cx="12" cy="12" r="9" />
+    <circle cx="12" cy="12" r="6" stroke="var(--accent)" strokeWidth="1" />
+    <path d="M12 5l2 7-2 1-2-1z" fill="currentColor" />
+    <path d="M12 19l-2-7 2-1 2 1z" fill="none" stroke="currentColor" />
+  </svg>
+);
+
+const StatsIcon = () => (
+  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="square">
+    <path d="M3 21h18M3 3v18" />
+    <rect x="6" y="13" width="3" height="5" fill="var(--accent)" stroke="currentColor" strokeWidth="1.5" />
+    <rect x="11" y="9" width="3" height="9" fill="currentColor" stroke="currentColor" strokeWidth="1.5" />
+    <rect x="16" y="5" width="3" height="13" fill="var(--accent)" stroke="currentColor" strokeWidth="1.5" />
+  </svg>
+);
+
+const TrophyIcon = () => (
+  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="square">
+    <path d="M6 4h12v7c0 3-2 5-6 5s-6-2-6-5V4z" fill="var(--accent)" stroke="currentColor" strokeWidth="1.5" />
+    <path d="M12 16v3M8 19h8" />
+    <path d="M4 6H2v3c0 2 2 3 4 3M20 6h2v3c0 2-2 3-4 3" />
+  </svg>
+);
+
+const ProfileIcon = () => (
+  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="square">
+    <path d="M6 12V8a6 6 0 0 1 12 0v4H6z" />
+    <rect x="8" y="9" width="8" height="2" fill="var(--accent)" />
+    <path d="M6 12h12v5a3 3 0 0 1-6 3 3 3 0 0 1-6-3v-5z" />
+    <path d="M12 5V2h3" stroke="var(--accent)" strokeWidth="1.5" />
+  </svg>
+);
+
+const ReportIcon = () => (
+  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="square">
+    <path d="M7 14l9 4V6l-9 4H4v4h3z" />
+    <path d="M19 8c1 1.5 1 2.5 0 4" stroke="var(--accent)" strokeWidth="1.5" />
+    <path d="M22 6c2 2.5 2 3.5 0 6" stroke="var(--accent)" strokeWidth="1.5" />
+    <path d="M9 14v3h2v-3" />
+  </svg>
+);
+
+const AuthIcon = ({ isOut }) => (
+  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="square">
+    {isOut ? (
+      <>
+        <path d="M4 20V4h11v16H4z" />
+        <path d="M15 8h4v10h-4" stroke="var(--accent)" strokeWidth="1.5" />
+        <path d="M12 12h8M17 9l3 3-3 3" stroke="var(--accent)" strokeWidth="1.5" />
+      </>
+    ) : (
+      <>
+        <circle cx="7" cy="12" r="4" stroke="var(--accent)" strokeWidth="2" />
+        <path d="M11 12h10" />
+        <path d="M18 12v3M21 12v3M15 12v2" stroke="var(--accent)" strokeWidth="1.5" />
+      </>
+    )}
+  </svg>
+);
+
 function RpgTriggerIcon({ isOpen }) {
   if (isOpen) {
     return (
@@ -151,22 +223,22 @@ function Navbar({ isConnected }) {
   };
 
   const slots = [
-    { name: 'Map', path: '/', icon: '🗺️', label: 'COMMUNITY MAP', desc: 'Browse active community issues' },
-    { name: 'Missions', path: '/missions', icon: '🧭', label: 'MISSIONS', desc: 'Verify issues & earn rewards' },
-    { name: 'Ledger', path: '/dashboard', icon: '📊', label: 'CITY DASHBOARD', desc: 'SLA & issue statistics' },
-    { name: 'Leaders', path: '/leaderboard', icon: '🏆', label: 'HERO LEAGUE', desc: 'Citizen contribution rankings' },
+    { name: 'Map', path: '/', icon: <MapIcon />, label: 'COMMUNITY MAP', desc: 'Browse active community issues' },
+    { name: 'Missions', path: '/missions', icon: <CompassIcon />, label: 'MISSIONS', desc: 'Verify issues & earn rewards' },
+    { name: 'Ledger', path: '/dashboard', icon: <StatsIcon />, label: 'CITY DASHBOARD', desc: 'SLA & issue statistics' },
+    { name: 'Leaders', path: '/leaderboard', icon: <TrophyIcon />, label: 'HERO LEAGUE', desc: 'Citizen contribution rankings' },
     { 
       name: 'Profile', 
       path: isAuthenticated ? '/profile' : '/login', 
-      icon: '👤', 
+      icon: <ProfileIcon />, 
       label: 'HERO DASHBOARD', 
       desc: isAuthenticated ? 'Your impact & achievements' : 'Authenticate console' 
     },
-    { name: 'Report', path: '/report', icon: '📢', label: 'REPORT ISSUE', desc: 'Log new community issue' },
+    { name: 'Report', path: '/report', icon: <ReportIcon />, label: 'REPORT ISSUE', desc: 'Log new community issue' },
     {
       name: isAuthenticated ? 'Sign Out' : 'Sign In',
       path: isAuthenticated ? '/logout' : '/login',
-      icon: isAuthenticated ? '🚪' : '🔑',
+      icon: <AuthIcon isOut={isAuthenticated} />,
       label: isAuthenticated ? 'DISMISS HERO' : 'HERO ACCESS',
       desc: isAuthenticated ? 'Sign out of console' : 'Authenticate console'
     }
