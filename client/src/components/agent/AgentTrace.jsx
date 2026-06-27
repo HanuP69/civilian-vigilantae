@@ -36,6 +36,7 @@ const STEP_COLORS = {
 
 function AgentTrace({ trace = [] }) {
   const [expandedIndex, setExpandedIndex] = useState(null);
+  const [showHistory, setShowHistory] = useState(false);
 
   if (!trace || trace.length === 0) {
     return (
@@ -44,6 +45,21 @@ function AgentTrace({ trace = [] }) {
       </div>
     );
   }
+
+  // Deduplicate trace to find the latest run of each step type
+  const latestSteps = [];
+  const seenSteps = new Set();
+  for (let i = trace.length - 1; i >= 0; i--) {
+    const step = trace[i];
+    const stepName = step.step || step.name;
+    if (stepName && !seenSteps.has(stepName)) {
+      seenSteps.add(stepName);
+      latestSteps.unshift(step);
+    }
+  }
+
+  const stepsToRender = showHistory ? trace : latestSteps;
+  const hasDuplicates = trace.length !== latestSteps.length;
 
   const toggleExpand = (index) => {
     setExpandedIndex(expandedIndex === index ? null : index);
@@ -58,8 +74,30 @@ function AgentTrace({ trace = [] }) {
 
   return (
     <div className="flex flex-col gap-3" style={{ fontFamily: 'var(--font-mono)', maxWidth: '720px' }}>
+      {hasDuplicates && (
+        <div className="flex justify-end" style={{ marginBottom: '4px' }}>
+          <button
+            onClick={() => {
+              setShowHistory(!showHistory);
+              setExpandedIndex(null);
+            }}
+            className="font-pixel"
+            style={{
+              background: 'transparent',
+              border: '1px solid var(--border-subtle)',
+              color: 'var(--accent)',
+              fontSize: '8px',
+              padding: '4px 8px',
+              cursor: 'pointer',
+              userSelect: 'none'
+            }}
+          >
+            {showHistory ? '[ 📑 SHOW CURRENT PIPELINE ]' : '[ 🕒 SHOW FULL AUDIT HISTORY ]'}
+          </button>
+        </div>
+      )}
       <AnimatePresence>
-        {trace.map((step, idx) => {
+        {stepsToRender.map((step, idx) => {
           const isExpanded = expandedIndex === idx;
           const stepName = step.step || step.name;
           const icon = STEP_ICONS[stepName] || 'SYS';
