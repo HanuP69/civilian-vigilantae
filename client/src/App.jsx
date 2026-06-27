@@ -14,7 +14,6 @@ import RegisterPage from './pages/RegisterPage';
 import ProfilePage from './pages/ProfilePage';
 import MissionsPage from './pages/MissionsPage';
 import CopilotDrawer from './components/copilot/CopilotDrawer';
-import { ErrorBoundary } from './components/ErrorBoundary';
 import './index.css';
 
 function NotFoundPage() {
@@ -629,15 +628,13 @@ function AppContent() {
 
 function App() {
   return (
-    <ErrorBoundary>
-      <ToastProvider>
-        <AuthProvider>
-          <BrowserRouter>
-            <AppContent />
-          </BrowserRouter>
-        </AuthProvider>
-      </ToastProvider>
-    </ErrorBoundary>
+    <ToastProvider>
+      <AuthProvider>
+        <BrowserRouter>
+          <AppContent />
+        </BrowserRouter>
+      </AuthProvider>
+    </ToastProvider>
   );
 }
 

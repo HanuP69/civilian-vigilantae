@@ -180,9 +180,10 @@ function ReportPage() {
     let res;
     try {
       res = await submitReport(formData);
-    } catch {
-      setResult({ error: 'Submission failed. Please check your connection and try again.' });
-      toast('Submission failed', 'error');
+    } catch (err) {
+      const errMsg = err.message || 'Submission failed. Please check your connection and try again.';
+      setResult({ error: errMsg });
+      toast(errMsg, 'error');
       setSubmitting(false);
       setActiveReportId(null);
       setTraceSteps([]);

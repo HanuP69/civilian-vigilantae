@@ -60,7 +60,7 @@ export async function submitReport(formData) {
     method: 'POST',
     headers: { 'Authorization': `Bearer ${userId}` },
     body: formData
-  });
+  }, 45000);
   const data = await handleResponse(res);
   return { ...data, report_id: reportId };
 }
