@@ -391,7 +391,7 @@ function ZigzagPath({ steps = [], isComplete }) {
           )}
         </AnimatePresence>
         <SentinelSprite
-          scale={2.0} // Enlarged robot mascot
+          scale={2.5} // Enlarged cat mascot
           flip={currentIdx >= 3} // Face left when walking on the bottom row (right-to-left)
           celebrating={isComplete}
         />

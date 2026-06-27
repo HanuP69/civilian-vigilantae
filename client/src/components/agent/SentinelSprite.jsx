@@ -48,7 +48,7 @@ function SentinelSprite({ scale = 3, flip = false, celebrating = false }) {
       className="sentinel-sprite"
       style={{
         imageRendering: 'pixelated',
-        transform: flip ? 'scaleX(-1) rotate(90deg)' : 'scaleX(1) rotate(90deg)',
+        transform: flip ? 'scaleX(-1) rotate(180deg)' : 'scaleX(1) rotate(180deg)',
         transformOrigin: 'center center',
       }}
       animate={bobAnim}
@@ -72,10 +72,15 @@ function SentinelSprite({ scale = 3, flip = false, celebrating = false }) {
         <rect x={2 * p} y={3 * p} width={8 * p} height={5 * p} fill={colors.fur} />
         <rect x={3 * p} y={3 * p} width={6 * p} height={4 * p} fill={colors.furLight} />
         
-        {/* === VISOR === */}
-        <rect x={2 * p} y={4 * p} width={8 * p} height={2 * p} fill="#0d1f2d" />
-        <rect x={3 * p} y={4 * p} width={6 * p} height={1 * p} fill={colors.visor} />
-        <rect x={3 * p} y={4 * p} width={2 * p} height={1 * p} fill={colors.visorGlow} />
+        {/* === EYES === */}
+        {/* Left Eye */}
+        <rect x={3 * p} y={4 * p} width={2 * p} height={2 * p} fill="#ffffff" />
+        <rect x={4 * p} y={4 * p} width={1 * p} height={2 * p} fill="#4caf50" />
+        <rect x={4 * p} y={5 * p} width={1 * p} height={1 * p} fill="#000000" />
+        {/* Right Eye */}
+        <rect x={7 * p} y={4 * p} width={2 * p} height={2 * p} fill="#ffffff" />
+        <rect x={7 * p} y={4 * p} width={1 * p} height={2 * p} fill="#4caf50" />
+        <rect x={7 * p} y={5 * p} width={1 * p} height={1 * p} fill="#000000" />
 
         {/* === SNOUT & NOSE === */}
         <rect x={4 * p} y={6 * p} width={4 * p} height={1 * p} fill={colors.belly} />
