@@ -36,6 +36,7 @@ const STEP_COLORS = {
 
 function AgentTrace({ trace = [] }) {
   const [currentIndex, setCurrentIndex] = useState(0);
+  const [selectedRunIndex, setSelectedRunIndex] = useState(0);
   const [isDetailOpen, setIsDetailOpen] = useState(true);
   const [showHistory, setShowHistory] = useState(false);
 
@@ -59,8 +60,34 @@ function AgentTrace({ trace = [] }) {
     }
   }
 
-  const stepsToRender = showHistory ? trace : latestSteps;
+  // Group full history trace steps into "Runs" based on timestamp proximity (threshold: 15 seconds)
+  const groupStepsIntoRuns = (steps) => {
+    if (!steps || steps.length === 0) return [];
+    // Sort chronologically just in case
+    const sorted = [...steps].sort((a, b) => new Date(a.timestamp || 0) - new Date(b.timestamp || 0));
+    
+    const runsList = [];
+    let currentRun = [sorted[0]];
+    
+    for (let i = 1; i < sorted.length; i++) {
+      const prevTime = new Date(sorted[i - 1].timestamp || 0).getTime();
+      const currTime = new Date(sorted[i].timestamp || 0).getTime();
+      
+      if (Math.abs(currTime - prevTime) < 15000) {
+        currentRun.push(sorted[i]);
+      } else {
+        runsList.push(currentRun);
+        currentRun = [sorted[i]];
+      }
+    }
+    runsList.push(currentRun);
+    return runsList;
+  };
+
+  const runs = groupStepsIntoRuns(trace);
   const hasDuplicates = trace.length !== latestSteps.length;
+
+  const stepsToRender = showHistory && runs.length > 0 ? (runs[selectedRunIndex] || []) : latestSteps;
 
   // Reset index if it goes out of bounds when switching modes
   useEffect(() => {
@@ -84,6 +111,14 @@ function AgentTrace({ trace = [] }) {
     }
   };
 
+  const getRunLabel = (run, idx) => {
+    if (idx === 0) return `RUN 1: INTAKE PIPELINE`;
+    const stepNames = run.map(s => s.step || s.name);
+    if (stepNames.includes('escalate_ticket')) return `RUN ${idx + 1}: ESCALATION ALERT`;
+    if (stepNames.includes('compute_priority')) return `RUN ${idx + 1}: PRIORITY UPDATE`;
+    return `RUN ${idx + 1}: SYSTEM UPDATE`;
+  };
+
   const step = stepsToRender[currentIndex];
   if (!step) return null;
 
@@ -104,7 +139,7 @@ function AgentTrace({ trace = [] }) {
   return (
     <div className="flex flex-col gap-3" style={{ fontFamily: 'var(--font-mono)', maxWidth: '720px', width: '100%' }}>
       {/* Navigation controls header */}
-      <div className="flex items-center justify-between" style={{ borderBottom: '1px solid var(--border-subtle)', paddingBottom: '10px', marginBottom: '4px' }}>
+      <div className="flex items-center justify-between" style={{ borderBottom: '1px solid var(--border-subtle)', paddingBottom: '10px', marginBottom: '8px' }}>
         <div className="flex items-center gap-2">
           <button
             onClick={handlePrev}
@@ -145,6 +180,7 @@ function AgentTrace({ trace = [] }) {
           <button
             onClick={() => {
               setShowHistory(!showHistory);
+              setSelectedRunIndex(0);
               setCurrentIndex(0);
             }}
             className="font-pixel"
@@ -163,10 +199,38 @@ function AgentTrace({ trace = [] }) {
         )}
       </div>
 
+      {/* Grouped Run Selector buttons (Only shown in Audit History mode) */}
+      {showHistory && runs.length > 0 && (
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginBottom: '6px', borderBottom: '1px dashed var(--border-subtle)', paddingBottom: '8px' }}>
+          {runs.map((run, idx) => (
+            <button
+              key={idx}
+              onClick={() => {
+                setSelectedRunIndex(idx);
+                setCurrentIndex(0);
+              }}
+              className="font-pixel"
+              style={{
+                padding: '4px 8px',
+                fontSize: '8px',
+                border: '1px solid var(--border)',
+                borderRadius: 0,
+                background: selectedRunIndex === idx ? 'var(--accent)' : 'var(--bg-surface)',
+                color: selectedRunIndex === idx ? '#000' : 'var(--ink-secondary)',
+                cursor: 'pointer',
+                userSelect: 'none'
+              }}
+            >
+              {getRunLabel(run, idx)}
+            </button>
+          ))}
+        </div>
+      )}
+
       {/* Render Single Active Step Card */}
       <AnimatePresence mode="wait">
         <motion.div
-          key={`${currentIndex}-${stepName}-${showHistory}`}
+          key={`${currentIndex}-${stepName}-${showHistory}-${selectedRunIndex}`}
           initial={{ opacity: 0, x: 10 }}
           animate={{ opacity: 1, x: 0 }}
           exit={{ opacity: 0, x: -10 }}
