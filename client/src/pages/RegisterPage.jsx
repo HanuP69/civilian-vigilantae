@@ -49,20 +49,17 @@ function RegisterPage() {
         toast('Google Identity API is disabled on your Firebase project. Activating demo mode fallback...', 'warning');
         setTimeout(async () => {
           try {
-            const fallbackEmail = 'google.hero@gmail.com';
-            const pass = 'google-auth-fallback-hero';
-            try {
-              await register(fallbackEmail, pass, 'Google Hero');
-            } catch {
-              await login(fallbackEmail, pass);
-            }
+            const uniqueId = Math.floor(Math.random() * 1000000);
+            const fallbackEmail = `google.hero.${uniqueId}@gmail.com`;
+            const pass = `google-auth-fallback-${uniqueId}`;
+            await register(fallbackEmail, pass, 'Google Hero');
             setIsSuccess(true);
             toast('Successfully logged in (Demo Mode)!', 'success');
             setTimeout(() => {
               navigate('/');
             }, 1500);
           } catch (fallbackErr) {
-            toast('Auth failed: ' + err.message, 'error');
+            toast('Demo auth failed: ' + fallbackErr.message, 'error');
             setSubmitting(false);
           }
         }, 1500);
