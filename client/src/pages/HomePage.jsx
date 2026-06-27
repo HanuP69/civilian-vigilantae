@@ -228,7 +228,7 @@ function HomePage() {
   return (
     <div className="home-container" style={{ paddingBottom: 'var(--space-10)' }}>
       {/* Hero — editorial strip, not a landing page */}
-      <section aria-label="Introduction" style={{
+      <section aria-label="Introduction" className="home-hero-section" style={{
         display: 'flex',
         justifyContent: 'space-between',
         alignItems: 'flex-end',

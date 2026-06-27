@@ -2384,3 +2384,64 @@ tr:hover td { background: var(--bg-surface); }
   transform-origin: 32px 32px;
 }
 
+/* ==========================================
+   Responsive Overrides for Lucknow Watch App
+   ========================================== */
+
+/* Leaderboard Responsiveness */
+@media (max-width: 600px) {
+  .leaderboard-row {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: var(--space-3) !important;
+    padding: var(--space-4) !important;
+  }
+  .leaderboard-row .avatar-container {
+    align-self: flex-start !important;
+  }
+  .leaderboard-row .leaderboard-score-col {
+    align-self: flex-start !important;
+    align-items: flex-start !important;
+    flex-direction: row !important;
+    gap: var(--space-4) !important;
+    margin-top: var(--space-2) !important;
+  }
+}
+
+/* Missions Responsiveness */
+@media (max-width: 768px) {
+  .mission-card {
+    flex-direction: column !important;
+    gap: var(--space-4) !important;
+  }
+  .mission-actions-col {
+    align-items: flex-start !important;
+    width: 100% !important;
+    min-width: unset !important;
+  }
+}
+
+/* Profile Responsiveness */
+@media (max-width: 768px) {
+  .profile-left-col {
+    flex: 1 1 100% !important;
+  }
+  .profile-right-col {
+    flex: 1 1 100% !important;
+    width: 100% !important;
+  }
+}
+
+/* Home Hero Responsiveness */
+@media (max-width: 768px) {
+  .home-hero-section {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: var(--space-4) !important;
+  }
+  .home-hero-section > div:last-child {
+    text-align: left !important;
+    align-self: stretch !important;
+  }
+}
+

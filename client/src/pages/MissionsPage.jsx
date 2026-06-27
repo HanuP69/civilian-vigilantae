@@ -82,7 +82,7 @@ function MissionsPage() {
               <motion.div 
                 key={mission.id}
                 variants={itemAnim}
-                className={`card rpg-panel ${isCompleted ? 'success' : ''}`}
+                className={`card rpg-panel ${isCompleted ? 'success' : ''} mission-card`}
                 onClick={handleCardClick}
                 style={{ 
                   borderRadius: 0,
@@ -132,7 +132,7 @@ function MissionsPage() {
                     </div>
                   </div>
 
-                  <div className="flex flex-col items-end gap-3" style={{ minWidth: '160px' }}>
+                  <div className="flex flex-col items-end gap-3 mission-actions-col" style={{ minWidth: '160px' }}>
                     <div className="flex gap-2">
                       <div className="summary-card text-center" style={{ padding: '6px 12px', minWidth: '70px', borderRadius: 0 }}>
                         <div className="font-pixel" style={{ fontSize: '11px', color: 'var(--success)' }}>+{mission.xp_reward}</div>

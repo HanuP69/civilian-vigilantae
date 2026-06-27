@@ -270,7 +270,7 @@ function ProfilePage() {
         }}
       >
         {/* LEFT COLUMN: CHARACTER SHEET SIDEBAR (320px) */}
-        <div style={{ flex: '0 0 320px', width: '100%', display: 'flex', flexDirection: 'column', gap: 'var(--space-6)' }} className="flex flex-col gap-6">
+        <div style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: 'var(--space-6)' }} className="profile-left-col flex flex-col gap-6">
           
           {/* Hero Profile Details Card */}
           <div className="card rpg-panel" style={{ borderRadius: 0, padding: 'var(--space-5)' }}>
@@ -485,7 +485,7 @@ function ProfilePage() {
         </div>
 
         {/* RIGHT COLUMN: ACTION CONSOLE VIEW (FLEX-1) */}
-        <div style={{ flex: '1 1 450px', display: 'flex', flexDirection: 'column', gap: 'var(--space-6)' }} className="flex flex-col gap-6">
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-6)' }} className="profile-right-col flex flex-col gap-6">
           
           {/* Main Action Tabs */}
           <div style={{ display: 'flex', gap: '6px' }}>

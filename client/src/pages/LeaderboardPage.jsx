@@ -163,7 +163,7 @@ function LeaderboardPage() {
             <motion.div
               key={user.id || user.uid || i}
               variants={itemAnim}
-              className="card rpg-panel flex items-center gap-4"
+              className="card rpg-panel flex items-center gap-4 leaderboard-row"
               style={{
                 padding: 'var(--space-3) var(--space-4)',
                 borderRadius: 0
@@ -229,7 +229,7 @@ function LeaderboardPage() {
                 </div>
               </div>
 
-              <div className="flex flex-col items-end gap-1">
+              <div className="flex flex-col items-end gap-1 leaderboard-score-col">
                 <span className="font-pixel" style={{ color: 'var(--accent)', fontSize: '10px', fontWeight: 700 }}>
                   {contributionScore} PTS
                 </span>
