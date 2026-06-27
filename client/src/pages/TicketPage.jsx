@@ -265,7 +265,6 @@ function TicketPage() {
             {[
               { id: 'diagnostics', label: '🧠 AI DIAGNOSTICS' },
               { id: 'telemetry', label: '📊 TELEMETRY' },
-              ...(ticket.dispatch_plan ? [{ id: 'dispatch', label: '📋 RESPONSE PLAN' }] : []),
               ...(ticket.media_urls && ticket.media_urls.length > 0 ? [{ id: 'evidence', label: '📷 SUBMITTED EVIDENCE' }] : [])
             ].map((tab) => (
               <button
@@ -461,34 +460,7 @@ function TicketPage() {
               </>
             )}
 
-            {activeExplainTab === 'dispatch' && ticket.dispatch_plan && (
-              /* 5. Resolution Plan */
-              <div className="panel rpg-panel" style={{ borderRadius: 0 }}>
-                <h3 className="section-title font-pixel" style={{ fontSize: '0.65rem', color: 'var(--success)', marginBottom: 'var(--space-3)' }}>
-                  [ 📋 RESPONSE PLAN ]
-                </h3>
-                <p className="text-secondary text-sm" style={{ lineHeight: 1.6, marginBottom: 'var(--space-4)' }}>
-                  {ticket.dispatch_plan.explanation}
-                </p>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: 'var(--space-3)' }}>
-                  <div style={{ padding: 'var(--space-2)', border: '1px solid var(--border-subtle)', background: 'var(--bg-primary)' }}>
-                    <span className="font-pixel block text-muted" style={{ fontSize: '0.35rem' }}>CREW SIZE</span>
-                    <span className="font-pixel text-sm" style={{ color: 'var(--accent)' }}>{ticket.dispatch_plan.crew_size} Staff</span>
-                  </div>
-                  <div style={{ padding: 'var(--space-2)', border: '1px solid var(--border-subtle)', background: 'var(--bg-primary)' }}>
-                    <span className="font-pixel block text-muted" style={{ fontSize: '0.35rem' }}>ESTIMATED COST</span>
-                    <span className="font-pixel text-sm" style={{ color: 'var(--success)' }}>₹{ticket.dispatch_plan.estimated_cost}</span>
-                  </div>
-                  <div style={{ padding: 'var(--space-2)', border: '1px solid var(--border-subtle)', background: 'var(--bg-primary)' }}>
-                    <span className="font-pixel block text-muted" style={{ fontSize: '0.35rem' }}>ESTIMATED ETA</span>
-                    <span className="font-pixel text-sm" style={{ color: 'var(--accent)' }}>{ticket.dispatch_plan.eta}</span>
-                  </div>
-                </div>
-                <div style={{ marginTop: 'var(--space-3)', fontSize: '0.65rem' }} className="font-mono text-muted">
-                  <strong>Supplies:</strong> {ticket.dispatch_plan.materials?.join(', ')}
-                </div>
-              </div>
-            )}
+
 
             {activeExplainTab === 'evidence' && ticket.media_urls && ticket.media_urls.length > 0 && (
               /* 6. Submitted Evidence Media List */
