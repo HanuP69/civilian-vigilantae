@@ -116,9 +116,10 @@ router.post('/chat', requireAuth, async (req, res) => {
 
     // Fetch Leaderboard data
     const leaderboard = await getLeaderboard(10);
-    const leaderboardSummary = leaderboard.map((u, i) => 
-      `${i + 1}. User: "${u.username || u.name || 'Anonymous'}" (Level: ${u.level || 1}, XP: ${u.xp || 0}, Reputation Trust: ${u.reputationScore !== undefined ? u.reputationScore.toFixed(2) : '1.00'}, Reports: ${u.reportsCount || 0}, Votes: ${u.votesCount || 0})`
-    ).join('\n');
+    const leaderboardSummary = leaderboard.map((u, i) => {
+      const level = Math.floor((u.xp || 0) / 100) + 1;
+      return `${i + 1}. User: "${u.display_name || 'Anonymous'}" (Level: ${level}, XP: ${u.xp || 0}, Reputation Trust: ${u.reputationScore !== undefined ? u.reputationScore.toFixed(2) : '1.00'}, Reports: ${u.reports || 0}, Votes: ${u.verifications_made || 0})`;
+    }).join('\n');
 
     // 4. Check for Budget/Knapsack Queries
     const detectedBudget = parseBudget(message);
