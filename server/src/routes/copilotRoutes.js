@@ -107,7 +107,7 @@ router.post('/chat', requireAuth, async (req, res) => {
       assetsList.push(doc.data());
     });
     assetsList.sort((a, b) => (a.health || 100) - (b.health || 100));
-    const failingAssetsSummary = assetsList.filter(a => a.health < 100).map(a => 
+    const allAssetsSummary = assetsList.map(a => 
       `- Asset: "${a.name}" (Type: ${a.type.toUpperCase()}), Ward: ${a.ward}, Health Index: ${a.health}%, Open Issues: ${a.open_issues_count || 0}`
     ).join('\n');
 
@@ -169,8 +169,8 @@ You are fully conversant in the advanced engineering and mathematical literature
 - Answer in clear, engaging Markdown. Make frequent use of bold highlights, list structures, and ticket links like [Report #ticket_id] which render as clickable references.
 
 ---
-[REAL-TIME CONTEXT: MUNICIPAL DEGRADING ASSETS]
-${failingAssetsSummary || 'All infrastructure assets verify at 100% health index.'}
+[REAL-TIME CONTEXT: MUNICIPAL INFRASTRUCTURE ASSETS]
+${allAssetsSummary || 'No infrastructure assets registered in the database.'}
 
 [REAL-TIME CONTEXT: ACTIVE REPORTS]
 Total Active Reports: ${activeTickets.length}
