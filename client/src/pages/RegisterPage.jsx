@@ -1,8 +1,10 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../hooks/AuthContext';
 import { useToast } from '../hooks/useToast.jsx';
 import InteractiveCommunity from '../components/agent/InteractiveCommunity';
+import { auth, googleProvider } from '../firebase';
+import { signInWithPopup } from 'firebase/auth';
 
 function RegisterPage() {
   const [displayName, setDisplayName] = useState('');
@@ -16,50 +18,36 @@ function RegisterPage() {
   const { toast } = useToast();
   const navigate = useNavigate();
 
-  useEffect(() => {
-    const handleAuthMessage = async (event) => {
-      if (event.origin !== window.location.origin) return;
-      if (event.data && event.data.type === 'GOOGLE_AUTH_SUCCESS') {
-        const { email: gEmail, displayName: gName } = event.data;
-        setSubmitting(true);
-        toast('Google auth verified. Synchronizing session...', 'info');
+  const handleGoogleLogin = async () => {
+    setSubmitting(true);
+    toast('Opening Google Authentication...', 'info');
+    try {
+      const result = await signInWithPopup(auth, googleProvider);
+      const user = result.user;
+      const gEmail = user.email;
+      const gName = user.displayName || 'Google User';
 
-        try {
-          const pass = `google-auth-${gEmail.replace(/[^a-zA-Z0-9]/g, '')}`;
-          try {
-            await register(gEmail, pass, gName);
-          } catch {
-            await login(gEmail, pass);
-          }
-          setIsSuccess(true);
-          toast(`Successfully logged in as ${gName}!`, 'success');
-          setTimeout(() => {
-            navigate('/');
-          }, 1500);
-        } catch (err) {
-          toast('Failed to synchronize user session.', 'error');
-          setSubmitting(false);
-        }
+      if (!gEmail) {
+        throw new Error('Google Auth did not provide an email address');
       }
-    };
 
-    window.addEventListener('message', handleAuthMessage);
-    return () => window.removeEventListener('message', handleAuthMessage);
-  }, [login, register, navigate, toast]);
-
-  const handleGoogleLogin = () => {
-    const width = 500;
-    const height = 600;
-    const left = window.screen.width / 2 - width / 2;
-    const top = window.screen.height / 2 - height / 2;
-    
-    const popup = window.open(
-      '/google-auth.html',
-      'GoogleSignIntoSentinel',
-      `width=${width},height=${height},left=${left},top=${top},status=no,resizable=no`
-    );
-
-    if (popup) popup.focus();
+      toast('Google Auth verified. Synchronizing session...', 'info');
+      const pass = `google-auth-${gEmail.replace(/[^a-zA-Z0-9]/g, '')}`;
+      try {
+        await register(gEmail, pass, gName);
+      } catch {
+        await login(gEmail, pass);
+      }
+      setIsSuccess(true);
+      toast(`Successfully logged in as ${gName}!`, 'success');
+      setTimeout(() => {
+        navigate('/');
+      }, 1500);
+    } catch (err) {
+      console.error(err);
+      toast(err.message || 'Google Auth failed', 'error');
+      setSubmitting(false);
+    }
   };
 
   const handleSubmit = async (e) => {
