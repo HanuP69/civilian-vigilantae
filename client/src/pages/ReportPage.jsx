@@ -96,10 +96,16 @@ function ReportPage() {
           if (res.ok) {
             const data = await res.json();
             const readable = data.results?.[0]?.formatted_address || '';
-            if (readable) setAddress(readable);
+            if (readable) {
+              setAddress(readable);
+            } else {
+              setAddress(`Lucknow Area (Lat: ${latitude.toFixed(4)}, Lng: ${longitude.toFixed(4)})`);
+            }
+          } else {
+            setAddress(`Lucknow Area (Lat: ${latitude.toFixed(4)}, Lng: ${longitude.toFixed(4)})`);
           }
         } catch {
-          setAddress('Location captured');
+          setAddress(`Lucknow Area (Lat: ${latitude.toFixed(4)}, Lng: ${longitude.toFixed(4)})`);
         }
         setDetecting(false);
       },
