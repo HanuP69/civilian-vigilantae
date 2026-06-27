@@ -1,5 +1,6 @@
 import { getLLMClient } from '../llm/index.js';
 import { db } from '../config/firebase.js';
+import { computeRecurrenceRisk } from '../math/recurrence.js';
 
 /**
  * Gathers structured mathematical and spatial evidence for a cluster of reports,
@@ -61,21 +62,30 @@ export async function analyzeRootCause(category, reports) {
     assetCorrelation = `Distributed Infrastructure Stress across ${uniqueAssets.length} assets`;
   }
 
-  // 4. Fetch Historical Recurrence risk for this category and ward
-  let historicalRecurrenceRisk = 'Pending dynamic fitting';
+  // 4. Compute recurrence risk inline from resolved tickets (recurrence_risks collection never populated)
+  let historicalRecurrenceRisk = 'Insufficient resolved ticket data for recurrence estimation.';
   const firstReport = reports[0];
   if (firstReport && firstReport.ward) {
     try {
-      const recDoc = await db.collection('recurrence_risks')
+      const resolvedSnap = await db.collection('tickets')
+        .where('status', '==', 'resolved')
         .where('ward', '==', firstReport.ward)
         .where('category', '==', category)
         .get();
-      if (!recDoc.empty) {
-        const risk = recDoc.docs[0].data();
-        historicalRecurrenceRisk = `${Math.round((risk.probability || 0) * 100)}% recurrence risk forecasted for this ward/category.`;
+      const resolvedTickets = [];
+      resolvedSnap.forEach(doc => {
+        const t = doc.data();
+        if (t.resolved_at) resolvedTickets.push({ resolved_at: t.resolved_at, category: t.category, ward: t.ward, verification_score: t.verification_score });
+      });
+      if (resolvedTickets.length >= 2) {
+        const risks = computeRecurrenceRisk(resolvedTickets, 14);
+        const match = risks.find(r => r.ward === firstReport.ward && r.category === category);
+        if (match) {
+          historicalRecurrenceRisk = `${Math.round(match.probability * 100)}% recurrence risk in next 14 days. ${match.recommendedAction}.`;
+        }
       }
     } catch (err) {
-      console.warn('[RootCauseService] Failed to query historical recurrence:', err.message);
+      console.warn('[RootCauseService] Failed to compute recurrence risk:', err.message);
     }
   }
 

@@ -1,4 +1,5 @@
 import { db } from '../config/firebase.js';
+import bcrypt from 'bcryptjs';
 
 const XP_REWARDS = { report: 25, report_verified: 50, vote: 5, vote_accurate: 20, resolved: 30 };
 
@@ -47,11 +48,12 @@ export async function registerUser(email, password, displayName) {
   if (!snap.empty) throw new Error('Email already registered');
 
   const uid = `user-${Math.random().toString(36).slice(2, 8)}`;
+  const hashedPassword = await bcrypt.hash(password, 10);
   const newUser = {
     uid,
     display_name: displayName || 'Citizen Hero',
     email,
-    password,
+    password: hashedPassword,
     photo_url: null,
     xp: 0,
     level: 1,
@@ -88,10 +90,11 @@ export async function loginUser(email, password) {
   if (snap.empty) throw new Error('Invalid email or password');
 
   let user = null;
-  snap.forEach(doc => {
-    const u = doc.data();
-    if (u.password === password) user = u;
-  });
+  const docs = [];
+  snap.forEach(doc => docs.push(doc.data()));
+  for (const u of docs) {
+    if (u.password && await bcrypt.compare(password, u.password)) { user = u; break; }
+  }
 
   if (!user) throw new Error('Invalid email or password');
   const u = await ensureUser(user.uid);

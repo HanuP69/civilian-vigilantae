@@ -25,6 +25,8 @@ const SEEDED_ASSETS = [
 
   { id: 'asset_aminabad_waste', name: 'Aminabad Market Dumpster Grid', type: 'waste_bin', ward: 'Aminabad', health: 100 },
   { id: 'asset_aminabad_road', name: 'Aminabad Central Square Roadway', type: 'road', ward: 'Aminabad', health: 100 },
+  { id: 'asset_aminabad_lights', name: 'Aminabad Bazaar Lighting Grid', type: 'streetlight', ward: 'Aminabad', health: 100 },
+  { id: 'asset_aminabad_drains', name: 'Aminabad Naala Drainage Culvert', type: 'drainage', ward: 'Aminabad', health: 100 },
 
   { id: 'asset_rajajipuram_pipes', name: 'Rajajipuram Sector E Trunk Line', type: 'pipe', ward: 'Rajajipuram', health: 100 },
   { id: 'asset_rajajipuram_lights', name: 'Rajajipuram Sector F Lighting Grid', type: 'streetlight', ward: 'Rajajipuram', health: 100 }

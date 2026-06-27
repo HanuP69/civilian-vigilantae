@@ -21,7 +21,7 @@ export async function getAllTickets(filters = {}) {
 
   const snap = await query.get();
   let tickets = [];
-  snap.forEach(doc => tickets.push(doc.data()));
+  snap.forEach(doc => tickets.push({ ...doc.data(), id: doc.id }));
 
   tickets.sort((a, b) => (b.priority_score || 0) - (a.priority_score || 0));
   return tickets;

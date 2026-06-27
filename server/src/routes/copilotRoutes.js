@@ -176,7 +176,7 @@ ${knapsackOutput ? `\n${knapsackOutput}\nUse this Knapsack Solver result to tell
 
     if (Array.isArray(chatHistory)) {
       chatHistory.forEach(h => {
-        messages.push({ role: h.role === 'user' ? 'user' : 'model', content: h.content });
+        messages.push({ role: h.role === 'user' ? 'user' : 'assistant', content: h.content });
       });
     }
 

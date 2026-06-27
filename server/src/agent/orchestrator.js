@@ -92,33 +92,26 @@ export async function processReport(reportData, onStep) {
   // 9. Root Cause Diagnosis
   const { db } = await import('../config/firebase.js');
   let reportsForRootCause = [];
-  if (merged) {
-    try {
-      const ticketSnap = await db.collection('tickets').doc(ticketId).get();
-      if (ticketSnap.exists) {
-        const ticketData = ticketSnap.data();
-        reportsForRootCause.push({
-          title: ticketData.title,
-          description: ticketData.description,
-          address: ticketData.address,
-          ward: ticketData.ward,
-          created_at: ticketData.created_at,
-          asset_id: ticketData.asset_id,
-          asset_name: ticketData.asset_name
-        });
-      }
-    } catch (err) {
-      console.warn('[Orchestrator] Failed to fetch existing ticket for root cause:', err.message);
-    }
-  }
 
-  // Get active asset details if any
-  const ticketDocForAsset = await db.collection('tickets').doc(ticketId).get();
+  // Single read for both root cause data and asset details
+  const ticketDoc = await db.collection('tickets').doc(ticketId).get();
   let ticketAssetId = null;
   let ticketAssetName = null;
-  if (ticketDocForAsset.exists) {
-    ticketAssetId = ticketDocForAsset.data().asset_id || null;
-    ticketAssetName = ticketDocForAsset.data().asset_name || null;
+  if (ticketDoc.exists) {
+    const ticketData = ticketDoc.data();
+    ticketAssetId = ticketData.asset_id || null;
+    ticketAssetName = ticketData.asset_name || null;
+    if (merged) {
+      reportsForRootCause.push({
+        title: ticketData.title,
+        description: ticketData.description,
+        address: ticketData.address,
+        ward: ticketData.ward,
+        created_at: ticketData.created_at,
+        asset_id: ticketData.asset_id,
+        asset_name: ticketData.asset_name
+      });
+    }
   }
 
   reportsForRootCause.push({
@@ -133,6 +126,8 @@ export async function processReport(reportData, onStep) {
 
   const { analyzeRootCause } = await import('../services/rootCauseService.js');
   const rootCauseResult = await analyzeRootCause(ctx.classificationResult.category, reportsForRootCause);
+
+  trace.logStep('agent_response', {}, { text: 'Report processing complete.' }, 'SENTINEL-CIVIC pipeline operations complete.', 0);
 
   // Store full trace and dynamic calculations in Firestore
   await db.collection('tickets').doc(ticketId).update({
@@ -150,8 +145,6 @@ export async function processReport(reportData, onStep) {
     root_cause: rootCauseResult,
   });
 
-  trace.logStep('agent_response', {}, { text: 'Report processing complete.' }, 'SENTINEL-CIVIC pipeline operations complete.', 0);
-
   return { ticketId, merged, trace: trace.getSteps() };
 }
 
@@ -162,7 +155,7 @@ export async function processSchedulerTick(onStep) {
   const ticketsSnap = await db.collection('tickets').get();
   const openTickets = [];
   ticketsSnap.forEach(doc => {
-    const t = doc.data();
+    const t = { ...doc.data(), id: doc.id };
     if (['reported', 'verified', 'in_progress'].includes(t.status)) openTickets.push(t);
   });
 

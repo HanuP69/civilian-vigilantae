@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import { getAllTickets, getTicketById, updateTicket, getDashboardStats } from '../services/ticketService.js';
+import { requireAuth } from '../middleware/authMiddleware.js';
 const router = Router();
 
 router.get('/', async (req, res) => {
@@ -17,9 +18,9 @@ router.get('/:id', async (req, res) => {
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
-router.patch('/:id', async (req, res) => {
+router.patch('/:id', requireAuth, async (req, res) => {
   try {
-    const userId = req.headers['x-user-id'] || req.body.userId;
+    const userId = req.user.id;
     if (!userId) return res.status(401).json({ error: 'Unauthorized: Missing user ID' });
     
     const result = await updateTicket(req.params.id, req.body);

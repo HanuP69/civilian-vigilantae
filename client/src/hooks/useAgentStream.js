@@ -10,6 +10,7 @@ export function useAgentStream(reportId, initialSteps = []) {
   const completeRef = useRef(false);
   const sawLiveRef = useRef(false);
   const prevInitialRef = useRef([]);
+  const esRef = useRef(null);
 
   useEffect(() => {
     if (!reportId) {
@@ -41,7 +42,14 @@ export function useAgentStream(reportId, initialSteps = []) {
   useEffect(() => {
     if (!reportId) return;
 
+    // Close previous connection before opening new one
+    if (esRef.current) {
+      esRef.current.close();
+      esRef.current = null;
+    }
+
     const es = new EventSource('/api/events');
+    esRef.current = es;
 
     const onStep = (event) => {
       try {
@@ -65,7 +73,10 @@ export function useAgentStream(reportId, initialSteps = []) {
     };
 
     es.addEventListener('agent_step', onStep);
-    return () => es.close();
+    return () => {
+      es.close();
+      esRef.current = null;
+    };
   }, [reportId]);
 
   const currentStepName = steps.find((s) => s && s.status === 'pending')?.step || null;

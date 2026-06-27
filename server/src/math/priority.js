@@ -145,13 +145,16 @@ export function computePriorityWithBreakdown(input) {
 
   const rSafety = SAFETY_CRITICAL.has(input.category) ? 1.0 : 0.5;
 
+  // Compute continuous score first (matches computePriority exactly)
+  const raw = W1 * sVis + W2 * nReports + W3 * vRatio + W4 * slaRatio + W5 * rSafety;
+  const score = Math.round(Math.min(Math.max(raw, 0), 1) * 100);
+
+  // Breakdown as rounded weighted contributions (informational only)
   const severityVal = Math.round(W1 * sVis * 100);
   const volumeVal = Math.round(W2 * nReports * 100);
   const verificationVal = Math.round(W3 * vRatio * 100);
   const slaUrgencyVal = Math.round(W4 * slaRatio * 100);
   const safetyVal = Math.round(W5 * rSafety * 100);
-
-  const score = severityVal + volumeVal + verificationVal + slaUrgencyVal + safetyVal;
 
   return {
     score,

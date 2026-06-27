@@ -8,8 +8,17 @@ export function addClient(userId, res) {
     'Connection': 'keep-alive', 'Access-Control-Allow-Origin': '*',
   });
   res.write(`event: connected\ndata: ${JSON.stringify({ clientId: id })}\n\n`);
+
+  // Heartbeat every 25s to keep connection alive through proxies
+  const heartbeat = setInterval(() => {
+    try { res.write(': heartbeat\n\n'); } catch (_) { clearInterval(heartbeat); }
+  }, 25000);
+
   clients.set(id, { userId, res });
-  res.on('close', () => clients.delete(id));
+  res.on('close', () => {
+    clearInterval(heartbeat);
+    clients.delete(id);
+  });
   return id;
 }
 

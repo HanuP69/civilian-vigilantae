@@ -46,7 +46,10 @@ async function updateVoterReputations(votes, newStatus) {
     } else if (newStatus === 'resolved') {
       isCorrect = (voteType === 'looks_resolved');
     } else if (newStatus === 'disputed') {
-      isCorrect = (voteType === 'looks_resolved');
+      // disputed = low verification score, issue contested — no clear correct vote, skip rep update
+      continue;
+    } else if (newStatus === 'reopened') {
+      isCorrect = (voteType === 'still_issue');
     } else {
       continue;
     }
@@ -108,16 +111,18 @@ export const toolHandlers = {
   async find_cluster({ lat, lng, category, timestamp }) {
     const ticketsSnap = await db.collection('tickets').get();
     const recentTickets = [];
+    const ticketMetaById = {};
     const parsedTimestamp = timestamp ? new Date(timestamp) : new Date();
     const now = Number.isNaN(parsedTimestamp.getTime()) ? new Date() : parsedTimestamp;
     const windowMs = 72 * 60 * 60 * 1000;
 
     ticketsSnap.forEach(doc => {
-      const t = doc.data();
+      const t = { ...doc.data(), id: doc.id };
       if (t.status === 'resolved') return;
       const created = t.created_at?.toDate?.() ?? new Date(t.created_at);
       if (now - created < windowMs) {
         recentTickets.push({ id: t.id, lat: t.lat, lng: t.lng, timestamp: created, category: t.category });
+        ticketMetaById[t.id] = { priority_score: t.priority_score || 0, created_at: created };
       }
     });
 
@@ -128,10 +133,15 @@ export const toolHandlers = {
     const { clusters } = dbscan(points);
     for (const cluster of clusters) {
       if (cluster.includes('__new__')) {
-        const existingId = cluster.find(id => id !== '__new__');
-        if (existingId) {
-          const neighbors = cluster.filter(id => id !== '__new__');
-          return { found: true, ticket_id: existingId, cluster_size: cluster.length, category, neighbors };
+        const neighbors = cluster.filter(id => id !== '__new__');
+        if (neighbors.length > 0) {
+          // Pick highest-priority existing ticket as merge target
+          const bestId = neighbors.reduce((best, id) => {
+            const bScore = ticketMetaById[best]?.priority_score ?? 0;
+            const cScore = ticketMetaById[id]?.priority_score ?? 0;
+            return cScore > bScore ? id : best;
+          }, neighbors[0]);
+          return { found: true, ticket_id: bestId, cluster_size: cluster.length, category, neighbors };
         }
       }
     }
@@ -300,13 +310,13 @@ export const toolHandlers = {
     const ts = t.created_at?.toDate?.() ?? new Date(t.created_at);
     const elapsedHours = Number.isNaN(ts.getTime()) ? 0 : (Date.now() - ts.getTime()) / 3600000;
     const slaDeadline = t.sla_deadline ? (t.sla_deadline.toDate?.() ?? new Date(t.sla_deadline)) : null;
-    const slaHours = slaDeadline && !Number.isNaN(ts.getTime())
+    const slaHours = Math.max(1, slaDeadline && !Number.isNaN(ts.getTime())
       ? (slaDeadline.getTime() - ts.getTime()) / 3600000
-      : 48;
+      : 48);
 
     const priorityResult = computePriorityWithBreakdown({
       severity: t.severity || 'medium',
-      reportCount: t.cluster_detail?.cluster_size || 1,
+      reportCount: (t.child_reports?.length || 0) + 1,
       verificationUp: newUp,
       verificationDown: newDown,
       elapsedHours,
@@ -362,9 +372,9 @@ export const toolHandlers = {
     const elapsedHours = Number.isNaN(ts.getTime()) ? 0 : (Date.now() - ts.getTime()) / 3600000;
     const params = DEFAULT_PARAMS[t.category] || DEFAULT_PARAMS.other;
     const slaDeadline = t.sla_deadline ? (t.sla_deadline.toDate?.() ?? new Date(t.sla_deadline)) : null;
-    const slaHours = slaDeadline
+    const slaHours = Math.max(1, slaDeadline
       ? (slaDeadline.getTime() - ts.getTime()) / 3600000
-      : params.lambda;
+      : params.lambda);
 
     // Localized Weibull MLE Parameter Estimation
     const resolvedSnap = await db.collection('tickets')
@@ -396,19 +406,23 @@ export const toolHandlers = {
     }
 
     const breached = slaDeadline ? Date.now() > slaDeadline.getTime() : elapsedHours > slaHours;
-    const probability = breached ? 0 : weibullConditionalProbability(elapsedHours, slaHours, fitParams.lambda, fitParams.k);
+    // resolutionProbability = P(resolve before deadline | not yet resolved at elapsed)
+    const resolutionProbability = breached ? 0 : weibullConditionalProbability(elapsedHours, slaHours, fitParams.lambda, fitParams.k);
+    // breachRisk = 1 - resolutionProbability (high = likely to breach)
+    const breachRisk = breached ? 1 : (1 - resolutionProbability);
 
     await db.collection('tickets').doc(ticket_id).update({
-      sla_probability: probability,
-      sla_risk_score: Math.round(probability * 100),
-      sla_risk_explanation: `Weibull conditional resolution probability is ${Math.round(probability * 100)}% with parameters scale lambda = ${Math.round(fitParams.lambda * 10) / 10}h and shape k = ${Math.round(fitParams.k * 100) / 100}.`,
+      sla_probability: resolutionProbability,
+      sla_risk_score: Math.round(breachRisk * 100),
+      sla_risk_explanation: `SLA breach risk is ${Math.round(breachRisk * 100)}% (resolution probability: ${Math.round(resolutionProbability * 100)}%) using Weibull parameters λ=${Math.round(fitParams.lambda * 10) / 10}h, k=${Math.round(fitParams.k * 100) / 100}.`,
       sla_params: { lambda: fitParams.lambda, k: fitParams.k, localizedUsed }
     });
     return { 
       ticket_id, 
       elapsed_hours: Math.round(elapsedHours), 
       sla_hours: Math.round(slaHours), 
-      probability: Math.round(probability * 100) / 100, 
+      probability: Math.round(breachRisk * 100) / 100,
+      is_breached: breached,
       breached,
       localized_params: { lambda: Math.round(fitParams.lambda * 10) / 10, k: Math.round(fitParams.k * 100) / 100, localizedUsed }
     };
