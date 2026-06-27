@@ -4,6 +4,41 @@ import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
 import { MapContainer, TileLayer, Marker, Popup, Circle, Tooltip, useMap } from 'react-leaflet';
 
+const getTimestampMs = (val) => {
+  if (!val) return 0;
+  if (val.toDate && typeof val.toDate === 'function') {
+    return val.toDate().getTime();
+  }
+  if (typeof val === 'object' && val.seconds !== undefined) {
+    return val.seconds * 1000;
+  }
+  const d = new Date(val);
+  return isNaN(d.getTime()) ? 0 : d.getTime();
+};
+
+const getSlaRisk = (t) => {
+  if (!t) return 0;
+  if (t.sla_risk_score !== undefined) return t.sla_risk_score;
+  if (t.sla_probability !== undefined) return Math.round((1 - t.sla_probability) * 100);
+  return 0;
+};
+
+const getWardCenterArray = (wardCenter) => {
+  if (!wardCenter) return null;
+  if (Array.isArray(wardCenter)) {
+    return [Number(wardCenter[0]), Number(wardCenter[1])];
+  }
+  return [Number(wardCenter.lat), Number(wardCenter.lng)];
+};
+
+const getWardCenterObject = (wardCenter) => {
+  if (!wardCenter) return null;
+  if (Array.isArray(wardCenter)) {
+    return { lat: Number(wardCenter[0]), lng: Number(wardCenter[1]) };
+  }
+  return { lat: Number(wardCenter.lat), lng: Number(wardCenter.lng) };
+};
+
 const DEFAULT_CENTER = { lat: 26.8467, lng: 80.9462 };
 
 function loadGoogleMapsScript(apiKey, onLoad, onError) {
@@ -36,8 +71,8 @@ function getMarkerColor(priorityScore) {
   return '#10b981';
 }
 
-function createLeafletIcon(priorityScore, isActive, isVerified, isSla) {
-  const color = getMarkerColor(priorityScore);
+function createLeafletIcon(priorityScore, isActive, isVerified, isSla, currentLayer) {
+  const color = currentLayer === 'sla' ? '#ff4d4f' : getMarkerColor(priorityScore);
   const activeClass = isActive ? 'active' : '';
   const glowClass = isVerified ? 'leaflet-verified-glow' : '';
   const slaClass = isSla ? 'leaflet-sla-pulse' : '';
@@ -64,8 +99,8 @@ function createLeafletIcon(priorityScore, isActive, isVerified, isSla) {
   });
 }
 
-function createGoogleMarkerIcon(priorityScore, isActive) {
-  const color = getMarkerColor(priorityScore);
+function createGoogleMarkerIcon(priorityScore, isActive, currentLayer) {
+  const color = currentLayer === 'sla' ? '#ff4d4f' : getMarkerColor(priorityScore);
   const svg = `
     <svg xmlns="http://www.w3.org/2000/svg" width="32" height="40" viewBox="0 0 32 40">
       <path d="M6 2h20v4h4v12h-4v8h-4v4h-4v8h-4v-8h-4v-4h-4v-8H2V6h4V2z" fill="#000000" />
@@ -110,10 +145,12 @@ function MapController({ tickets, clusterGroups, recurrence, slaByWard, layer, c
     const positions = [];
     if (layer === 'reports' || layer === 'verified' || layer === 'sla') {
       const filtered = tickets.filter(t => {
-        if (!t.lat || !t.lng) return false;
+        const latVal = Number(t.lat);
+        const lngVal = Number(t.lng);
+        if (!Number.isFinite(latVal) || !Number.isFinite(lngVal)) return false;
         if (layer === 'reports') return t.status !== 'resolved';
         if (layer === 'verified') return t.status === 'verified';
-        if (layer === 'sla') return t.status !== 'resolved' && t.sla_risk_score > 50;
+        if (layer === 'sla') return t.status !== 'resolved' && getSlaRisk(t) > 50;
         return false;
       });
       currentDataLength = filtered.length;
@@ -129,8 +166,10 @@ function MapController({ tickets, clusterGroups, recurrence, slaByWard, layer, c
       const activeRecurrence = recurrence.filter(item => item.probability > 0.3 && wardCenters[item.ward]);
       currentDataLength = activeRecurrence.length;
       activeRecurrence.forEach(item => {
-        const c = wardCenters[item.ward];
-        positions.push([c.lat, c.lng]);
+        const coords = getWardCenterArray(wardCenters[item.ward]);
+        if (coords && Number.isFinite(coords[0]) && Number.isFinite(coords[1])) {
+          positions.push(coords);
+        }
       });
     }
 
@@ -240,7 +279,9 @@ function ConfigurableMap({
 
     if (layer === 'reports' || layer === 'verified' || layer === 'sla') {
       const filtered = tickets.filter((ticket) => {
-        if (!ticket.lat || !ticket.lng) return false;
+        const latVal = Number(ticket.lat);
+        const lngVal = Number(ticket.lng);
+        if (!Number.isFinite(latVal) || !Number.isFinite(lngVal)) return false;
         if (layer === 'reports') return ticket.status !== 'resolved';
         if (layer === 'verified') return ticket.status === 'verified';
         if (layer === 'sla') return ticket.status !== 'resolved' && ticket.sla_risk_score > 50;
@@ -253,7 +294,7 @@ function ConfigurableMap({
           position,
           map,
           title: ticket.title || ticket.ai_title || 'Report',
-          icon: createGoogleMarkerIcon(ticket.priority_score, activeTicketId === ticket.id),
+          icon: createGoogleMarkerIcon(ticket.priority_score, activeTicketId === ticket.id, layer),
           zIndex: activeTicketId === ticket.id ? 1000 : 0,
         });
 
@@ -261,11 +302,11 @@ function ConfigurableMap({
           onMarkerClick(ticket);
           const content = `
             <div style="font-family: 'Press Start 2P', monospace; min-width: 180px; padding: 4px; line-height: 1.4;">
-              <strong style="font-size: 8px; color: var(--ink-primary); display: block; margin-bottom: 4px;">${ticket.title || ticket.ai_title || 'Untitled Quest'}</strong>
+              <strong style="font-size: 8px; color: var(--ink-primary); display: block; margin-bottom: 4px;">${ticket.title || ticket.ai_title || 'Untitled Issue'}</strong>
               <span style="color:${categoryColors[ticket.category] || 'var(--ink-muted)'}; font-size: 6px; display: block; margin-bottom: 6px;">${(categoryLabels[ticket.category] || capitalize(ticket.category)).toUpperCase()}</span>
               <div style="font-size: 6px; color: var(--ink-secondary); margin-bottom: 6px;">${ticket.verification_up > 0 ? `✓ ${ticket.verification_up} VOTES · ` : ''}${(ticket.ward || '—').toUpperCase()}</div>
               ${ticket.sla_risk_score !== undefined ? `<div style="font-size: 6px; color: var(--error); margin-bottom: 6px;">SLA BREACH RISK: ${ticket.sla_risk_score}%</div>` : ''}
-              <a href="/ticket/${ticket.id}" style="color: var(--accent); font-size: 6px; text-decoration: underline;">ENTER QUEST →</a>
+              <a href="/ticket/${ticket.id}" style="color: var(--accent); font-size: 6px; text-decoration: underline;">VIEW DETAILS →</a>
             </div>
           `;
           infoWindow.setContent(content);
@@ -300,9 +341,11 @@ function ConfigurableMap({
     } else if (layer === 'recurrence') {
       recurrence.filter((item) => item.probability > 0.3 && wardCenters[item.ward]).forEach((item) => {
         const color = item.probability > 0.7 ? '#ef4444' : item.probability > 0.4 ? '#f59e0b' : '#10b981';
+        const centerObj = getWardCenterObject(wardCenters[item.ward]);
+        if (!centerObj || !Number.isFinite(centerObj.lat) || !Number.isFinite(centerObj.lng)) return;
         const circle = new window.google.maps.Circle({
           map,
-          center: wardCenters[item.ward],
+          center: centerObj,
           radius: 400 + item.probability * 600,
           strokeColor: color,
           strokeOpacity: 0.8,
@@ -311,7 +354,7 @@ function ConfigurableMap({
           fillOpacity: 0.2,
         });
         overlaysRef.current.push(circle);
-        addBounds(wardCenters[item.ward].lat, wardCenters[item.ward].lng);
+        addBounds(centerObj.lat, centerObj.lng);
       });
     }
 
@@ -333,7 +376,7 @@ function ConfigurableMap({
         const marker = new window.google.maps.Marker({
           position,
           map,
-          title: `QUEST: ${mission.title}`,
+          title: `MISSION: ${mission.title}`,
           icon: {
             path: window.google.maps.SymbolPath.CIRCLE,
             scale: 8,
@@ -351,7 +394,7 @@ function ConfigurableMap({
               <p style="font-size: 6.5px; color: var(--ink-secondary); margin-bottom: 6px;">${mission.description}</p>
               <div style="font-size: 6px; color: var(--success); margin-bottom: 6px;">REWARDS: +${mission.xp_reward} XP · ${mission.gold_reward} GOLD</div>
               <div style="font-size: 6px; color: var(--ink-muted); margin-bottom: 6px;">PROGRESS: ${mission.current_confirmations}/${mission.target_confirmations} CONFIRMATIONS</div>
-              <a href="/missions" style="color: var(--accent); font-size: 6px; text-decoration: underline;">GO TO QUEST BOARD →</a>
+              <a href="/missions" style="color: var(--accent); font-size: 6px; text-decoration: underline;">GO TO MISSIONS →</a>
             </div>
           `;
           infoWindow.setContent(content);
@@ -416,10 +459,12 @@ function ConfigurableMap({
           {(layer === 'reports' || layer === 'verified' || layer === 'sla') &&
             tickets
               .filter((ticket) => {
-                if (!ticket.lat || !ticket.lng) return false;
+                const latVal = Number(ticket.lat);
+                const lngVal = Number(ticket.lng);
+                if (!Number.isFinite(latVal) || !Number.isFinite(lngVal)) return false;
                 if (layer === 'reports') return ticket.status !== 'resolved';
                 if (layer === 'verified') return ticket.status === 'verified';
-                if (layer === 'sla') return ticket.status !== 'resolved' && ticket.sla_risk_score > 50;
+                if (layer === 'sla') return ticket.status !== 'resolved' && getSlaRisk(ticket) > 50;
                 return false;
               })
               .map((ticket) => (
@@ -430,7 +475,8 @@ function ConfigurableMap({
                     ticket.priority_score,
                     activeTicketId === ticket.id,
                     ticket.status === 'verified',
-                    layer === 'sla' || (ticket.status !== 'resolved' && (ticket.sla_risk_score > 50 || (ticket.sla_deadline && new Date(ticket.sla_deadline).getTime() < Date.now())))
+                    layer === 'sla' || (ticket.status !== 'resolved' && (getSlaRisk(ticket) > 50 || (ticket.sla_deadline && getTimestampMs(ticket.sla_deadline) < Date.now()))),
+                    layer
                   )}
                   eventHandlers={{
                     click: () => onMarkerClick(ticket),
@@ -447,9 +493,9 @@ function ConfigurableMap({
                       <div className="text-secondary" style={{ fontSize: '11px', marginBottom: '8px' }}>
                         {ticket.verification_up > 0 ? `✓ ${ticket.verification_up} VOTE${ticket.verification_up > 1 ? 'S' : ''} · ` : ''}{ticket.ward?.toUpperCase() || '—'}
                       </div>
-                      {ticket.sla_risk_score !== undefined && (
+                      {getSlaRisk(ticket) > 0 && (
                         <div className="text-error" style={{ fontSize: '11px', marginBottom: '8px', fontWeight: 600 }}>
-                          SLA RISK: {ticket.sla_risk_score}%
+                          SLA RISK: {getSlaRisk(ticket)}%
                         </div>
                       )}
                       <Link to={`/ticket/${ticket.id}`} style={{ display: 'inline-block', color: 'var(--accent)', fontSize: '11px', textDecoration: 'underline', fontWeight: 600 }}>
@@ -488,11 +534,12 @@ function ConfigurableMap({
               .filter((item) => item.probability > 0.3 && wardCenters[item.ward])
               .map((item, index) => {
                 const color = '#d946ef';
-                const centerCoord = wardCenters[item.ward];
+                const coords = getWardCenterArray(wardCenters[item.ward]);
+                if (!coords || !Number.isFinite(coords[0]) || !Number.isFinite(coords[1])) return null;
                 return (
                   <Circle
                     key={`recurrence-${index}`}
-                    center={[centerCoord.lat, centerCoord.lng]}
+                    center={coords}
                     radius={400 + item.probability * 600}
                     pathOptions={{
                       className: 'leaflet-hotspot-pulse',

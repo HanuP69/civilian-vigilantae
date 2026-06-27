@@ -194,6 +194,21 @@ function ReportPage() {
     if (res.classification) setClassification(res.classification.category);
   };
 
+  useEffect(() => {
+    if (agentStream.isComplete && agentStream.steps.length > 0) {
+      const completeStep = agentStream.steps.find(
+        s => s && (s.step === 'create_ticket' || s.step === 'merge_into_ticket') && s.status === 'success'
+      );
+      if (completeStep && completeStep.output) {
+        setResult(prev => ({
+          ...prev,
+          ticket_id: completeStep.output.ticket_id || completeStep.output.ticketId,
+          merged: completeStep.step === 'merge_into_ticket',
+        }));
+      }
+    }
+  }, [agentStream.isComplete, agentStream.steps]);
+
   const handleCloseReveal = () => {
     setSubmitting(false);
     setActiveReportId(null);
@@ -524,14 +539,21 @@ function ReportPage() {
 
             {result && !result.error && (
               <div className="flex flex-col gap-4 panel rpg-panel" style={{ borderColor: 'var(--success)', borderRadius: 0 }}>
-                <div className="flex items-center gap-3">
-                  <div style={{ width: 32, height: 32, borderRadius: 0, background: 'var(--success)', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.875rem', fontWeight: 600 }}>✓</div>
-                  <span className="font-serif" style={{ fontSize: '1.5rem', color: 'var(--ink-primary)' }}>
-                    {result.merged ? 'Merged into existing report' : 'Report dispatched'}
-                  </span>
+                <div className="flex flex-col gap-2">
+                  <div className="flex items-center gap-3">
+                    <div style={{ width: 32, height: 32, borderRadius: 0, background: result.merged ? 'var(--warning)' : 'var(--success)', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.875rem', fontWeight: 600 }}>✓</div>
+                    <span className="font-serif" style={{ fontSize: '1.5rem', color: 'var(--ink-primary)' }}>
+                      {result.merged ? 'Verification Upvote Registered' : 'Report Dispatched'}
+                    </span>
+                  </div>
+                  {result.merged && (
+                    <p className="text-secondary text-sm" style={{ lineHeight: 1.4, marginTop: 'var(--space-2)', color: 'var(--ink-secondary)' }}>
+                      An active report for this issue already exists at this location. Your report has been merged and registered as an official verification upvote for Ticket #{result.ticket_id}.
+                    </p>
+                  )}
                 </div>
                 {result.ticket_id && (
-                  <p className="text-secondary" style={{ letterSpacing: '0.05em' }}>Ticket ID: <span className="font-mono">{result.ticket_id}</span></p>
+                  <p className="text-secondary text-xs" style={{ letterSpacing: '0.05em', marginTop: 'var(--space-2)' }}>Ticket ID: <span className="font-mono">{result.ticket_id}</span></p>
                 )}
                 <div className="flex gap-3" style={{ marginTop: 'var(--space-4)' }}>
                   {result.ticket_id && (

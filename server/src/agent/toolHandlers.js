@@ -8,7 +8,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { broadcast } from '../services/sseService.js';
 import { classifyWithLLM } from '../services/classificationService.js';
 
-const DEPARTMENTS = {
+export const DEPARTMENTS = {
   pothole: 'Roads & Infrastructure', water_leak: 'Water Supply', streetlight: 'Electrical & Lighting',
   waste: 'Sanitation & Waste Management', road_damage: 'Roads & Infrastructure',
   drainage: 'Drainage & Sewerage', other: 'General Maintenance',
@@ -71,6 +71,8 @@ async function updateVoterReputations(votes, newStatus) {
       await userRef.update({
         reports_verified: reportsVerified,
         reports_rejected: reportsRejected,
+        verifications_made: totalVotes,
+        accurate_verifications: reportsVerified,
         verification_accuracy: accuracy,
         trust_score: trustScore,
       });
@@ -238,7 +240,7 @@ export const toolHandlers = {
     return { ticket_id, merged: true, total_reports: childReports.length + 1 };
   },
 
-  async record_verification({ ticket_id, vote_type }, ctx) {
+  async record_verification({ ticket_id, vote_type, lat, lng, photo }, ctx) {
     const doc = await db.collection('tickets').doc(ticket_id).get();
     if (!doc.exists) return { error: 'Ticket not found' };
     const t = doc.data();
@@ -247,6 +249,70 @@ export const toolHandlers = {
     if (userId !== 'anonymous' && votes[userId]) {
       return { error: 'Already voted' };
     }
+
+    // 1. Geofencing Validation (must be within 50 meters of the ticket location)
+    if (lat !== undefined && lng !== undefined) {
+      const { haversine } = await import('../math/haversine.js');
+      const dist = haversine(Number(lat), Number(lng), t.lat, t.lng);
+      if (dist > 50) {
+        return { error: 'Verification rejected: you must be within 50 meters of the issue location to verify.' };
+      }
+    }
+
+    // 2. Photo-Evidentiary AI Verification
+    if (photo) {
+      const cleanBase64 = photo.replace(/^data:image\/[a-zA-Z+]+;base64,/, '');
+      const { getLLMClient } = await import('../llm/index.js');
+      const client = getLLMClient();
+
+      const prompt = `You are a Municipal Verification Agent.
+An issue of category "${t.category}" (Description: "${t.description || t.title}") is reported at this location.
+The user is casting a vote: "${vote_type === 'still_issue' ? 'still unresolved / active hazard' : 'looks resolved / repaired / clean'}"
+Examine the photo evidence. Determine if it matches their claim.
+Respond with a JSON object:
+{
+  "matches": true or false,
+  "reasoning": "A concise explanation of what is visible in the photo."
+}`;
+
+      try {
+        const visionRes = await client.chatWithMedia(prompt, {
+          mimeType: 'image/jpeg',
+          data: cleanBase64
+        });
+
+        let parsed = visionRes;
+        if (typeof visionRes === 'string') {
+          const cleanText = visionRes.replace(/```json/gi, '').replace(/```/g, '').trim();
+          parsed = JSON.parse(cleanText);
+        }
+
+        if (parsed.matches === false) {
+          // Penalize voter reputation for submitting false/unmatching evidence
+          if (userId !== 'anonymous') {
+            const userRef = db.collection('users').doc(userId);
+            const userDoc = await userRef.get();
+            if (userDoc.exists) {
+              const u = userDoc.data();
+              const verified = u.reports_verified || 0;
+              const rejected = (u.reports_rejected || 0) + 2; // Penalize by adding 2 rejections
+              const total = verified + rejected;
+              const trustScore = Math.round(((verified + 1) / (total + 2)) * 100) / 100;
+
+              await userRef.update({
+                reports_rejected: rejected,
+                trust_score: trustScore,
+                verification_accuracy: total > 0 ? (verified / total) : 0
+              });
+            }
+          }
+          return { error: `Verification rejected: Photo evidence does not match your claim. Reasoning: ${parsed.reasoning || 'No match detected.'}` };
+        }
+      } catch (err) {
+        console.warn('[record_verification] Photo AI verification failed, falling back to location verification:', err.message);
+      }
+    }
+
     votes[userId] = vote_type;
 
     const newUp = Object.values(votes).filter(v => v === 'still_issue').length;
@@ -262,7 +328,14 @@ export const toolHandlers = {
         continue;
       }
       const voterDoc = await db.collection('users').doc(uid).get();
-      const vTrust = voterDoc.exists ? (voterDoc.data().trust_score ?? 0.5) : 0.5;
+      let vTrust = 0.5;
+      if (voterDoc.exists) {
+        const voterData = voterDoc.data();
+        const totalActions = (voterData.reports_verified || 0) + (voterData.reports_rejected || 0);
+        if (totalActions >= 10) {
+          vTrust = voterData.trust_score ?? 0.5;
+        }
+      }
       if (vType === 'still_issue') weightedUp += vTrust;
       else weightedDown += vTrust;
     }
@@ -275,7 +348,13 @@ export const toolHandlers = {
     if (reporterTrust === undefined && t.reporter_id) {
       const repDoc = await db.collection('users').doc(t.reporter_id).get();
       if (repDoc.exists) {
-        reporterTrust = repDoc.data().trust_score ?? 0.5;
+        const repData = repDoc.data();
+        const totalActions = (repData.reports_verified || 0) + (repData.reports_rejected || 0);
+        if (totalActions >= 10) {
+          reporterTrust = repData.trust_score ?? 0.5;
+        } else {
+          reporterTrust = 0.5;
+        }
       }
     }
     if (reporterTrust === undefined) reporterTrust = 0.5;

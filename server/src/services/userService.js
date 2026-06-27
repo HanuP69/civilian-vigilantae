@@ -331,18 +331,45 @@ export async function equipAvatar(uid, avatarValue) {
 export async function getLeaderboard(limit = 20) {
   const snap = await db.collection('users').get();
   const users = [];
-  snap.forEach(doc => users.push(doc.data()));
-  users.sort((a, b) => (b.xp || 0) - (a.xp || 0));
+  snap.forEach(doc => {
+    const data = doc.data();
+    // Compute contribution score dynamically
+    const xp = data.xp || 0;
+    const reports = data.reports_submitted || data.reports || 0;
+    const verifications = data.verifications_made !== undefined 
+      ? data.verifications_made 
+      : ((data.reports_verified || 0) + (data.reports_rejected || 0));
+    const accurate = data.accurate_verifications !== undefined
+      ? data.accurate_verifications
+      : (data.reports_verified || 0);
+    const trustScore = data.trust_score !== undefined ? data.trust_score : 0.5;
+    const incorrect = Math.max(0, verifications - accurate);
+    
+    data.contribution_score = Math.round(
+      (xp * 0.1) +
+      (reports * 15) +
+      (accurate * 25) -
+      (incorrect * 10) +
+      (trustScore * 100)
+    );
+    if (data.contribution_score < 0) data.contribution_score = 0;
+    users.push(data);
+  });
+  
+  users.sort((a, b) => b.contribution_score - a.contribution_score);
+  
   return users.slice(0, limit).map((u, i) => ({
     rank: i + 1,
     uid: u.uid,
     display_name: u.display_name,
     xp: u.xp || 0,
+    contribution_score: u.contribution_score,
     badges: u.badges || [],
     reports: u.reports_submitted || 0,
     photo_url: u.photo_url,
     verifications_made: u.verifications_made || 0,
     accurate_verifications: u.accurate_verifications || 0,
+    trust_score: u.trust_score !== undefined ? u.trust_score : 0.5,
   }));
 }
 

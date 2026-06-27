@@ -59,6 +59,204 @@ function weightedPick(items) {
 }
 function gaussRand() { let u = 0, v = 0; while (!u) u = Math.random(); while (!v) v = Math.random(); return Math.sqrt(-2.0 * Math.log(u)) * Math.cos(2.0 * Math.PI * v); }
 
+function enrichAgentFields(ticket, priorityScore, vUp, vDown, category, severity, slaDeadline, slaProbability, createdAt) {
+  const ai = ticket.ai_classification?.confidence ?? 0.8;
+  const rep = 0.7;
+  const near = ticket.cluster_id ? 0.6 : 0.0;
+  const total = vUp + vDown;
+  const comm = total > 0 ? (vUp + 1) / (total + 2) : 0.5;
+
+  const l0 = Math.log(ai / (1 - ai));
+  const lReporter = Math.log(rep / (1 - rep));
+  const pNear = 0.5 + 0.4 * (near - 0.5);
+  const lNearby = Math.log(pNear / (1 - pNear));
+  const lComm = Math.log(comm / (1 - comm));
+
+  const lFinal = l0 + lReporter + lNearby + lComm;
+  const pFinal = 1 / (1 + Math.exp(-lFinal));
+  const vScore = Math.round(pFinal * 100);
+
+  const slaRisk = Math.round((1 - slaProbability) * 100);
+  const createdDate = new Date(createdAt);
+  const deadlineDate = new Date(slaDeadline);
+  
+  ticket.verification_score = vScore;
+  ticket.verification_explanation = `Bayesian consensus calculated valid issue state at ${vScore}% probability. Supported by ${vUp} citizen upvotes, AI computer vision label validation, and proximity cluster confirmation.`;
+
+  ticket.priority_explanation = `Civic priority index calibrated at ${Math.round(priorityScore)}/100. Factors weighed: ${severity.toUpperCase()} hazard level, asset category index, and community feedback weighting.`;
+
+  ticket.sla_risk_score = slaRisk;
+  ticket.sla_risk_explanation = `Weibull hazard reliability forecast predicts a ${slaRisk}% probability of SLA deadline breach, assuming active department maintenance backlogs.`;
+
+  const DISPATCH_DATA = {
+    pothole: {
+      department: "Roads & Infrastructure",
+      crew_size: 3,
+      materials: ["Cold-mix asphalt", "Compactor", "Traffic cones", "Safety signage"],
+      estimated_cost: 3500,
+      eta: "24h",
+      explanation: "Deploy patch repair crew for asphalt overlay during off-peak traffic window."
+    },
+    water_leak: {
+      department: "Water Supply",
+      crew_size: 2,
+      materials: ["Pipe clamps", "Excavator", "Replacement PVC conduit"],
+      estimated_cost: 6000,
+      eta: "12h",
+      explanation: "Isolate main pressure valve, excavate section, and install heavy-duty pressure clamp."
+    },
+    streetlight: {
+      department: "Electrical & Lighting",
+      crew_size: 1,
+      materials: ["LED bulb array", "Cherry picker lift", "Replacement fuses"],
+      estimated_cost: 1500,
+      eta: "48h",
+      explanation: "Inspect wiring terminals and replace burnt out bulb assembly using aerial lift."
+    },
+    waste: {
+      department: "Sanitation & Waste Management",
+      crew_size: 2,
+      materials: ["Compactor truck", "Heavy waste bins", "Sanitizer spray"],
+      estimated_cost: 1200,
+      eta: "8h",
+      explanation: "Deploy regional waste management crew for container clearance and sanitation sweep."
+    },
+    road_damage: {
+      department: "Roads & Infrastructure",
+      crew_size: 4,
+      materials: ["Sub-base gravel", "Asphalt roller", "Milling machine"],
+      estimated_cost: 9500,
+      eta: "72h",
+      explanation: "Mill degraded asphalt surface, re-compact base gravel layer, and lay fresh wear course."
+    },
+    drainage: {
+      department: "Drainage & Sewerage",
+      crew_size: 3,
+      materials: ["Hydro-jetting unit", "Gully vacuum truck", "CCTV inspection camera"],
+      estimated_cost: 4500,
+      eta: "36h",
+      explanation: "Inspect pipe blockage with gully camera, deploy high-pressure jetting to clear silt sediment."
+    },
+    other: {
+      department: "General Maintenance",
+      crew_size: 2,
+      materials: ["General toolset", "Hazard tape", "Reflective signs"],
+      estimated_cost: 2000,
+      eta: "48h",
+      explanation: "Dispatch inspections crew to evaluate asset condition and determine correction path."
+    }
+  };
+
+  ticket.dispatch_plan = DISPATCH_DATA[category] || DISPATCH_DATA.other;
+
+  const ROOT_CAUSE_DATA = {
+    pothole: {
+      cause: "Sub-base water logging and freeze-thaw cycles",
+      confidence: 84,
+      explanation: "Improper storm drainage allowed water to saturate the subgrade base, causing pavement fatigue under vehicle wheel loads."
+    },
+    water_leak: {
+      cause: "High-pressure pipe corrosion rupture",
+      confidence: 91,
+      explanation: "Aging distribution main suffered galvanic corrosion, weakening the metal wall until pressure surges caused a longitudinal split."
+    },
+    streetlight: {
+      cause: "Corroded luminaire starter circuit",
+      confidence: 78,
+      explanation: "Water ingress through damaged enclosure seal caused short circuit across terminal block, blowing the inline fuse."
+    },
+    waste: {
+      cause: "Exceeded ward capacity container allocation",
+      confidence: 88,
+      explanation: "Rapid residential growth in sector outstripped the weekly municipal garbage container collection schedules."
+    },
+    road_damage: {
+      cause: "Unregulated heavy commercial vehicle transit",
+      confidence: 85,
+      explanation: "Axle weights from unauthorized construction traffic exceeded pavement load capacity, initiating longitudinal rutting."
+    },
+    drainage: {
+      cause: "Siltation blockage from upstream surface runoff",
+      confidence: 80,
+      explanation: "Unpaved road runoff washed high volumes of sand and debris into the gully, completely choking the connection pipe."
+    },
+    other: {
+      cause: "General wear and tear deterioration",
+      confidence: 70,
+      explanation: "Normal environmental exposure and lack of preventative maintenance over extended life cycle."
+    }
+  };
+
+  ticket.root_cause = ROOT_CAUSE_DATA[category] || ROOT_CAUSE_DATA.other;
+
+  const trace = [];
+  const tStr = createdDate.toISOString();
+  
+  trace.push({
+    step: "classify_issue",
+    timestamp: tStr,
+    input: { text: ticket.description },
+    output: { category, severity, confidence: ai },
+    reasoning: `AI classifier processed description. Categorized as "${category}" with confidence ${Math.round(ai*100)}%.`,
+    duration_ms: Math.round(150 + Math.random()*200),
+    status: "success"
+  });
+
+  trace.push({
+    step: "geo_resolve",
+    timestamp: new Date(createdDate.getTime() + 1000).toISOString(),
+    input: { lat: ticket.lat, lng: ticket.lng },
+    output: { address: ticket.address, ward: ticket.ward },
+    reasoning: `Inverse geocoding resolved coordinates to municipal ward "${ticket.ward}".`,
+    duration_ms: Math.round(100 + Math.random()*150),
+    status: "success"
+  });
+
+  trace.push({
+    step: "find_cluster",
+    timestamp: new Date(createdDate.getTime() + 2000).toISOString(),
+    input: { lat: ticket.lat, lng: ticket.lng, category },
+    output: { found: !!ticket.cluster_id, ticket_id: ticket.cluster_id ? ticket.id : null },
+    reasoning: ticket.cluster_id 
+      ? `Spatial clustering agent associated report with active duplicate hotspot group #${ticket.cluster_id}.`
+      : `Spatial clustering agent scanned coordinates; no active duplicates located in proximity.`,
+    duration_ms: Math.round(200 + Math.random()*300),
+    status: "success"
+  });
+
+  trace.push({
+    step: "compute_priority",
+    timestamp: new Date(createdDate.getTime() + 3000).toISOString(),
+    input: { severity, reportCount: vUp + 1, category },
+    output: { priority_score: priorityScore },
+    reasoning: `Priority evaluation calculated score of ${Math.round(priorityScore)} using multi-factor hazard weights.`,
+    duration_ms: Math.round(120 + Math.random()*180),
+    status: "success"
+  });
+
+  trace.push({
+    step: "check_sla_status",
+    timestamp: new Date(createdDate.getTime() + 4000).toISOString(),
+    input: { category, created_at: tStr },
+    output: { probability: slaProbability },
+    reasoning: `Weibull distribution analyzed. Target resolution deadline set to ${deadlineDate.toLocaleString()}.`,
+    duration_ms: Math.round(180 + Math.random()*250),
+    status: "success"
+  });
+
+  trace.push({
+    step: "create_ticket",
+    timestamp: new Date(createdDate.getTime() + 5000).toISOString(),
+    input: { ticket_id: ticket.id },
+    output: { status: "created" },
+    reasoning: `Orchestrator successfully compiled pipeline traces and initialized ticket #${ticket.id}.`,
+    duration_ms: Math.round(90 + Math.random()*150),
+    status: "success"
+  });
+
+  ticket.agent_trace = trace;
+}
+
 function seasonalWeight(month, category) {
   const monsoon = [6, 7, 8];
   const summer = [3, 4, 5];
@@ -201,7 +399,7 @@ export function generateTickets(count = 800) {
       : Math.round(weibullConditionalProbability(elapsedHours, slaHours, slaParams.lambda, slaParams.k) * 100) / 100;
 
     const randomSuffix = Math.random().toString(36).substring(2, 8);
-    tickets.push({
+    const ticket = {
       id: `ticket-${i}-${randomSuffix}`,
       title: pick(TITLES[category]),
       description: `${pick(TITLES[category])} near ${landmark} in ${ward.name}. Residents have been facing this issue and need urgent attention.`,
@@ -227,7 +425,10 @@ export function generateTickets(count = 800) {
       created_at: createdAt.toISOString(),
       updated_at: createdAt.toISOString(),
       resolved_at: resolvedAt ? resolvedAt.toISOString() : null,
-    });
+    };
+
+    enrichAgentFields(ticket, priorityScore, vUp, vDown, category, severity, slaDeadline.toISOString(), slaProbability, createdAt.toISOString());
+    tickets.push(ticket);
   }
 
   // Create ~5 duplicate clusters
@@ -264,13 +465,20 @@ export function generateUsers() {
     if (xp > 150) badges.push('Verified Reporter');
     if (xp > 300) badges.push('Eagle Eye');
     if (xp > 500) badges.push('Community Champion');
+
+    const verifications_made = Math.floor(rand(0, 50));
+    const accurate_verifications = Math.floor(rand(0, verifications_made));
+    const reports_rejected = verifications_made - accurate_verifications;
+
     return {
       uid: `user-${i + 1}`, display_name: name,
       email: `${name.toLowerCase().replace(/\s/g, '.')}@example.com`,
       photo_url: null, xp, badges,
       reports_submitted: Math.floor(rand(1, 30)),
-      verifications_made: Math.floor(rand(0, 50)),
-      accurate_verifications: Math.floor(rand(0, 40)),
+      verifications_made,
+      accurate_verifications,
+      reports_verified: accurate_verifications,
+      reports_rejected,
       joined_at: new Date(Date.now() - rand(30, 180) * 24 * 60 * 60 * 1000).toISOString(),
     };
   });

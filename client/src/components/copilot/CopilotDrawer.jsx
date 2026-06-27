@@ -22,10 +22,55 @@ function CopilotDrawer() {
   if (!isAuthenticated) return null;
 
   const handleSend = async (textToSend) => {
-    const text = textToSend || input;
+    let text = textToSend || input;
     if (!text.trim() || loading) return;
 
     if (!textToSend) setInput('');
+
+    const detectKeywords = ['detect location', 'detect my location', 'get my location', 'use my location', 'where am i', 'current location'];
+    const matchesDetect = detectKeywords.some(keyword => text.toLowerCase().includes(keyword));
+
+    if (matchesDetect) {
+      const newMessages = [...messages, { role: 'user', content: text }];
+      setMessages(newMessages);
+      setLoading(true);
+
+      if (!('geolocation' in navigator)) {
+        setMessages(prev => [...prev, { role: 'model', content: '⚠️ Geolocation is not supported by your browser.' }]);
+        setLoading(false);
+        return;
+      }
+
+      navigator.geolocation.getCurrentPosition(
+        async (pos) => {
+          const { latitude, longitude } = pos.coords;
+          let addressStr = 'Lucknow, India';
+          try {
+            const mapsKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
+            const res = await fetch(
+              `https://maps.googleapis.com/maps/api/geocode/json?latlng=${latitude},${longitude}&key=${mapsKey}`,
+              { headers: { 'Accept-Language': 'en' } }
+            );
+            if (res.ok) {
+              const data = await res.json();
+              addressStr = data.results?.[0]?.formatted_address || addressStr;
+            }
+          } catch (err) {
+            console.error('Reverse geocode failed:', err);
+          }
+
+          const modelResponseText = `📍 GPS Telemetry Captured:\n- Coordinates: ${latitude.toFixed(5)}, ${longitude.toFixed(5)}\n- Address: ${addressStr}\n\nI have locked this location. How would you like to proceed?`;
+          setMessages(prev => [...prev, { role: 'model', content: modelResponseText }]);
+          setLoading(false);
+        },
+        (err) => {
+          setMessages(prev => [...prev, { role: 'model', content: `⚠️ Failed to acquire GPS lock: ${err.message}` }]);
+          setLoading(false);
+        },
+        { enableHighAccuracy: true, timeout: 10000 }
+      );
+      return;
+    }
 
     const newMessages = [...messages, { role: 'user', content: text }];
     setMessages(newMessages);
@@ -50,7 +95,7 @@ function CopilotDrawer() {
   const suggestions = [
     'Why is Hazratganj deteriorating?',
     'What issue cluster should be fixed first?',
-    'Show summary of active quests'
+    'Show summary of active issues'
   ];
 
   return (

@@ -165,14 +165,14 @@ test('weighted community votes update verification, priority, and voter reputati
   }, { userId: 'u_reporter', userName: 'Reporter' });
   const ticketId = created.ticket_id;
 
-  // 2. Create users with different trust scores
+  // 2. Create users with different trust scores (seeded with 10 actions to satisfy threshold)
   await db.collection('users').doc('voter_high').set({
     uid: 'voter_high', display_name: 'Noble Ranger', trust_score: 0.9,
-    reports_verified: 0, reports_rejected: 0, verification_accuracy: 1.0, xp: 0
+    reports_verified: 10, reports_rejected: 0, verification_accuracy: 1.0, xp: 0
   });
   await db.collection('users').doc('voter_low').set({
     uid: 'voter_low', display_name: 'Novice Squire', trust_score: 0.1,
-    reports_verified: 0, reports_rejected: 0, verification_accuracy: 1.0, xp: 0
+    reports_verified: 10, reports_rejected: 0, verification_accuracy: 1.0, xp: 0
   });
 
   // 3. noble ranger upvotes
@@ -200,21 +200,21 @@ test('weighted community votes update verification, priority, and voter reputati
   assert.ok(ticket.resolved_at);
 
   // 6. Verify reputation updates
-  // voter_low voted looks_resolved (correct stance) -> reports_verified: 1, reports_rejected: 0
-  // Laplace trust: (1 + 1) / (1 + 2) = 0.67
+  // voter_low voted looks_resolved (correct stance) -> reports_verified: 11, reports_rejected: 0
+  // Laplace trust: (11 + 1) / (11 + 2) = 0.92
   const lowVoterDoc = await db.collection('users').doc('voter_low').get();
   const lowVoter = lowVoterDoc.data();
-  assert.equal(lowVoter.reports_verified, 1);
+  assert.equal(lowVoter.reports_verified, 11);
   assert.equal(lowVoter.reports_rejected, 0);
-  assert.equal(lowVoter.trust_score, 0.67);
+  assert.equal(lowVoter.trust_score, 0.92);
 
-  // voter_high voted still_issue (incorrect stance) -> reports_verified: 0, reports_rejected: 1
-  // Laplace trust: (0 + 1) / (1 + 2) = 0.33
+  // voter_high voted still_issue (correct for verified, incorrect for resolved) -> reports_verified: 11, reports_rejected: 1
+  // Laplace trust: (11 + 1) / (12 + 2) = 0.86
   const highVoterDoc = await db.collection('users').doc('voter_high').get();
   const highVoter = highVoterDoc.data();
-  assert.equal(highVoter.reports_verified, 0);
+  assert.equal(highVoter.reports_verified, 11);
   assert.equal(highVoter.reports_rejected, 1);
-  assert.equal(highVoter.trust_score, 0.33);
+  assert.equal(highVoter.trust_score, 0.86);
 });
 
 test('analyzeRootCause analyzes report cluster and diagnoses probable cause', async () => {
@@ -228,5 +228,88 @@ test('analyzeRootCause analyzes report cluster and diagnoses probable cause', as
   assert.ok(result.cause);
   assert.ok(result.confidence);
   assert.ok(result.explanation);
+});
+
+test('record_verification enforces 50m geofence validation', async () => {
+  const handlers = (await import('../toolHandlers.js')).toolHandlers;
+  const created = await handlers.create_ticket({
+    title: 'Geofence test',
+    description: 'Civic geofence verification test',
+    category: 'water_leak',
+    severity: 'medium',
+    lat: 26.85,
+    lng: 80.95,
+    address: 'Hazratganj',
+    ward: 'Hazratganj'
+  }, { userId: 'u_reporter', userName: 'Reporter' });
+  const ticketId = created.ticket_id;
+
+  // Attempt to vote from 1 km away (lat: 26.86, lng: 80.95)
+  const failRes = await handlers.record_verification({
+    ticket_id: ticketId,
+    vote_type: 'still_issue',
+    lat: 26.86,
+    lng: 80.95
+  }, { userId: 'geofence_voter' });
+
+  assert.equal(failRes.error, 'Verification rejected: you must be within 50 meters of the issue location to verify.');
+
+  // Vote from exactly the same spot (lat: 26.85, lng: 80.95)
+  const successRes = await handlers.record_verification({
+    ticket_id: ticketId,
+    vote_type: 'still_issue',
+    lat: 26.85,
+    lng: 80.95
+  }, { userId: 'geofence_voter' });
+
+  assert.ok(!successRes.error);
+  assert.equal(successRes.verification_up, 1);
+});
+
+test('processReport redirects duplicate reports to verification upvotes', async () => {
+  const orchestrator = await loadOrchestratorWithStubbedLLM();
+  
+  // Clean mock tickets collection for test isolation
+  const ticketsSnap = await db.collection('tickets').get();
+  for (const doc of ticketsSnap.docs) {
+    await db.collection('tickets').doc(doc.id).delete();
+  }
+  
+  // 1. Create first report (ticket created)
+  const res1 = await orchestrator.processReport({
+    id: 'report-orig',
+    text: 'Water leak',
+    lat: 26.85,
+    lng: 80.95,
+    reporter_id: 'voter_first',
+    reporter_name: 'Reporter 1',
+    address: 'Hazratganj',
+    classificationResult: { category: 'water_leak', severity: 'medium', confidence: 0.9, reasoning: 'test' },
+  }, () => {});
+
+  const ticketId = res1.ticketId;
+  assert.ok(ticketId);
+  assert.equal(res1.merged, false);
+
+  // 2. Create second report at same location (duplicate)
+  const res2 = await orchestrator.processReport({
+    id: 'report-dup',
+    text: 'Water leak duplicate',
+    lat: 26.8501,
+    lng: 80.9501,
+    reporter_id: 'voter_second',
+    reporter_name: 'Reporter 2',
+    address: 'Hazratganj',
+    classificationResult: { category: 'water_leak', severity: 'medium', confidence: 0.9, reasoning: 'test' },
+  }, () => {});
+
+  assert.equal(res2.ticketId, ticketId);
+  assert.equal(res2.merged, true);
+
+  // Verify that voter_second's vote was registered as 'still_issue'
+  const ticketDoc = await db.collection('tickets').doc(ticketId).get();
+  const ticket = ticketDoc.data();
+  assert.equal(ticket.votes['voter_second'], 'still_issue');
+  assert.equal(ticket.verification_up, 1);
 });
 

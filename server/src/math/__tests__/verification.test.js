@@ -3,32 +3,32 @@ import assert from 'node:assert/strict';
 import { calculateVerificationScore, statusFromVerificationScore } from '../verification.js';
 
 test('calculateVerificationScore calculates correct weighted output', () => {
-  // Perfect confidence score: 0.4*1 + 0.2*1 + 0.2*1 + 0.2*1 = 1.0 (100)
+  // Perfect confidence score: Bayesian consensus log-odds
   let score = calculateVerificationScore({
     aiConfidence: 1.0,
     reporterTrust: 1.0,
     nearbyEvidence: 1.0,
     communityVotes: 1.0,
   });
-  assert.equal(score, 100);
+  assert.equal(score, 99.94);
 
-  // Baseline/Neutral: 0.4*0.5 + 0.2*0.5 + 0.2*0.0 + 0.2*0.5 = 0.2 + 0.1 + 0 + 0.1 = 0.40 (40)
+  // Baseline/Neutral:
   score = calculateVerificationScore({
     aiConfidence: 0.5,
     reporterTrust: 0.5,
     nearbyEvidence: 0.0,
     communityVotes: 0.5,
   });
-  assert.equal(score, 40);
+  assert.equal(score, 30);
 
-  // High dispute: 0.4*0.8 + 0.2*0.2 + 0.2*0.0 + 0.2*0.1 = 0.32 + 0.04 + 0.0 + 0.02 = 0.38 (38)
+  // High dispute:
   score = calculateVerificationScore({
     aiConfidence: 0.8,
     reporterTrust: 0.2,
     nearbyEvidence: 0.0,
     communityVotes: 0.1,
   });
-  assert.equal(score, 38);
+  assert.equal(score, 4.55);
 });
 
 test('statusFromVerificationScore maps status correctly to boundaries', () => {

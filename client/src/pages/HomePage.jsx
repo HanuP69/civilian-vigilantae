@@ -7,6 +7,18 @@ import { CATEGORY_LABELS, CATEGORY_COLORS, WARD_LIST, WARD_CENTERS } from '../ut
 import { timeAgo, capitalize } from '../utils/formatters';
 import ConfigurableMap from '../components/map/ConfigurableMap';
 
+const getTimestampMs = (val) => {
+  if (!val) return 0;
+  if (val.toDate && typeof val.toDate === 'function') {
+    return val.toDate().getTime();
+  }
+  if (typeof val === 'object' && val.seconds !== undefined) {
+    return val.seconds * 1000;
+  }
+  const d = new Date(val);
+  return isNaN(d.getTime()) ? 0 : d.getTime();
+};
+
 const LAYERS = [
   { key: 'reports', label: 'ACTIVE ISSUES' },
   { key: 'verified', label: 'VERIFIED ISSUES' },
@@ -164,7 +176,7 @@ function HomePage() {
       if (!t.sla_deadline || !t.ward) continue;
       if (!counts[t.ward]) counts[t.ward] = { total: 0, breached: 0 };
       counts[t.ward].total++;
-      if (t.status !== 'resolved' && new Date(t.sla_deadline).getTime() < now) counts[t.ward].breached++;
+      if (t.status !== 'resolved' && getTimestampMs(t.sla_deadline) < now) counts[t.ward].breached++;
     }
     return counts;
   }, [tickets]);
@@ -177,7 +189,7 @@ function HomePage() {
   const criticalCount = useMemo(() => activeIssues.filter(t => t.priority_score > 70).length, [activeIssues]);
   const slaBreachCount = useMemo(() => {
     const now = Date.now();
-    return activeIssues.filter(t => t.sla_deadline && new Date(t.sla_deadline).getTime() < now).length;
+    return activeIssues.filter(t => t.sla_deadline && getTimestampMs(t.sla_deadline) < now).length;
   }, [activeIssues]);
 
   const communityHealthIndex = useMemo(() => {

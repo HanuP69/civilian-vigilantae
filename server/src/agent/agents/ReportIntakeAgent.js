@@ -18,12 +18,20 @@ export const ReportIntakeAgent = {
       media_urls: reportData.media_urls || [],
     };
 
-    // Validate coordinates
+    // Validate coordinates (restrict to Lucknow bounding box)
     const latitude = parseFloat(reportData.lat);
     const longitude = parseFloat(reportData.lng);
-    if (Number.isNaN(latitude) || Number.isNaN(longitude) || latitude < -90 || latitude > 90 || longitude < -180 || longitude > 180) {
-      trace.logStep('validation_error', { lat: reportData.lat, lng: reportData.lng }, { error: 'Invalid coordinates' }, 'Coordinates are out of bounds or missing.', 0);
-      throw new Error('Invalid coordinates');
+    
+    const minLat = 26.75;
+    const maxLat = 26.95;
+    const minLng = 80.85;
+    const maxLng = 81.05;
+
+    if (Number.isNaN(latitude) || Number.isNaN(longitude) || 
+        latitude < minLat || latitude > maxLat || 
+        longitude < minLng || longitude > maxLng) {
+      trace.logStep('validation_error', { lat: reportData.lat, lng: reportData.lng }, { error: 'Invalid coordinates' }, 'Coordinates are outside Lucknow city boundaries.', 0);
+      throw new Error('Invalid coordinates: Out of Lucknow boundaries');
     }
 
     ctx.intakeResult = intakeResult;

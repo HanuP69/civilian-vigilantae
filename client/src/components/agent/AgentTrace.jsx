@@ -125,7 +125,7 @@ function AgentTrace({ trace = [] }) {
                         </span>
                       )}
                     </div>
-                    <span className="text-xs" style={{ color: 'var(--ink-muted)' }}>
+                    <span className="text-xs" style={{ color: 'var(--ink-muted)', wordBreak: 'break-word', display: 'block' }}>
                       {step.reasoning || step.detail || step.result || 'Executing...'}
                     </span>
                   </div>

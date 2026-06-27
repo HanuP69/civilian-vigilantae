@@ -12,14 +12,26 @@ async function clearCollection(collectionName) {
   const collectionRef = db.collection(collectionName);
   let totalDeleted = 0;
   
-  while (true) {
-    const snapshot = await collectionRef.limit(400).get();
-    if (snapshot.empty) break;
-    
-    const batch = db.batch();
-    snapshot.docs.forEach((doc) => batch.delete(doc.ref));
-    await batch.commit();
-    totalDeleted += snapshot.size;
+  if (typeof collectionRef.limit !== 'function' || typeof db.batch !== 'function') {
+    // Mock environment
+    const snapshot = await collectionRef.get();
+    if (!snapshot.empty) {
+      for (const doc of snapshot.docs) {
+        await collectionRef.doc(doc.id).delete();
+        totalDeleted++;
+      }
+    }
+  } else {
+    // Real Firebase environment
+    while (true) {
+      const snapshot = await collectionRef.limit(400).get();
+      if (snapshot.empty) break;
+      
+      const batch = db.batch();
+      snapshot.docs.forEach((doc) => batch.delete(doc.ref));
+      await batch.commit();
+      totalDeleted += snapshot.size;
+    }
   }
   console.log(`Successfully cleared "${collectionName}" (deleted ${totalDeleted} documents).`);
 }
@@ -49,29 +61,47 @@ async function run() {
     
     // Write tickets
     console.log('Writing tickets...');
-    const ticketBatch = db.batch();
-    tickets.forEach((ticket) => {
-      ticketBatch.set(db.collection('tickets').doc(ticket.id), ticket);
-    });
-    await ticketBatch.commit();
+    if (typeof db.batch !== 'function') {
+      for (const ticket of tickets) {
+        await db.collection('tickets').doc(ticket.id).set(ticket);
+      }
+    } else {
+      const ticketBatch = db.batch();
+      tickets.forEach((ticket) => {
+        ticketBatch.set(db.collection('tickets').doc(ticket.id), ticket);
+      });
+      await ticketBatch.commit();
+    }
     console.log(`Wrote ${tickets.length} tickets.`);
 
     // Write users
     console.log('Writing users...');
-    const userBatch = db.batch();
-    users.forEach((user) => {
-      userBatch.set(db.collection('users').doc(user.uid), user);
-    });
-    await userBatch.commit();
+    if (typeof db.batch !== 'function') {
+      for (const user of users) {
+        await db.collection('users').doc(user.uid).set(user);
+      }
+    } else {
+      const userBatch = db.batch();
+      users.forEach((user) => {
+        userBatch.set(db.collection('users').doc(user.uid), user);
+      });
+      await userBatch.commit();
+    }
     console.log(`Wrote ${users.length} users.`);
 
     // Write departments
     console.log('Writing departments...');
-    const deptBatch = db.batch();
-    departments.forEach((dept) => {
-      deptBatch.set(db.collection('departments').doc(dept.id), dept);
-    });
-    await deptBatch.commit();
+    if (typeof db.batch !== 'function') {
+      for (const dept of departments) {
+        await db.collection('departments').doc(dept.id).set(dept);
+      }
+    } else {
+      const deptBatch = db.batch();
+      departments.forEach((dept) => {
+        deptBatch.set(db.collection('departments').doc(dept.id), dept);
+      });
+      await deptBatch.commit();
+    }
     console.log(`Wrote ${departments.length} departments.`);
 
     console.log('\nUpdating local seedOutput.json...');

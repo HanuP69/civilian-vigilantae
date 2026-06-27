@@ -73,20 +73,20 @@ router.post('/', requireAuth, reportLimiter, upload.single('media'), async (req,
       classificationResult, cloudVisionResult, classificationAgreement,
     };
 
-    const result = await processReport(reportData, (step) => {
+    // Run the heavy multi-agent pipeline in the background asynchronously
+    processReport(reportData, (step) => {
       broadcast('agent_step', step);
+    }).catch((err) => {
+      console.error('[Async Agent Pipeline] Critical Error:', err);
     });
 
-    if (result.ticketId && reporter_id !== 'anonymous') {
-      await awardXP(reporter_id, result.merged ? 'vote' : 'report', result.ticketId);
-    }
+
 
     res.json({
       success: true,
-      ticket_id: result.ticketId,
-      merged: !!result.merged,
-      classification: classificationResult,
-      trace: result.trace,
+      ticket_id: reportData.id,
+      merged: false,
+      status: 'queued',
     });
   } catch (err) {
     console.error('[Report] Error:', err);

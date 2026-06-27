@@ -171,7 +171,31 @@ export function createMockFirestore() {
     },
   });
 
-  return { collection: collectionRef };
+  const runTransaction = async (updateFunction) => {
+    const transaction = {
+      get: async (refOrQuery) => {
+        return refOrQuery.get();
+      },
+      set: (ref, data) => {
+        ref.set(data);
+        return transaction;
+      },
+      update: (ref, data) => {
+        ref.update(data);
+        return transaction;
+      },
+      delete: (ref) => {
+        ref.delete();
+        return transaction;
+      }
+    };
+    return updateFunction(transaction);
+  };
+
+  return { 
+    collection: collectionRef,
+    runTransaction
+  };
 }
 
 // ---------------------------------------------------------------------------

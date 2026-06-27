@@ -134,12 +134,30 @@ function LeaderboardPage() {
           if (rank === 2) rankColor = 'var(--rank-silver)';
           if (rank === 3) rankColor = 'var(--rank-bronze)';
 
-          // Accuracy & Trust calculation
-          const accuracyRate = user.verifications_made > 0 
-            ? Math.round(((user.accurate_verifications || 0) / user.verifications_made) * 100) 
+          // Accuracy & Trust calculation with database schemas fallbacks
+          const verifications = user.verifications_made !== undefined 
+            ? user.verifications_made 
+            : ((user.reports_verified || 0) + (user.reports_rejected || 0));
+
+          const accurateVerifications = user.accurate_verifications !== undefined
+            ? user.accurate_verifications
+            : (user.reports_verified || 0);
+
+          const accuracyRate = verifications > 0 
+            ? Math.min(100, Math.round((accurateVerifications / verifications) * 100)) 
             : 100;
           
-          const trustScore = Math.min(100, Math.max(50, Math.round(50 + (user.reports || 0) * 3 + (user.accurate_verifications || 0) * 2 - ((user.verifications_made || 0) - (user.accurate_verifications || 0)) * 4)));
+           const trustScore = Math.min(100, Math.max(50, Math.round(50 + (user.reports || user.reports_submitted || 0) * 3 + accurateVerifications * 2 - (verifications - accurateVerifications) * 4)));
+
+          const contributionScore = user.contribution_score !== undefined
+            ? user.contribution_score
+            : Math.max(0, Math.round(
+                ((user.xp || 0) * 0.1) +
+                ((user.reports ?? user.reports_submitted ?? 0) * 15) +
+                (accurateVerifications * 25) -
+                (Math.max(0, verifications - accurateVerifications) * 10) +
+                ((user.trust_score !== undefined ? user.trust_score : 0.5) * 100)
+              ));
 
           return (
             <motion.div
@@ -200,7 +218,7 @@ function LeaderboardPage() {
                     {user.reports ?? user.reports_submitted ?? 0} Reported
                   </span>
                   <span className="text-xs text-muted" style={{ whiteSpace: 'nowrap' }}>
-                    · {user.verifications_made ?? 0} Verified
+                    · {verifications} Verified
                   </span>
                   <span className="text-xs" style={{ whiteSpace: 'nowrap', color: accuracyRate >= 70 ? 'var(--success)' : 'var(--warning)', fontWeight: 600 }}>
                     · Accuracy: {accuracyRate}%
@@ -212,7 +230,10 @@ function LeaderboardPage() {
               </div>
 
               <div className="flex flex-col items-end gap-1">
-                <span className="font-mono" style={{ color: 'var(--accent)', fontSize: '0.95rem', fontWeight: 700 }}>
+                <span className="font-pixel" style={{ color: 'var(--accent)', fontSize: '10px', fontWeight: 700 }}>
+                  {contributionScore} PTS
+                </span>
+                <span className="font-mono text-muted" style={{ fontSize: '0.75rem' }}>
                   {user.xp ?? 0} XP
                 </span>
                 {badges.length > 0 && (

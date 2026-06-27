@@ -35,6 +35,26 @@ const SEVERITY_MAP = {
 /** @type {Set<string>} Categories that pose direct public safety risks. */
 const SAFETY_CRITICAL = new Set(['water_leak', 'drainage', 'road_damage']);
 
+const SAFETY_KEYWORDS = [
+  'wire', 'electric', 'shock', 'hazard', 'danger', 'fire', 
+  'flood', 'injury', 'accident', 'emergency', 'cave-in', 'open manhole', 'exposed'
+];
+
+/**
+ * Check if an issue is safety-critical based on its category or description text.
+ *
+ * @param {string} category
+ * @param {string} description
+ * @returns {boolean}
+ */
+export function checkIfSafetyCritical(category, description = '') {
+  if (SAFETY_CRITICAL.has(category)) return true;
+
+  const text = (description || '').toLowerCase();
+  const matchCount = SAFETY_KEYWORDS.filter(kw => text.includes(kw)).length;
+  return matchCount >= 2;
+}
+
 /**
  * @typedef {Object} PriorityInput
  * @property {string} severity         — one of 'critical' | 'high' | 'medium' | 'low'
@@ -44,34 +64,13 @@ const SAFETY_CRITICAL = new Set(['water_leak', 'drainage', 'road_damage']);
  * @property {number} elapsedHours     — hours since the issue was first reported
  * @property {number} slaHours         — target resolution time in hours
  * @property {string} category         — issue category (e.g. 'pothole')
+ * @property {string} [description]    — optional report description text
  */
 
 /**
  * Compute a priority score for a civic issue.
  *
  * The returned value is clamped and scaled to [0, 100].
- *
- * | Dimension        | Formula component                                     |
- * |------------------|-------------------------------------------------------|
- * | Severity         | `SEVERITY_MAP[severity]`                              |
- * | Report volume    | `log(1 + reportCount)`  (natural log)                 |
- * | Verification     | `(up - down) / (up + down + 1)`  in [-1, 1]           |
- * | SLA urgency      | `elapsedHours / slaHours`  (capped at 1)              |
- * | Safety           | 1.0 for safety-critical categories, 0.5 otherwise     |
- *
- * @param {PriorityInput} input
- * @returns {number} priority score in [0, 100]
- *
- * @example
- * computePriority({
- *   severity: 'high',
- *   reportCount: 5,
- *   verificationUp: 12,
- *   verificationDown: 1,
- *   elapsedHours: 36,
- *   slaHours: 48,
- *   category: 'pothole',
- * }); // ≈ 67
  */
 export function computePriority({
   severity,
@@ -81,13 +80,12 @@ export function computePriority({
   elapsedHours,
   slaHours,
   category,
+  description,
 }) {
   // ── 1. Severity (S_vis) ──────────────────────────────────────────
   const sVis = SEVERITY_MAP[severity] ?? SEVERITY_MAP.medium;
 
   // ── 2. Report volume — log(1 + N) ───────────────────────────────
-  // Normalize: log(1+N) / log(1+100) caps contribution around ~1 for
-  // 100 reports, which keeps scale comparable to other 0–1 components.
   const maxExpectedReports = 100;
   const logReports = Math.log(1 + Math.max(reportCount || 0, 0));
   const logNorm = logReports / Math.log(1 + maxExpectedReports);
@@ -96,17 +94,16 @@ export function computePriority({
   // ── 3. Verification ratio ───────────────────────────────────────
   const up = Math.max(verificationUp || 0, 0);
   const down = Math.max(verificationDown || 0, 0);
-  // Range: [-1, 1] → remap to [0, 1] for scoring
   const rawRatio = (up - down) / (up + down + 1);
-  const vRatio = (rawRatio + 1) / 2; // shift to [0, 1]
+  const vRatio = (rawRatio + 1) / 2;
 
   // ── 4. SLA urgency ──────────────────────────────────────────────
   const elapsed = Math.max(elapsedHours || 0, 0);
-  const sla = slaHours > 0 ? slaHours : 1; // guard against zero / missing
+  const sla = slaHours > 0 ? slaHours : 1;
   const slaRatio = Math.min(elapsed / sla, 1);
 
-  // ── 5. Safety criticality ───────────────────────────────────────
-  const rSafety = SAFETY_CRITICAL.has(category) ? 1.0 : 0.5;
+  // ── 5. Safety criticality (dynamic) ─────────────────────────────
+  const rSafety = checkIfSafetyCritical(category, description) ? 1.0 : 0.5;
 
   // ── Combine ─────────────────────────────────────────────────────
   const raw =
@@ -116,7 +113,6 @@ export function computePriority({
     W4 * slaRatio +
     W5 * rSafety;
 
-  // Raw theoretical range: ~0 to 1. Return clamped float [0, 100].
   return Math.min(Math.max(raw, 0), 1) * 100;
 }
 
@@ -143,7 +139,7 @@ export function computePriorityWithBreakdown(input) {
   const sla = input.slaHours > 0 ? input.slaHours : 1;
   const slaRatio = Math.min(elapsed / sla, 1);
 
-  const rSafety = SAFETY_CRITICAL.has(input.category) ? 1.0 : 0.5;
+  const rSafety = checkIfSafetyCritical(input.category, input.description) ? 1.0 : 0.5;
 
   // Compute continuous score first (matches computePriority exactly)
   const raw = W1 * sVis + W2 * nReports + W3 * vRatio + W4 * slaRatio + W5 * rSafety;

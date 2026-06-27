@@ -22,13 +22,34 @@ export function calculateVerificationScore({
   nearbyEvidence,
   communityVotes,
 }) {
-  const ai = Math.min(Math.max(aiConfidence ?? 0.5, 0), 1);
-  const rep = Math.min(Math.max(reporterTrust ?? 0.5, 0), 1);
-  const near = Math.min(Math.max(nearbyEvidence ?? 0.0, 0), 1);
-  const comm = Math.min(Math.max(communityVotes ?? 0.5, 0), 1);
+  // Clamp variables to prevent infinity/NaN in log-odds calculations
+  const ai = Math.min(Math.max(aiConfidence ?? 0.5, 0.1), 0.9);
+  const rep = Math.min(Math.max(reporterTrust ?? 0.5, 0.1), 0.9);
+  const near = Math.min(Math.max(nearbyEvidence ?? 0.0, 0.0), 1.0);
+  const comm = Math.min(Math.max(communityVotes ?? 0.5, 0.1), 0.9);
 
-  const score = (0.40 * ai + 0.20 * rep + 0.20 * near + 0.20 * comm) * 100;
-  return Math.round(score * 100) / 100; // Round to 2 decimal places
+  // 1. Initial prior probability based on AI confidence
+  const prior = ai;
+  const l0 = Math.log(prior / (1 - prior));
+
+  // 2. Update with Reporter Trust likelihood
+  const lReporter = Math.log(rep / (1 - rep));
+
+  // 3. Update with Nearby Evidence (spatial density)
+  // Maps nearbyEvidence [0, 1] to a likelihood ratio between [0.3, 0.7] remapped from 0.5
+  const pNear = 0.5 + 0.4 * (near - 0.5);
+  const lNearby = Math.log(pNear / (1 - pNear));
+
+  // 4. Update with Community votes
+  const lComm = Math.log(comm / (1 - comm));
+
+  // Final log-odds
+  const lFinal = l0 + lReporter + lNearby + lComm;
+
+  // Convert back to probability
+  const pFinal = 1 / (1 + Math.exp(-lFinal));
+
+  return Math.round(pFinal * 10000) / 100; // Return score in [0, 100] (2 decimal places)
 }
 
 /**

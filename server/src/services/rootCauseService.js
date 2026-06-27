@@ -28,9 +28,12 @@ export async function analyzeRootCause(category, reports) {
     categoriesCount[cat] = (categoriesCount[cat] || 0) + 1;
   });
 
-  // 2. Calculate Temporal Correlation (Standard Deviation in hours)
+  // 2. Calculate Temporal Correlation (Standard Deviation in hours + Burstiness Index)
   let temporalCorrelation = 'N/A (Single Incident)';
   let stdDevHours = 0;
+  let burstinessIndex = 0;
+  let burstinessText = 'N/A';
+
   if (totalReportsCount >= 2) {
     const timestamps = reports.map(r => new Date(r.created_at || Date.now()).getTime());
     const mean = timestamps.reduce((sum, t) => sum + t, 0) / totalReportsCount;
@@ -44,6 +47,31 @@ export async function analyzeRootCause(category, reports) {
       temporalCorrelation = `Moderate Temporal Correlation (σ = ${stdDevHours.toFixed(1)}h - Continuous Degradation)`;
     } else {
       temporalCorrelation = `Low Temporal Correlation (σ = ${stdDevHours.toFixed(1)}h - Intermittent Accumulation)`;
+    }
+
+    // Compute Interval Burstiness if we have at least 3 incidents (which gives 2 intervals)
+    if (totalReportsCount >= 3) {
+      const sortedTimestamps = [...timestamps].sort((a, b) => a - b);
+      const intervals = [];
+      for (let i = 0; i < sortedTimestamps.length - 1; i++) {
+        intervals.push(sortedTimestamps[i + 1] - sortedTimestamps[i]);
+      }
+      const meanInterval = intervals.reduce((sum, val) => sum + val, 0) / intervals.length;
+      const varInterval = intervals.reduce((sum, val) => sum + Math.pow(val - meanInterval, 2), 0) / intervals.length;
+      const stdDevInterval = Math.sqrt(varInterval);
+
+      if (meanInterval + stdDevInterval > 0) {
+        burstinessIndex = (stdDevInterval - meanInterval) / (stdDevInterval + meanInterval);
+      }
+
+      if (burstinessIndex > 0.3) {
+        burstinessText = `High Burstiness (B = ${burstinessIndex.toFixed(2)} - Clustered Anomaly)`;
+      } else if (burstinessIndex < -0.3) {
+        burstinessText = `Low Burstiness (B = ${burstinessIndex.toFixed(2)} - Regularly Spaced)`;
+      } else {
+        burstinessText = `Poisson Burstiness (B = ${burstinessIndex.toFixed(2)})`;
+      }
+      temporalCorrelation = `${temporalCorrelation} | ${burstinessText}`;
     }
   }
 
@@ -62,7 +90,7 @@ export async function analyzeRootCause(category, reports) {
     assetCorrelation = `Distributed Infrastructure Stress across ${uniqueAssets.length} assets`;
   }
 
-  // 4. Compute recurrence risk inline from resolved tickets (recurrence_risks collection never populated)
+  // 4. Compute recurrence risk inline from resolved tickets
   let historicalRecurrenceRisk = 'Insufficient resolved ticket data for recurrence estimation.';
   const firstReport = reports[0];
   if (firstReport && firstReport.ward) {
@@ -89,6 +117,30 @@ export async function analyzeRootCause(category, reports) {
     }
   }
 
+  // Calculate evidence-grounded confidence score
+  // Size (40% max), Temporal (20% max), Asset (20% max), Recurrence (20% max)
+  const sizeScore = Math.min(totalReportsCount * 4, 40);
+  let temporalScore = 5;
+  if (totalReportsCount >= 2) {
+    if (stdDevHours <= 6) temporalScore = 20;
+    else if (stdDevHours <= 24) temporalScore = 15;
+    else temporalScore = 10;
+  }
+  let assetScore = 5;
+  if (uniqueAssets.length === 1) assetScore = 20;
+  else if (uniqueAssets.length > 1) assetScore = 10;
+
+  let recurrenceScore = 5;
+  if (historicalRecurrenceRisk.includes('%')) {
+    const pctMatch = historicalRecurrenceRisk.match(/(\d+)%/);
+    if (pctMatch) {
+      const riskPct = parseInt(pctMatch[1], 10);
+      recurrenceScore = Math.min(Math.max(Math.round(riskPct * 0.2), 5), 20);
+    }
+  }
+
+  const computedConfidence = Math.min(Math.max(sizeScore + temporalScore + assetScore + recurrenceScore, 50), 95);
+
   // 5. Package Evidence for LLM explanation
   const evidenceSummary = {
     composition: `${totalReportsCount} active complaints under [${category.toUpperCase()}] category`,
@@ -110,7 +162,7 @@ Respond ONLY with a valid JSON object matching the following schema. Do NOT incl
 Schema:
 {
   "cause": "Short Title of the Probable Cause (e.g. Main Pipe Fracture, Circuit Substation Fault, Sewer Line Blockage)",
-  "confidence": <integer percentage between 0 and 100 representing confidence>,
+  "confidence": ${computedConfidence},
   "explanation": "A concise explanation (2-3 sentences) explaining how the evidence (temporal correlation, asset correlation, and recurrence risk) leads to this diagnosis."
 }`;
 
@@ -138,25 +190,24 @@ ${reportsSummary}
     const parsed = JSON.parse(text);
     return {
       cause: parsed.cause || `${category.replace('_', ' ').toUpperCase()} Cluster`,
-      confidence: Math.min(Math.max(Number(parsed.confidence) || 75, 0), 100),
+      confidence: computedConfidence,
       explanation: parsed.explanation || 'Analyzed underlying municipal infrastructure anomalies.',
       evidence: evidenceSummary
     };
   } catch (err) {
     console.warn('[RootCauseService] Failed to parse LLM response, using fallback:', err.message);
     const fallbacks = {
-      water_leak: { cause: 'Aging Water Main Leakage', confidence: 60, explanation: `Nearby leakage reports indicate pressure stress. Asset correlation: ${evidenceSummary.asset}.` },
-      streetlight: { cause: 'Circuit Substation Fault', confidence: 65, explanation: `Lighting grid failures clustered temporally. Temporal correlation: ${evidenceSummary.temporal}.` },
-      waste: { cause: 'Illegal Commercial Dumping', confidence: 70, explanation: `Persistent refuse overflows in this ward. Recurrence risk: ${evidenceSummary.recurrence}.` },
-      pothole: { cause: 'Sub-base Water Infiltration', confidence: 65, explanation: `Tarmac degradation accelerated by sub-base wear. Asset correlation: ${evidenceSummary.asset}.` },
-      road_damage: { cause: 'Heavy Construction Transit', confidence: 60, explanation: `Tarmac deterioration indicates heavy vehicle detours. Temporal correlation: ${evidenceSummary.temporal}.` },
-      drainage: { cause: 'Drainage Culvert Sewer Blockage', confidence: 70, explanation: `Flooding indicates culvert blockages. Recurrence risk: ${evidenceSummary.recurrence}.` }
+      water_leak: { cause: 'Aging Water Main Leakage', explanation: `Nearby leakage reports indicate pressure stress. Asset correlation: ${evidenceSummary.asset}.` },
+      streetlight: { cause: 'Circuit Substation Fault', explanation: `Lighting grid failures clustered temporally. Temporal correlation: ${evidenceSummary.temporal}.` },
+      waste: { cause: 'Illegal Commercial Dumping', explanation: `Persistent refuse overflows in this ward. Recurrence risk: ${evidenceSummary.recurrence}.` },
+      pothole: { cause: 'Sub-base Water Infiltration', explanation: `Tarmac degradation accelerated by sub-base wear. Asset correlation: ${evidenceSummary.asset}.` },
+      road_damage: { cause: 'Heavy Construction Transit', explanation: `Tarmac deterioration indicates heavy vehicle detours. Temporal correlation: ${evidenceSummary.temporal}.` },
+      drainage: { cause: 'Drainage Culvert Sewer Blockage', explanation: `Flooding indicates culvert blockages. Recurrence risk: ${evidenceSummary.recurrence}.` }
     };
     const fb = fallbacks[category] || {
       cause: `${category.replace('_', ' ').toUpperCase()} Swarm`,
-      confidence: 50,
       explanation: 'Clustered reports suggest localized infrastructure stress.'
     };
-    return { ...fb, evidence: evidenceSummary };
+    return { ...fb, confidence: computedConfidence, evidence: evidenceSummary };
   }
 }

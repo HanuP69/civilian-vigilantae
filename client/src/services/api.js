@@ -38,7 +38,7 @@ export async function submitReport(formData) {
   return { ...data, report_id: reportId };
 }
 
-export async function submitVerification(ticketId, voteType, userId) {
+export async function submitVerification(ticketId, voteType, userId, lat, lng, photo) {
   const token = localStorage.getItem('userId') || userId;
   const res = await fetch(`${API}/verify/${ticketId}`, {
     method: 'POST',
@@ -46,7 +46,7 @@ export async function submitVerification(ticketId, voteType, userId) {
       'Content-Type': 'application/json',
       'Authorization': `Bearer ${token}`
     },
-    body: JSON.stringify({ vote_type: voteType, user_id: userId }),
+    body: JSON.stringify({ vote_type: voteType, user_id: userId, lat, lng, photo }),
   });
   return handleResponse(res);
 }

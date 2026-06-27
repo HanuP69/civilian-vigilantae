@@ -7,6 +7,12 @@ import { CATEGORY_LABELS, CATEGORY_COLORS } from '../utils/constants';
 import { formatHours, capitalize } from '../utils/formatters';
 import { useToast } from '../hooks/useToast.jsx';
 import { motion } from 'framer-motion';
+
+const getSeverityColor = (index) => {
+  if (index > 8) return 'var(--error)';
+  if (index > 3) return 'var(--warning)';
+  return 'var(--success)';
+};
 const CountUp = ({ to, suffix = '' }) => {
   const [count, setCount] = useState(0);
   useEffect(() => {
@@ -374,6 +380,7 @@ function DashboardPage() {
   const [activeInfo, setActiveInfo] = useState({});
   const [selectedWardName, setSelectedWardName] = useState(null);
   const [viewMode, setViewMode] = useState('map');
+  const [dashboardTab, setDashboardTab] = useState('overview');
   const { toast } = useToast();
 
   const toggleInfo = (key) => setActiveInfo(prev => ({ ...prev, [key]: !prev[key] }));
@@ -404,7 +411,7 @@ function DashboardPage() {
     for (const ticket of tickets) {
       if (!ticket.ward) continue;
       if (!metrics[ticket.ward]) {
-        metrics[ticket.ward] = { name: ticket.ward, active: 0, total: 0, highUrgency: 0, maxRisk: 0 };
+        metrics[ticket.ward] = { name: ticket.ward, active: 0, total: 0, highUrgency: 0, maxRisk: 0, severityIndex: 0 };
       }
       metrics[ticket.ward].total++;
       if (ticket.status !== 'resolved') {
@@ -413,6 +420,9 @@ function DashboardPage() {
           metrics[ticket.ward].highUrgency++;
         }
       }
+    }
+    for (const name in metrics) {
+      metrics[name].severityIndex = (metrics[name].active * 1.5) + (metrics[name].highUrgency * 3.0);
     }
     for (const item of recurrence) {
       if (metrics[item.ward]) {
@@ -679,789 +689,696 @@ function DashboardPage() {
         <div className="skeleton" style={{ height: 300, borderRadius: 0 }} />
       </div>
     );
-  }
-
-  const kpis = [
-    { label: 'QUESTS IN JOURNAL', value: stats?.total, spark: createdSpark, sparkColor: 'var(--accent)', panelKey: 'total_issues' },
-    { label: 'QUESTS COMPLETED', value: stats?.resolvedThisWeek, spark: resolvedSpark, sparkColor: 'var(--success)', panelKey: 'resolved_7d', success: true },
+  }  const kpis = [
+    { label: 'ISSUES IN JOURNAL', value: stats?.total, spark: createdSpark, sparkColor: 'var(--accent)', panelKey: 'total_issues' },
+    { label: 'ISSUES RESOLVED', value: stats?.resolvedThisWeek, spark: resolvedSpark, sparkColor: 'var(--success)', panelKey: 'resolved_7d', success: true },
     { label: 'AVG RESOLUTION', value: stats?.avgResolutionHours != null ? Math.round(stats.avgResolutionHours) : null, suffix: 'h', panelKey: 'avg_resolution' },
-    { label: 'GUILD SENTINELS', value: stats?.activeReporters, panelKey: 'active_reporters' },
-    { label: 'EXPIRING QUESTS', value: slaAtRisk, danger: slaAtRisk > 0, panelKey: 'sla_risk' },
+    { label: 'SENTINELS ACTIVE', value: stats?.activeReporters, panelKey: 'active_reporters' },
+    { label: 'EXPIRING ISSUES', value: slaAtRisk, danger: slaAtRisk > 0, panelKey: 'sla_risk' },
   ];
 
   return (
     <motion.div className="flex flex-col gap-6" variants={container} initial="hidden" animate="show">
       <div className="flex items-center justify-between">
-        <h2 className="font-pixel" style={{ fontSize: '0.9rem', color: 'var(--ink-primary)' }}>⚔️ Guild Operations Ledger</h2>
-        <span className="font-pixel text-muted" style={{ fontSize: '0.45rem' }}>{tickets.length} QUESTS TRACKED · LIVE</span>
+        <h2 className="font-pixel" style={{ fontSize: '0.9rem', color: 'var(--ink-primary)' }}>⚔️ Department Operations Ledger</h2>
+        <span className="font-pixel text-muted" style={{ fontSize: '0.45rem' }}>{tickets.length} ISSUES TRACKED · LIVE</span>
       </div>
 
-      <div className="grafana-kpi-grid">
-        {kpis.map((kpi) => {
-          const isOpen = activeInfo[kpi.panelKey];
-          return (
-            <motion.div
-              key={kpi.label}
-              variants={itemAnim}
-              className={`grafana-kpi-card ${kpi.danger ? 'danger' : kpi.success ? 'success' : ''}`}
-            >
-              <div className="flex flex-col gap-1" style={{ height: '100%', justifyContent: 'space-between' }}>
-                <div className="flex items-center justify-between">
-                  <span className="grafana-kpi-title">{kpi.label}</span>
-                  <button
-                    className="btn-info-icon"
-                    onClick={() => toggleInfo(kpi.panelKey)}
-                    style={{ width: 14, height: 14, fontSize: '0.65rem' }}
-                    aria-label={`Formula details for ${kpi.label}`}
-                  >
-                    ⓘ
-                  </button>
-                </div>
-                {isOpen ? (
-                  <div className="text-xs text-muted rpg-scrollbar" style={{ lineHeight: 1.3, animation: 'slideDown 0.2s ease-out', overflowY: 'auto', maxHeight: '68px' }}>
-                    <span style={{ color: 'var(--accent)', fontWeight: 600 }}>{EXPLANATIONS[kpi.panelKey].title}:</span>{' '}
-                    {EXPLANATIONS[kpi.panelKey].text}
-                    <div className="formula-box" style={{ marginTop: '4px' }}>
-                      <Latex math={EXPLANATIONS[kpi.panelKey].formula} block />
-                    </div>
-                  </div>
-                ) : (
-                  <div className="grafana-kpi-val">
-                    <CountUp to={kpi.value} suffix={kpi.suffix || ''} />
-                  </div>
-                )}
-                {!isOpen && kpi.spark && (
-                  <div className="kpi-spark" style={{ height: 28 }}>
-                    <Line {...sparkConfig(kpi.spark, kpi.sparkColor)} />
-                  </div>
-                )}
-              </div>
-            </motion.div>
-          );
-        })}
-      </div>
-
-      <div className="flex items-center justify-between" style={{ marginTop: 'var(--space-2)' }}>
-        <h2 className="font-pixel" style={{ fontSize: '13px', color: 'var(--accent)' }}>🧮 Multi-Agent Mathematical Engine</h2>
-        <span className="font-pixel text-muted" style={{ fontSize: '10px' }}>6 CORE ALGORITHMIC SCENARIOS</span>
-      </div>
-
-      <div className="grafana-kpi-grid">
-        {mathMetrics.map((kpi) => {
-          const isOpen = activeInfo[kpi.panelKey];
-          return (
-            <motion.div
-              key={kpi.label}
-              variants={itemAnim}
-              className={`grafana-kpi-card ${kpi.danger ? 'danger' : kpi.warning ? 'warning' : kpi.success ? 'success' : ''}`}
-            >
-              <div className="flex flex-col gap-1" style={{ height: '100%', justifyContent: 'space-between' }}>
-                <div className="flex items-center justify-between">
-                  <span className="grafana-kpi-title" style={{ fontSize: '10px', letterSpacing: '0.05em' }}>{kpi.label}</span>
-                  <button
-                    className="btn-info-icon"
-                    onClick={() => toggleInfo(kpi.panelKey)}
-                    style={{ width: 14, height: 14, fontSize: '0.65rem' }}
-                    aria-label={`Formula details for ${kpi.label}`}
-                  >
-                    ⓘ
-                  </button>
-                </div>
-                {isOpen ? (
-                  <div className="text-xs text-muted rpg-scrollbar" style={{ lineHeight: 1.3, animation: 'slideDown 0.2s ease-out', overflowY: 'auto', maxHeight: '72px' }}>
-                    <span style={{ color: 'var(--accent)', fontWeight: 600, fontSize: '11px' }}>{EXPLANATIONS[kpi.panelKey].title}:</span>{' '}
-                    <span style={{ fontSize: '11px' }}>{EXPLANATIONS[kpi.panelKey].text}</span>
-                    <div className="formula-box" style={{ marginTop: '4px', padding: '2px', background: 'rgba(0,0,0,0.2)' }}>
-                      <Latex math={EXPLANATIONS[kpi.panelKey].formula} block />
-                    </div>
-                    <div style={{ marginTop: '4px', fontSize: '10px', color: 'var(--accent)', borderTop: '1px dashed var(--border-subtle)', paddingTop: '2px' }}>
-                      <strong>Parameters:</strong> {kpi.params}
-                    </div>
-                  </div>
-                ) : (
-                  <div className="grafana-kpi-val" style={{ fontSize: '1.25rem', fontFamily: 'var(--font-mono)' }}>
-                    <CountUp to={kpi.value} suffix={kpi.suffix || ''} />
-                  </div>
-                )}
-                {!isOpen && (
-                  <div style={{ fontSize: '10px', color: 'var(--ink-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                    ALGORITHM METRIC ACTIVE
-                  </div>
-                )}
-              </div>
-            </motion.div>
-          );
-        })}
-      </div>
-
-      <div className="dash-grid">
-        <InteractivePanel
-          title="[ 📦 QUEST CLASSES ]"
-          subtitle={`${catKeys.length} categories`}
-          panelKey="category"
-          activeInfo={activeInfo}
-          onToggleInfo={toggleInfo}
-          explanation={EXPLANATIONS.category.text}
-          formula={EXPLANATIONS.category.formula}
-        >
-          <Bar data={categoryData} options={categoryOpts} />
-        </InteractivePanel>
-        <InteractivePanel
-          title="[ ⏳ QUEST LIFECYCLE ]"
-          subtitle="lifecycle"
-          panelKey="status"
-          activeInfo={activeInfo}
-          onToggleInfo={toggleInfo}
-          explanation={EXPLANATIONS.status.text}
-          formula={EXPLANATIONS.status.formula}
-        >
-          <div style={{ position: 'relative', width: '100%', height: '100%' }}>
-            <Doughnut data={statusData} options={statusOpts} />
-            <div className="doughnut-center-label">
-              <span className="doughnut-center-val">{stats?.total || 0}</span>
-              <span className="doughnut-center-lbl font-pixel" style={{ fontSize: '0.45rem', marginTop: '4px' }}>QUEST JOURNAL</span>
-            </div>
-          </div>
-        </InteractivePanel>
-      </div>
-
-      <InteractivePanel
-        title="[ ⚡ GUILD DISPATCH VELOCITY ]"
-        subtitle="resolved tickets · last 30 days"
-        panelKey="velocity"
-        activeInfo={activeInfo}
-        onToggleInfo={toggleInfo}
-        explanation={EXPLANATIONS.velocity.text}
-        formula={EXPLANATIONS.velocity.formula}
-        height={240}
-      >
-        <Line data={velocityData} options={velocityOpts} />
-      </InteractivePanel>
-
-      {/* Grafana-style Hotspot Heatmap Panel with Hexmap Toggle */}
-      <motion.div variants={itemAnim} className="card rpg-panel" style={{ marginBottom: 'var(--space-6)', position: 'relative', borderRadius: 0 }}>
-        <div className="flex items-center justify-between" style={{ marginBottom: 'var(--space-4)', flexWrap: 'wrap', gap: 'var(--space-2)' }}>
-          <div className="flex items-center gap-3">
-            <h3 className="font-pixel" style={{ fontSize: '0.65rem', margin: 0, color: 'var(--accent)' }}>[ 🗺️ WARD THREAT HEXMAP ]</h3>
-            <button className="btn-info-icon" onClick={() => toggleInfo('ward_heatmap')} aria-label="Formula details for Heatmap">ⓘ</button>
-            <div className="flex items-center gap-1.5" style={{ marginLeft: 'var(--space-2)' }}>
-              <button 
-                className={`btn-toggle ${viewMode === 'map' ? 'active' : ''}`}
-                onClick={() => setViewMode('map')}
-              >
-                Hexmap
-              </button>
-              <button 
-                className={`btn-toggle ${viewMode === 'list' ? 'active' : ''}`}
-                onClick={() => setViewMode('list')}
-              >
-                Card List
-              </button>
-            </div>
-          </div>
-          <span className="font-pixel text-muted" style={{ fontSize: '0.45rem' }}>REAL-TIME CIVIC DENSITY</span>
-        </div>
-
-        {activeInfo.ward_heatmap && (
-          <div 
-            className="metric-explanation-panel" 
-            style={{ 
-              position: 'absolute', 
-              top: 0, 
-              left: 0, 
-              width: '100%', 
-              height: '100%', 
-              backgroundColor: 'rgba(21, 22, 29, 0.96)', 
-              backdropFilter: 'blur(4px)',
+      {/* Modern RPG Sub-Tabs */}
+      <div style={{ display: 'flex', gap: '6px', borderBottom: '2px solid var(--border)', paddingBottom: 'var(--space-3)' }}>
+        {[
+          { id: 'overview', label: '📊 City Overview' },
+          { id: 'infrastructure', label: '🏢 Infrastructure' },
+          { id: 'algorithms', label: '🧮 Algorithmic Engine' }
+        ].map((tab) => (
+          <button
+            key={tab.id}
+            onClick={() => setDashboardTab(tab.id)}
+            className="font-pixel"
+            style={{
+              padding: '10px 16px',
+              fontSize: '0.65rem',
+              border: '2px solid #000',
               borderRadius: 0,
-              zIndex: 30,
-              display: 'flex',
-              flexDirection: 'column',
-              justifyContent: 'space-between',
-              margin: 0,
-              padding: 'var(--space-5)',
-              boxSizing: 'border-box'
+              background: dashboardTab === tab.id ? 'var(--accent)' : 'var(--bg-secondary)',
+              color: dashboardTab === tab.id ? '#000' : 'var(--ink-secondary)',
+              boxShadow: dashboardTab === tab.id ? 'none' : '2px 2px 0 rgba(0,0,0,0.5)',
+              cursor: 'pointer',
+              fontWeight: 800,
+              textTransform: 'uppercase'
             }}
           >
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-2)' }}>
-              <div className="flex justify-between items-center">
-                <span style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--accent)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                  Hotspot Severity Metric
-                </span>
-                <button className="btn-close-inline" onClick={() => toggleInfo('ward_heatmap')}>✕</button>
-              </div>
-              <p className="text-secondary text-xs rpg-scrollbar" style={{ lineHeight: 1.4, margin: 0, overflowY: 'auto', maxHeight: '140px' }}>
-                {EXPLANATIONS.ward_heatmap.text}
-              </p>
-            </div>
-            <div className="formula-box" style={{ marginTop: 'auto' }}>
-              <Latex math={EXPLANATIONS.ward_heatmap.formula} block />
-            </div>
-          </div>
-        )}
+            {tab.label}
+          </button>
+        ))}
+      </div>
 
-        {viewMode === 'map' ? (
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 'var(--space-5)', alignItems: 'center' }}>
-            <WardHexmap wardMetrics={wardMetrics} activeWard={selectedWard} setActiveWard={(w) => setSelectedWardName(w ? w.name : null)} />
-            
-            {selectedWard && (
-              <div className="hex-details-card rpg-panel" style={{ animation: 'fadeIn 0.25s ease-out', borderRadius: 0 }}>
-                <div style={{ borderBottom: '1px solid var(--border-subtle)', paddingBottom: 'var(--space-2)', marginBottom: 'var(--space-4)' }}>
-                  <h4 className="font-pixel" style={{ margin: 0, fontSize: '12px', color: 'var(--accent)', fontWeight: 600 }}>{selectedWard.name}</h4>
-                  <span className="font-pixel" style={{ fontSize: '10px', color: 'var(--ink-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', marginTop: '4px', display: 'block' }}>WARD SEVERITY STATUS</span>
-                </div>
-                
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <span className="font-pixel" style={{ fontSize: '10px', color: 'var(--ink-muted)' }}>ACTIVE QUESTS</span>
-                    <span style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--ink-primary)' }} className="font-mono">{selectedWard.active}</span>
-                  </div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <span className="font-pixel" style={{ fontSize: '10px', color: 'var(--ink-muted)' }}>CRITICAL THREATS</span>
-                    <span style={{ fontSize: '0.85rem', fontWeight: 600, color: selectedWard.highUrgency > 0 ? 'var(--error)' : 'var(--ink-primary)' }} className="font-mono">{selectedWard.highUrgency}</span>
-                  </div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <span className="font-pixel" style={{ fontSize: '10px', color: 'var(--ink-muted)' }}>HISTORICAL LOG</span>
-                    <span style={{ fontSize: '0.85rem', fontWeight: 500, color: 'var(--ink-secondary)' }} className="font-mono">{selectedWard.total}</span>
-                  </div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <span className="font-pixel" style={{ fontSize: '10px', color: 'var(--ink-muted)' }}>RECURRENCE RISK</span>
-                    <span style={{ fontSize: '0.85rem', fontWeight: 600, color: selectedWard.maxRisk > 0.7 ? 'var(--error)' : selectedWard.maxRisk > 0.4 ? 'var(--warning)' : 'var(--success)' }} className="font-mono">
-                      {selectedWard.maxRisk ? `${Math.round(selectedWard.maxRisk * 100)}%` : '—'}
-                    </span>
-                  </div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: '1px dashed var(--border-subtle)', paddingTop: 'var(--space-3)', marginTop: 'var(--space-1)' }}>
-                    <span className="font-pixel" style={{ fontSize: '10px', fontWeight: 600, color: 'var(--ink-secondary)' }}>THREAT INDEX</span>
-                    <span style={{ fontSize: '1rem', fontWeight: 700, color: ((selectedWard.active * 1.5) + (selectedWard.highUrgency * 3.0)) > 8 ? 'var(--error)' : ((selectedWard.active * 1.5) + (selectedWard.highUrgency * 3.0)) > 3 ? 'var(--warning)' : 'var(--success)' }} className="font-mono">
-                      {((selectedWard.active * 1.5) + (selectedWard.highUrgency * 3.0)).toFixed(1)}
-                    </span>
-                  </div>
-                  
-                  <div style={{ background: 'oklch(0.12 0.01 260)', borderLeft: '2.5px solid var(--accent)', padding: 'var(--space-3)', borderRadius: 0, fontSize: '0.72rem', color: 'var(--ink-secondary)', marginTop: 'var(--space-2)', lineHeight: 1.4 }}>
-                    <span className="font-pixel" style={{ fontSize: '10px', fontWeight: 700, color: 'var(--accent)', display: 'block', marginBottom: '4px' }}>RECOMMENDED ACTION:</span>{' '}
-                    {selectedWard.active === 0 ? 'No active threats. Maintain regular civil sweeps.' :
-                     selectedWard.highUrgency > 1 || ((selectedWard.active * 1.5) + (selectedWard.highUrgency * 3.0)) > 8 ? 'Dispatch emergency maintenance crew immediately to resolve critical breaches.' :
-                     'Schedule department audit of outstanding tickets in next 48-hour routine cycle.'}
-                  </div>
-                </div>
-              </div>
-            )}
+      {/* TAB 1: CITY OVERVIEW */}
+      {dashboardTab === 'overview' && (
+        <>
+          <div style={{ display: 'flex', justifyContent: 'flex-start', marginBottom: 'var(--space-1)', marginTop: 'var(--space-2)' }}>
+            <span className="font-pixel text-muted" style={{ fontSize: '0.5rem', textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--ink-muted)' }}>
+              [ 🌐 City-Wide Summary Aggregates ]
+            </span>
           </div>
-        ) : (
-          <div className="grafana-heatmap-grid" style={{ animation: 'fadeIn 0.25s ease-out' }}>
-            {wardMetrics.map((ward) => {
-              const riskIndex = (ward.active * 1.5) + (ward.highUrgency * 3.0);
-              let colorVar = 'var(--success)';
-              let glowColor = 'rgba(16, 185, 129, 0.12)';
-              if (riskIndex > 8) {
-                colorVar = 'var(--error)';
-                glowColor = 'rgba(239, 68, 68, 0.15)';
-              } else if (riskIndex > 3) {
-                colorVar = 'var(--warning)';
-                glowColor = 'rgba(245, 158, 11, 0.15)';
-              }
-
+          <div className="grafana-kpi-grid">
+            {kpis.map((kpi) => {
+              const isOpen = activeInfo[kpi.panelKey];
               return (
-                <div 
-                  key={ward.name} 
-                  className="grafana-heatmap-card"
-                  style={{ 
-                    borderColor: riskIndex > 0 ? colorVar : 'var(--border-subtle)',
-                    boxShadow: riskIndex > 3 ? `0 0 12px ${glowColor}` : 'none'
-                  }}
+                <motion.div
+                  key={kpi.label}
+                  variants={itemAnim}
+                  className={`grafana-kpi-card ${kpi.danger ? 'danger' : kpi.success ? 'success' : ''}`}
                 >
-                  <span className="text-sm font-semibold" style={{ color: 'var(--ink-primary)' }}>{ward.name}</span>
-                  <div className="flex justify-between text-xs text-muted" style={{ marginTop: 'var(--space-2)' }}>
-                    <span>Active Issues:</span>
-                    <span className="font-mono font-semibold" style={{ color: 'var(--ink-secondary)' }}>{ward.active}</span>
+                  <div className="flex flex-col gap-1" style={{ height: '100%', justifyContent: 'space-between' }}>
+                    <div className="flex items-center justify-between">
+                      <span className="grafana-kpi-title">{kpi.label}</span>
+                      <button
+                        className="btn-info-icon"
+                        onClick={() => toggleInfo(kpi.panelKey)}
+                        style={{ width: 14, height: 14, fontSize: '0.65rem' }}
+                        aria-label={`Formula details for ${kpi.label}`}
+                      >
+                        ⓘ
+                      </button>
+                    </div>
+                    {isOpen ? (
+                      <div className="text-xs text-muted rpg-scrollbar" style={{ lineHeight: 1.3, animation: 'slideDown 0.2s ease-out', overflowY: 'auto', maxHeight: '68px' }}>
+                        <span style={{ color: 'var(--accent)', fontWeight: 600 }}>{EXPLANATIONS[kpi.panelKey].title}:</span>{' '}
+                        {EXPLANATIONS[kpi.panelKey].text}
+                        <div className="formula-box" style={{ marginTop: '4px' }}>
+                          <Latex math={EXPLANATIONS[kpi.panelKey].formula} block />
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="grafana-kpi-val">
+                        <CountUp to={kpi.value} suffix={kpi.suffix || ''} />
+                      </div>
+                    )}
+                    {!isOpen && kpi.spark && (
+                      <div className="kpi-spark" style={{ height: 28 }}>
+                        <Line {...sparkConfig(kpi.spark, kpi.sparkColor)} />
+                      </div>
+                    )}
                   </div>
-                  <div className="flex justify-between text-xs text-muted">
-                    <span>Critical (Urgent):</span>
-                    <span className="font-mono font-semibold" style={{ color: ward.highUrgency > 0 ? 'var(--error)' : 'var(--ink-secondary)' }}>
-                      {ward.highUrgency}
-                    </span>
-                  </div>
-                  <div className="flex justify-between text-xs text-muted">
-                    <span>Max Recurrence Risk:</span>
-                    <span className="font-mono font-semibold" style={{ color: (ward.maxRisk || 0) > 0.7 ? 'var(--error)' : (ward.maxRisk || 0) > 0.4 ? 'var(--warning)' : 'var(--success)' }}>
-                      {ward.maxRisk ? `${Math.round(ward.maxRisk * 100)}%` : '—'}
-                    </span>
-                  </div>
-                  <div 
-                    className="heatmap-intensity-bar" 
-                    style={{ background: riskIndex > 0 ? colorVar : 'var(--border-subtle)' }}
-                  />
-                </div>
+                </motion.div>
               );
             })}
           </div>
-        )}
-      </motion.div>
 
-      {/* Hiding the municipal budget ledger from citizen dashboard - to be used only by Executive Copilot agent */}
-      {false && (
-        <motion.div variants={itemAnim} className="card rpg-panel" style={{ marginBottom: 'var(--space-6)', position: 'relative', borderRadius: 0 }}>
-          <div className="flex items-center justify-between" style={{ marginBottom: 'var(--space-4)', flexWrap: 'wrap', gap: 'var(--space-2)' }}>
-            <div className="flex items-center gap-3">
-              <h3 className="font-pixel" style={{ fontSize: '0.65rem', margin: 0, color: 'var(--accent)' }}>[ ⚖️ GUILD RESOURCE OPTIMIZATION LEDGER ]</h3>
-              <button className="btn-info-icon" onClick={() => toggleInfo('knapsack_info')} aria-label="Formula details for Knapsack">ⓘ</button>
-            </div>
-            <span className="font-pixel text-muted" style={{ fontSize: '0.45rem' }}>MATHEMATICAL DISPATCH SOLVER</span>
-          </div>
-
-          {activeInfo.knapsack_info && (
-            <div 
-              className="metric-explanation-panel" 
-              style={{ 
-                position: 'absolute', 
-                top: 0, 
-                left: 0, 
-                width: '100%', 
-                height: '100%', 
-                backgroundColor: 'rgba(21, 22, 29, 0.96)', 
-                backdropFilter: 'blur(4px)',
-                borderRadius: 0,
-                zIndex: 30,
-                display: 'flex',
-                flexDirection: 'column',
-                justifyContent: 'space-between',
-                margin: 0,
-                padding: 'var(--space-5)',
-                boxSizing: 'border-box'
-              }}
-            >
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-2)' }}>
-                <div className="flex justify-between items-center">
-                  <span style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--accent)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                    Knapsack Dispatch Solver
-                  </span>
-                  <button className="btn-close-inline" onClick={() => toggleInfo('knapsack_info')}>✕</button>
-                </div>
-                <p className="text-secondary text-xs rpg-scrollbar" style={{ lineHeight: 1.4, margin: 0, overflowY: 'auto', maxHeight: '140px' }}>
-                  Given a municipal budget, the Knapsack Solver chooses the subset of tickets that maximizes the sum of priority scores (representing civic utility) without exceeding the budget limit.
-                </p>
-              </div>
-              <div className="formula-box" style={{ marginTop: 'auto' }}>
-                <Latex math="\max \sum x_i \cdot p_i \quad \text{s.t.} \quad \sum x_i \cdot c_i \le B \quad x_i \in \{0,1\}" block />
-              </div>
-            </div>
-          )}
-
-          {/* Budget Control Slider and Stats */}
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 'var(--space-6)', marginBottom: 'var(--space-6)' }}>
-            <div style={{ padding: 'var(--space-4)', background: 'var(--bg-primary)', border: '1px solid var(--border-subtle)' }}>
-              <div className="flex justify-between items-center" style={{ marginBottom: 'var(--space-3)' }}>
-                <span className="font-pixel text-muted" style={{ fontSize: '0.45rem' }}>BUDGET LIMIT</span>
-                <span className="font-mono" style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--accent)' }}>
-                  ₹{(budget / 1000).toFixed(0)}k
-                </span>
-              </div>
-              <input 
-                type="range" 
-                min={10000} 
-                max={300000} 
-                step={5000} 
-                value={budget} 
-                onChange={(e) => setBudget(Number(e.target.value))}
-                style={{ width: '100%', accentColor: 'var(--accent)', cursor: 'pointer', background: 'var(--border)' }}
-              />
-              <div className="flex justify-between text-xs text-muted font-mono" style={{ marginTop: '8px' }}>
-                <span>₹10k</span>
-                <span>₹150k</span>
-                <span>₹300k</span>
-              </div>
-            </div>
-
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 'var(--space-3)' }}>
-              <div className="summary-card text-center flex flex-col justify-center" style={{ padding: 'var(--space-3)', borderRadius: 0 }}>
-                <span className="font-pixel text-muted" style={{ fontSize: '0.35rem', marginBottom: '4px' }}>SOLVED</span>
-                <span style={{ fontSize: '1.15rem', fontWeight: 700, color: 'var(--success)' }} className="font-mono">
-                  {optimizedLedger.selected.length}
-                </span>
-              </div>
-              <div className="summary-card text-center flex flex-col justify-center" style={{ padding: 'var(--space-3)', borderRadius: 0 }}>
-                <span className="font-pixel text-muted" style={{ fontSize: '0.35rem', marginBottom: '4px' }}>COST ALLOC</span>
-                <span style={{ fontSize: '1.15rem', fontWeight: 700, color: 'var(--ink-primary)' }} className="font-mono">
-                  ₹{(optimizedLedger.totalCost / 1000).toFixed(1)}k
-                </span>
-              </div>
-              <div className="summary-card text-center flex flex-col justify-center" style={{ padding: 'var(--space-3)', borderRadius: 0 }}>
-                <span className="font-pixel text-muted" style={{ fontSize: '0.35rem', marginBottom: '4px' }}>UTILITY PTS</span>
-                <span style={{ fontSize: '1.15rem', fontWeight: 700, color: 'var(--accent)' }} className="font-mono">
-                  +{Math.round(optimizedLedger.totalValue)}
-                </span>
-              </div>
-            </div>
-          </div>
-
-          {/* Selected / Allocated Tickets */}
-          <div>
-            <h4 className="font-pixel" style={{ fontSize: '0.55rem', color: 'var(--ink-secondary)', marginBottom: 'var(--space-3)' }}>
-              [ OPTIMIZED DISPATCH ALIGNMENT ]
-            </h4>
-            {optimizedLedger.selected.length === 0 ? (
-              <p className="text-secondary text-xs" style={{ fontStyle: 'italic' }}>
-                Budget limit too low to allocate any tickets. Increase budget limit.
-              </p>
-            ) : (
-              <div className="rpg-scrollbar" style={{ maxHeight: '250px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 'var(--space-2)' }}>
-                {optimizedLedger.selected.map(ticket => (
-                  <div 
-                    key={ticket.id} 
-                    style={{ 
-                      display: 'flex', 
-                      justifyContent: 'space-between', 
-                      alignItems: 'center', 
-                      padding: 'var(--space-2) var(--space-3)', 
-                      border: '1px solid var(--border-subtle)', 
-                      background: 'var(--bg-primary)',
-                      fontSize: '0.72rem'
-                    }}
+          {/* Grafana-style Hotspot Heatmap Panel with Hexmap Toggle */}
+          <motion.div variants={itemAnim} className="card rpg-panel" style={{ marginBottom: 'var(--space-6)', position: 'relative', borderRadius: 0 }}>
+            <div className="flex items-center justify-between" style={{ marginBottom: 'var(--space-4)', flexWrap: 'wrap', gap: 'var(--space-2)' }}>
+              <div className="flex items-center gap-3">
+                <h3 className="font-pixel" style={{ fontSize: '0.65rem', margin: 0, color: 'var(--accent)' }}>[ 🗺️ WARD ISSUES HEATMAP ]</h3>
+                <button className="btn-info-icon" onClick={() => toggleInfo('ward_heatmap')} aria-label="Formula details for Heatmap">ⓘ</button>
+                <div className="flex items-center gap-1.5" style={{ marginLeft: 'var(--space-2)' }}>
+                  <button 
+                    className={`btn-toggle ${viewMode === 'map' ? 'active' : ''}`}
+                    onClick={() => setViewMode('map')}
                   >
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', minWidth: 0, flex: 1 }}>
-                      <span 
-                        style={{ 
-                          display: 'inline-block', 
-                          width: '8px', 
-                          height: '8px', 
-                          backgroundColor: CATEGORY_COLORS[ticket.category] || 'var(--border)' 
-                        }} 
-                      />
-                      <span style={{ color: 'var(--ink-primary)', fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                        {ticket.title || ticket.ai_title || 'Untitled Anomaly'}
-                      </span>
-                      <span className="text-muted" style={{ fontSize: '0.65rem' }}>
-                        ({(ticket.ward || '—').toUpperCase()})
-                      </span>
-                    </div>
-                    <div style={{ display: 'flex', gap: '12px', alignItems: 'center', fontWeight: 'bold' }}>
-                      <span style={{ color: 'oklch(0.68 0.16 55)' }}>
-                        ₹{(ticket.estimated_cost || 4000).toLocaleString()}
-                      </span>
-                      <span style={{ color: 'var(--accent)' }}>
-                        +{Math.round(ticket.priority_score || 10)} Utility
-                      </span>
-                    </div>
+                    Hexmap
+                  </button>
+                  <button 
+                    className={`btn-toggle ${viewMode === 'list' ? 'active' : ''}`}
+                    onClick={() => setViewMode('list')}
+                  >
+                    Card List
+                  </button>
+                </div>
+              </div>
+              <span className="font-pixel text-muted" style={{ fontSize: '0.45rem' }}>REAL-TIME CIVIC DENSITY</span>
+            </div>
+
+            {activeInfo.ward_heatmap && (
+              <div 
+                className="metric-explanation-panel" 
+                style={{ 
+                  position: 'absolute', 
+                  top: 0, 
+                  left: 0, 
+                  width: '100%', 
+                  height: '100%', 
+                  backgroundColor: 'rgba(21, 22, 29, 0.96)', 
+                  backdropFilter: 'blur(4px)',
+                  borderRadius: 0,
+                  zIndex: 30,
+                  display: 'flex',
+                  flexDirection: 'column',
+                  justifyContent: 'space-between',
+                  margin: 0,
+                  padding: 'var(--space-5)',
+                  boxSizing: 'border-box'
+                }}
+              >
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-2)' }}>
+                  <div className="flex justify-between items-center">
+                    <span style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--accent)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                      Hotspot Severity Metric
+                    </span>
+                    <button className="btn-close-inline" onClick={() => toggleInfo('ward_heatmap')}>✕</button>
                   </div>
-                ))}
+                  <p className="text-secondary text-xs rpg-scrollbar" style={{ lineHeight: 1.4, margin: 0, overflowY: 'auto', maxHeight: '140px' }}>
+                    {EXPLANATIONS.ward_heatmap.text}
+                  </p>
+                </div>
+                <div className="formula-box" style={{ marginTop: 'auto' }}>
+                  <Latex math={EXPLANATIONS.ward_heatmap.formula} block />
+                </div>
               </div>
             )}
-          </div>
-        </motion.div>
+
+            {viewMode === 'map' ? (
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: 'var(--space-6)' }}>
+                {/* Visual Hex Map Column */}
+                <div style={{ padding: 'var(--space-4)', background: 'var(--bg-primary)', border: '1px solid var(--border-subtle)', minHeight: 380, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+                  <WardHexmap wardMetrics={wardMetrics} activeWard={selectedWard} setActiveWard={(w) => setSelectedWardName(w.name)} />
+                </div>
+
+                {/* Interactive Sidebar details */}
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-5)', padding: 'var(--space-4)', background: 'var(--bg-primary)', border: '1px solid var(--border-subtle)' }}>
+                  {selectedWard ? (
+                    <>
+                      <div style={{ borderBottom: '2px solid var(--border)', paddingBottom: 'var(--space-3)' }} className="flex flex-col gap-1">
+                        <h4 className="font-pixel" style={{ margin: 0, fontSize: '12px', color: 'var(--accent)', fontWeight: 600 }}>{selectedWard.name}</h4>
+                        <span className="font-pixel" style={{ fontSize: '10px', color: 'var(--ink-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', marginTop: '4px', display: 'block' }}>WARD SEVERITY STATUS</span>
+                      </div>
+                      
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
+                        <div style={{ display: 'flex', justifycontent: 'space-between', alignItems: 'center' }}>
+                          <span className="font-pixel" style={{ fontSize: '10px', color: 'var(--ink-muted)' }}>ACTIVE ISSUES</span>
+                          <span style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--ink-primary)' }} className="font-mono">{selectedWard.active}</span>
+                        </div>
+                        <div style={{ display: 'flex', justifycontent: 'space-between', alignItems: 'center' }}>
+                          <span className="font-pixel" style={{ fontSize: '10px', color: 'var(--ink-muted)' }}>CRITICAL ISSUES</span>
+                          <span style={{ fontSize: '0.85rem', fontWeight: 600, color: selectedWard.highUrgency > 0 ? 'var(--error)' : 'var(--ink-primary)' }} className="font-mono">{selectedWard.highUrgency}</span>
+                        </div>
+                        <div style={{ display: 'flex', justifycontent: 'space-between', alignItems: 'center' }}>
+                          <span className="font-pixel" style={{ fontSize: '10px', color: 'var(--ink-muted)' }}>HISTORICAL LOG</span>
+                          <span style={{ fontSize: '0.85rem', fontWeight: 500, color: 'var(--ink-secondary)' }} className="font-mono">{selectedWard.total}</span>
+                        </div>
+                      </div>
+
+                      <div className="ward-rating-box" style={{ marginTop: 'var(--space-4)' }}>
+                        <div className="flex justify-between items-center" style={{ marginBottom: '6px' }}>
+                          <span className="font-pixel" style={{ fontSize: '9px', color: 'var(--ink-secondary)' }}>SEVERITY INDEX</span>
+                          <span className="font-mono font-bold" style={{ color: getSeverityColor(selectedWard.severityIndex) }}>
+                            {selectedWard.severityIndex.toFixed(2)}
+                          </span>
+                        </div>
+                        <div className="priority-bar" style={{ height: '6px', borderRadius: 0 }}>
+                          <div 
+                            className="priority-bar-fill" 
+                            style={{ 
+                              width: `${Math.min(selectedWard.severityIndex * 10, 100)}%`, 
+                              background: getSeverityColor(selectedWard.severityIndex),
+                              borderRadius: 0
+                            }} 
+                          />
+                        </div>
+                      </div>
+
+                      <div style={{ marginTop: 'auto', display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                        <span className="font-pixel" style={{ fontSize: '8px', color: 'var(--ink-muted)' }}>MAPPED CITIZENS</span>
+                        <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                          {selectedWard.reporters?.slice(0, 5).map((repId, idx) => (
+                            <span 
+                              key={idx}
+                              className="font-mono"
+                              style={{ 
+                                background: 'var(--bg-secondary)', 
+                                border: '1px solid var(--border-subtle)', 
+                                padding: '2px 6px',
+                                fontSize: '10px',
+                                color: 'var(--ink-secondary)'
+                              }}
+                            >
+                              sentinel_{repId.substring(0, 5)}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    </>
+                  ) : (
+                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%', color: 'var(--ink-muted)', textAlign: 'center' }}>
+                      <span style={{ fontSize: '1.5rem', marginBottom: 'var(--space-3)' }}>🗺️</span>
+                      <p className="font-pixel" style={{ fontSize: '8px', lineHeight: 1.4 }}>
+                        SELECT A WARD NODE ON THE HEX GRID TO PROJECT CRITICAL CIVIC SEVERITY DETAILS
+                      </p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            ) : (
+              <div className="rpg-scrollbar" style={{ maxHeight: '420px', overflowY: 'auto', border: '1px solid var(--border-subtle)' }}>
+                <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.72rem' }}>
+                  <thead>
+                    <tr style={{ background: 'var(--bg-secondary)', borderBottom: '2px solid var(--border)' }}>
+                      <th className="font-pixel" style={{ padding: '12px 16px', textAlign: 'left', fontSize: '0.45rem' }}>WARD REGION</th>
+                      <th className="font-pixel" style={{ padding: '12px 16px', textAlign: 'center', fontSize: '0.45rem' }}>ACTIVE ISSUES</th>
+                      <th className="font-pixel" style={{ padding: '12px 16px', textAlign: 'center', fontSize: '0.45rem' }}>CRITICAL</th>
+                      <th className="font-pixel" style={{ padding: '12px 16px', textAlign: 'right', fontSize: '0.45rem' }}>SEVERITY INDEX</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {wardMetrics.slice().sort((a,b) => b.severityIndex - a.severityIndex).map(ward => (
+                      <tr 
+                        key={ward.name} 
+                        style={{ borderBottom: '1px solid var(--border-subtle)', cursor: 'pointer', background: selectedWardName === ward.name ? 'oklch(0.25 0.06 85 / 0.15)' : 'transparent' }}
+                        onClick={() => setSelectedWardName(ward.name)}
+                      >
+                        <td style={{ padding: '12px 16px', color: 'var(--ink-primary)', fontWeight: 600 }}>{ward.name.toUpperCase()}</td>
+                        <td style={{ padding: '12px 16px', textAlign: 'center' }}>{ward.active}</td>
+                        <td style={{ padding: '12px 16px', textAlign: 'center', color: ward.highUrgency > 0 ? 'var(--error)' : 'inherit', fontWeight: ward.highUrgency > 0 ? 'bold' : 'normal' }}>{ward.highUrgency}</td>
+                        <td style={{ padding: '12px 16px', textAlign: 'right', color: getSeverityColor(ward.severityIndex), fontWeight: 'bold' }}>{ward.severityIndex.toFixed(2)}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </motion.div>
+        </>
       )}
 
-      {/* Infrastructure Assets Health Ledger */}
-      <motion.div variants={itemAnim} className="card rpg-panel" style={{ marginBottom: 'var(--space-6)', position: 'relative', borderRadius: 0 }}>
-        <div className="flex items-center justify-between" style={{ marginBottom: 'var(--space-4)', flexWrap: 'wrap', gap: 'var(--space-2)' }}>
-          <div className="flex items-center gap-3">
-            <h3 className="font-pixel" style={{ fontSize: '0.65rem', margin: 0, color: 'var(--accent)' }}>[ 🕸️ INFRASTRUCTURE ASSETS LEDGER ]</h3>
-            <button className="btn-info-icon" onClick={() => toggleInfo('assets_info')} aria-label="Formula details for Assets Health">ⓘ</button>
-          </div>
-          <span className="font-pixel text-muted" style={{ fontSize: '0.45rem' }}>DYNAMIC INFRASTRUCTURE HEALTH STATUS</span>
-        </div>
-
-        {activeInfo.assets_info && (
-          <div 
-            className="metric-explanation-panel" 
-            style={{ 
-              position: 'absolute', 
-              top: 0, 
-              left: 0, 
-              width: '100%', 
-              height: '100%', 
-              backgroundColor: 'rgba(21, 22, 29, 0.96)', 
-              backdropFilter: 'blur(4px)',
-              borderRadius: 0,
-              zIndex: 30,
-              display: 'flex',
-              flexDirection: 'column',
-              justifyContent: 'space-between',
-              margin: 0,
-              padding: 'var(--space-5)',
-              boxSizing: 'border-box'
-            }}
-          >
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-2)' }}>
-              <div className="flex justify-between items-center">
-                <span style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--accent)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                  Infrastructure Health Index
-                </span>
-                <button className="btn-close-inline" onClick={() => toggleInfo('assets_info')}>✕</button>
+      {/* TAB 2: INFRASTRUCTURE HEALTH & AUDIT */}
+      {dashboardTab === 'infrastructure' && (
+        <>
+          {/* Infrastructure Assets Health Ledger */}
+          <motion.div variants={itemAnim} className="card rpg-panel" style={{ marginBottom: 'var(--space-6)', position: 'relative', borderRadius: 0 }}>
+            <div className="flex items-center justify-between" style={{ marginBottom: 'var(--space-4)', flexWrap: 'wrap', gap: 'var(--space-2)' }}>
+              <div className="flex items-center gap-3">
+                <h3 className="font-pixel" style={{ fontSize: '0.65rem', margin: 0, color: 'var(--accent)' }}>[ 🕸️ INFRASTRUCTURE ASSETS LEDGER ]</h3>
+                <button className="btn-info-icon" onClick={() => toggleInfo('assets_info')} aria-label="Formula details for Assets Health">ⓘ</button>
               </div>
-              <p className="text-secondary text-xs rpg-scrollbar" style={{ lineHeight: 1.4, margin: 0, overflowY: 'auto', maxHeight: '140px' }}>
-                Asset Health decays dynamically when open tickets are linked to it: Critical (-30), High (-20), Medium (-10), Low (-5). Resolving tickets restores asset health.
-              </p>
+              <span className="font-pixel text-muted" style={{ fontSize: '0.45rem' }}>DYNAMIC INFRASTRUCTURE HEALTH STATUS</span>
             </div>
-            <div className="formula-box" style={{ marginTop: 'auto' }}>
-              <Latex math="H_{asset} = \max\left(0, 100 - \sum_{t \in T_{open}} \text{SeverityWeight}_t\right)" block />
-            </div>
-          </div>
-        )}
 
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 'var(--space-5)' }}>
-          {/* Column 1: Top Failing Assets (Health < 100) */}
-          <div style={{ padding: 'var(--space-3)', background: 'var(--bg-primary)', border: '1px solid var(--border-subtle)' }}>
-            <h4 className="font-pixel" style={{ fontSize: '0.55rem', color: 'var(--error)', marginBottom: 'var(--space-3)' }}>
-              ⚠️ CRITICAL INFRASTRUCTURE STATUS
-            </h4>
-            {assets.filter(a => a.health < 100).length === 0 ? (
-              <p className="text-secondary text-xs" style={{ fontStyle: 'italic' }}>
-                All city assets check out at 100% health. Good work, Marshall.
-              </p>
-            ) : (
-              <div className="rpg-scrollbar" style={{ maxHeight: '280px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                {assets.filter(a => a.health < 100).sort((a,b) => a.health - b.health).map(asset => {
-                  const color = asset.health < 60 ? 'var(--error)' : 'var(--warning)';
+            {activeInfo.assets_info && (
+              <div 
+                className="metric-explanation-panel" 
+                style={{ 
+                  position: 'absolute', 
+                  top: 0, 
+                  left: 0, 
+                  width: '100%', 
+                  height: '100%', 
+                  backgroundColor: 'rgba(21, 22, 29, 0.96)', 
+                  backdropFilter: 'blur(4px)',
+                  borderRadius: 0,
+                  zIndex: 30,
+                  display: 'flex',
+                  flexDirection: 'column',
+                  justifyContent: 'space-between',
+                  margin: 0,
+                  padding: 'var(--space-5)',
+                  boxSizing: 'border-box'
+                }}
+              >
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-2)' }}>
+                  <div className="flex justify-between items-center">
+                    <span style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--accent)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                      Infrastructure Health Index
+                    </span>
+                    <button className="btn-close-inline" onClick={() => toggleInfo('assets_info')}>✕</button>
+                  </div>
+                  <p className="text-secondary text-xs rpg-scrollbar" style={{ lineHeight: 1.4, margin: 0, overflowY: 'auto', maxHeight: '140px' }}>
+                    Asset Health decays dynamically when open tickets are linked to it: Critical (-30), High (-20), Medium (-10), Low (-5). Resolving tickets restores asset health.
+                  </p>
+                </div>
+                <div className="formula-box" style={{ marginTop: 'auto' }}>
+                  <Latex math="H_{asset} = \max\left(0, 100 - \sum_{t \in T_{open}} \text{SeverityWeight}_t\right)" block />
+                </div>
+              </div>
+            )}
+
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 'var(--space-5)' }}>
+              {/* Column 1: Top Failing Assets (Health < 100) */}
+              <div style={{ padding: 'var(--space-3)', background: 'var(--bg-primary)', border: '1px solid var(--border-subtle)' }}>
+                <h4 className="font-pixel" style={{ fontSize: '0.55rem', color: 'var(--error)', marginBottom: 'var(--space-3)' }}>
+                  ⚠️ CRITICAL INFRASTRUCTURE STATUS
+                </h4>
+                {assets.filter(a => a.health < 100).length === 0 ? (
+                  <p className="text-secondary text-xs" style={{ fontStyle: 'italic' }}>
+                    All city assets check out at 100% health. Good work, Marshall.
+                  </p>
+                ) : (
+                  <div className="rpg-scrollbar" style={{ maxHeight: '280px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                    {assets.filter(a => a.health < 100).sort((a,b) => a.health - b.health).map(asset => {
+                      const color = asset.health < 60 ? 'var(--error)' : 'var(--warning)';
+                      return (
+                        <div key={asset.id} style={{ borderBottom: '1px dashed var(--border-subtle)', paddingBottom: '6px', fontSize: '0.72rem' }}>
+                          <div className="flex justify-between items-center" style={{ marginBottom: '4px' }}>
+                            <span style={{ color: 'var(--ink-primary)', fontWeight: 600 }}>{asset.name}</span>
+                            <span style={{ color, fontWeight: 'bold' }}>{asset.health}%</span>
+                          </div>
+                          <div className="flex justify-between text-xs text-muted">
+                            <span>Ward: {asset.ward.toUpperCase()} · Type: {asset.type.toUpperCase()}</span>
+                            <span>{asset.open_issues_count || 0} active faults</span>
+                          </div>
+                          <div className="priority-bar" style={{ height: '4px', marginTop: '4px', borderRadius: 0 }}>
+                            <div className="priority-bar-fill" style={{ width: `${asset.health}%`, background: color, borderRadius: 0 }} />
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+
+              {/* Column 2: Healthy Infrastructure Registry */}
+              <div style={{ padding: 'var(--space-3)', background: 'var(--bg-primary)', border: '1px solid var(--border-subtle)' }}>
+                <h4 className="font-pixel" style={{ fontSize: '0.55rem', color: 'var(--success)', marginBottom: 'var(--space-3)' }}>
+                  ✓ STABLE INFRASTRUCTURE REGISTRY
+                </h4>
+                <div className="rpg-scrollbar" style={{ maxHeight: '280px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                  {assets.filter(a => a.health === 100).map(asset => (
+                    <div key={asset.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px dashed var(--border-subtle)', paddingBottom: '6px', fontSize: '0.72rem' }}>
+                      <div>
+                        <span style={{ color: 'var(--ink-secondary)' }}>{asset.name}</span>
+                        <div style={{ fontSize: '0.6rem', color: 'var(--ink-muted)' }}>Ward: {asset.ward.toUpperCase()} · Type: {asset.type.toUpperCase()}</div>
+                      </div>
+                      <span className="font-pixel" style={{ fontSize: '0.45rem', color: 'var(--success)', border: '1px solid var(--success)', padding: '2px 4px' }}>OPERATIONAL</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </motion.div>
+
+          {departments.length > 0 && (
+            <motion.div variants={itemAnim} className="card rpg-panel" style={{ display: 'flex', flexDirection: 'column', position: 'relative', borderRadius: 0 }}>
+              <div className="flex items-center justify-between" style={{ marginBottom: 'var(--space-4)' }}>
+                <div className="flex items-center gap-2">
+                  <h3 className="font-pixel" style={{ fontSize: '0.65rem', margin: 0, color: 'var(--accent)' }}>[ 🛡️ DEPARTMENT PERFORMANCE LEDGER ]</h3>
+                  <button className="btn-info-icon" onClick={() => toggleInfo('departments')} aria-label="Formula details for Departments">ⓘ</button>
+                </div>
+                <span className="font-pixel text-muted" style={{ fontSize: '0.45rem' }}>SLA AUDIT</span>
+              </div>
+
+              {activeInfo.departments && (
+                <div 
+                  className="metric-explanation-panel" 
+                  style={{ 
+                    position: 'absolute', 
+                    top: 0, 
+                    left: 0, 
+                    width: '100%', 
+                    height: '100%', 
+                    backgroundColor: 'rgba(21, 22, 29, 0.96)', 
+                    backdropFilter: 'blur(4px)',
+                    borderRadius: 0,
+                    zIndex: 30,
+                    display: 'flex',
+                    flexDirection: 'column',
+                    justifyContent: 'space-between',
+                    margin: 0,
+                    padding: 'var(--space-5)',
+                    boxSizing: 'border-box'
+                  }}
+                >
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-2)' }}>
+                    <div className="flex justify-between items-center">
+                      <span style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--accent)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                        SLA & Performance Metric
+                      </span>
+                      <button className="btn-close-inline" onClick={() => toggleInfo('departments')}>✕</button>
+                    </div>
+                    <p className="text-secondary text-xs rpg-scrollbar" style={{ lineHeight: 1.4, margin: 0, overflowY: 'auto', maxHeight: '140px' }}>
+                      Computes total open issues assigned to a department, total issues successfully resolved, and average duration (speed) to resolve tickets.
+                    </p>
+                  </div>
+                  <div className="formula-box" style={{ marginTop: 'auto' }}>
+                    <Latex math="\text{Avg Speed} = \frac{1}{|T_{resolved}|} \sum_{t \in T_{resolved}} (\text{ResolvedTime}_t - \text{CreatedTime}_t)" block />
+                  </div>
+                </div>
+              )}
+
+              <div className="table-container">
+                <table>
+                  <thead>
+                    <tr>
+                      <th className="font-pixel" style={{ fontSize: '0.45rem' }}>DEPARTMENT NAME</th>
+                      <th className="font-pixel" style={{ fontSize: '0.45rem' }}>ISSUES ASSIGNED</th>
+                      <th className="font-pixel" style={{ fontSize: '0.45rem' }}>RESOLVED</th>
+                      <th className="font-pixel" style={{ fontSize: '0.45rem' }}>SUCCESS RATE</th>
+                      <th className="font-pixel" style={{ fontSize: '0.45rem' }}>AVG RESOLVE SPEED</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {departments.map((dept, i) => (
+                      <tr key={dept.name} style={i === 0 ? { background: 'oklch(0.25 0.06 85 / 0.15)' } : undefined}>
+                        <td className="font-medium" style={{ color: 'var(--ink-primary)' }}>
+                          {dept.name}{i === 0 && <span className="badge font-pixel" style={{ marginLeft: 'var(--space-2)', background: 'var(--rank-gold)', color: '#000', fontSize: '0.45rem', borderRadius: 0, padding: '2px 4px' }}>TOP</span>}
+                        </td>
+                        <td>{dept.total}</td>
+                        <td>{dept.resolved}</td>
+                        <td>
+                          <div className="flex items-center gap-2">
+                            <span className="font-semibold font-mono" style={{ color: dept.rate > 80 ? 'var(--success)' : dept.rate > 50 ? 'var(--warning)' : 'var(--error)' }}>
+                              {dept.rate}%
+                            </span>
+                          </div>
+                        </td>
+                        <td>{formatHours(dept.avg_hours)}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </motion.div>
+          )}
+        </>
+      )}
+
+      {/* TAB 3: ALGORITHMIC ENGINE */}
+      {dashboardTab === 'algorithms' && (
+        <>
+          <div className="flex items-center justify-between" style={{ marginTop: 'var(--space-2)' }}>
+            <div className="flex items-center gap-3">
+              <h2 className="font-pixel" style={{ fontSize: '13px', color: 'var(--accent)', margin: 0 }}>🧮 Multi-Agent Mathematical Engine</h2>
+              <span className="font-pixel text-muted" style={{ fontSize: '0.5rem', textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--ink-muted)' }}>
+                [ 🌐 City-Wide Averages ]
+              </span>
+            </div>
+            <span className="font-pixel text-muted" style={{ fontSize: '10px' }}>6 CORE ALGORITHMIC SCENARIOS</span>
+          </div>
+
+          <div className="grafana-kpi-grid">
+            {mathMetrics.map((kpi) => {
+              const isOpen = activeInfo[kpi.panelKey];
+              return (
+                <motion.div
+                  key={kpi.label}
+                  variants={itemAnim}
+                  className={`grafana-kpi-card ${kpi.danger ? 'danger' : kpi.warning ? 'warning' : kpi.success ? 'success' : ''}`}
+                >
+                  <div className="flex flex-col gap-1" style={{ height: '100%', justifyContent: 'space-between' }}>
+                    <div className="flex items-center justify-between">
+                      <span className="grafana-kpi-title" style={{ fontSize: '10px', letterSpacing: '0.05em' }}>{kpi.label}</span>
+                      <button
+                        className="btn-info-icon"
+                        onClick={() => toggleInfo(kpi.panelKey)}
+                        style={{ width: 14, height: 14, fontSize: '0.65rem' }}
+                        aria-label={`Formula details for ${kpi.label}`}
+                      >
+                        ⓘ
+                      </button>
+                    </div>
+                    {isOpen ? (
+                      <div className="text-xs text-muted rpg-scrollbar" style={{ lineHeight: 1.3, animation: 'slideDown 0.2s ease-out', overflowY: 'auto', maxHeight: '72px' }}>
+                        <span style={{ color: 'var(--accent)', fontWeight: 600, fontSize: '11px' }}>{EXPLANATIONS[kpi.panelKey].title}:</span>{' '}
+                        <span style={{ fontSize: '11px' }}>{EXPLANATIONS[kpi.panelKey].text}</span>
+                        <div className="formula-box" style={{ marginTop: '4px', padding: '2px', background: 'rgba(0,0,0,0.2)' }}>
+                          <Latex math={EXPLANATIONS[kpi.panelKey].formula} block />
+                        </div>
+                        <div style={{ marginTop: '4px', fontSize: '10px', color: 'var(--accent)', borderTop: '1px dashed var(--border-subtle)', paddingTop: '2px' }}>
+                          <strong>Parameters:</strong> {kpi.params}
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="grafana-kpi-val" style={{ fontSize: '1.2rem' }}>
+                        {kpi.isFloat ? (
+                          <span className="font-mono">{kpi.value.toFixed(2)}</span>
+                        ) : (
+                          <CountUp to={kpi.value} suffix={kpi.suffix || ''} />
+                        )}
+                      </div>
+                    )}
+                    {!isOpen && kpi.spark && (
+                      <div className="kpi-spark" style={{ height: 28 }}>
+                        <Line {...sparkConfig(kpi.spark, kpi.sparkColor)} />
+                      </div>
+                    )}
+                  </div>
+                </motion.div>
+              );
+            })}
+          </div>
+
+          <div className="dash-grid">
+            <InteractivePanel
+              title="[ 📦 ISSUE CATEGORIES ]"
+              subtitle={`${catKeys.length} categories`}
+              panelKey="category"
+              activeInfo={activeInfo}
+              onToggleInfo={toggleInfo}
+              explanation={EXPLANATIONS.category.text}
+              formula={EXPLANATIONS.category.formula}
+            >
+              <Bar data={categoryData} options={categoryOpts} />
+            </InteractivePanel>
+            <InteractivePanel
+              title="[ ⏳ ISSUE LIFECYCLE ]"
+              subtitle="lifecycle"
+              panelKey="status"
+              activeInfo={activeInfo}
+              onToggleInfo={toggleInfo}
+              explanation={EXPLANATIONS.status.text}
+              formula={EXPLANATIONS.status.formula}
+            >
+              <div style={{ position: 'relative', width: '100%', height: '100%' }}>
+                <Doughnut data={statusData} options={statusOpts} />
+                <div className="doughnut-center-label">
+                  <span className="doughnut-center-val">{stats?.total || 0}</span>
+                  <span className="doughnut-center-lbl font-pixel" style={{ fontSize: '0.45rem', marginTop: '4px' }}>ISSUE LEDGER</span>
+                </div>
+              </div>
+            </InteractivePanel>
+          </div>
+
+          <InteractivePanel
+            title="[ ⚡ DEPARTMENT DISPATCH VELOCITY ]"
+            subtitle="resolved tickets · last 30 days"
+            panelKey="velocity"
+            activeInfo={activeInfo}
+            onToggleInfo={toggleInfo}
+            explanation={EXPLANATIONS.velocity.text}
+            formula={EXPLANATIONS.velocity.formula}
+            height={240}
+          >
+            <Line data={velocityData} options={velocityOpts} />
+          </InteractivePanel>
+
+          {recurrence.length > 0 && (
+            <motion.div variants={itemAnim} className="card rpg-panel" style={{ display: 'flex', flexDirection: 'column', position: 'relative', borderRadius: 0, marginTop: 'var(--space-6)' }}>
+              <div className="flex items-center justify-between" style={{ marginBottom: 'var(--space-4)' }}>
+                <div className="flex items-center gap-2">
+                  <h3 className="font-pixel" style={{ fontSize: '0.65rem', margin: 0, color: 'var(--accent)' }}>[ 🔮 RECURRENCE FORECAST ORACLE ]</h3>
+                  <button className="btn-info-icon" onClick={() => toggleInfo('recurrence')} aria-label="Formula details for Recurrence Risk">ⓘ</button>
+                </div>
+                <span className="font-pixel text-muted" style={{ fontSize: '0.45rem' }}>WEIBULL ANALYSIS</span>
+              </div>
+
+              {activeInfo.recurrence && (
+                <div 
+                  className="metric-explanation-panel"
+                  style={{ 
+                    position: 'absolute', 
+                    top: 0, 
+                    left: 0, 
+                    width: '100%', 
+                    height: '100%', 
+                    backgroundColor: 'rgba(21, 22, 29, 0.96)', 
+                    backdropFilter: 'blur(4px)',
+                    borderRadius: 0,
+                    zIndex: 30,
+                    display: 'flex',
+                    flexDirection: 'column',
+                    justifyContent: 'space-between',
+                    margin: 0,
+                    padding: 'var(--space-5)',
+                    boxSizing: 'border-box'
+                  }}
+                >
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-2)' }}>
+                    <div className="flex justify-between items-center">
+                      <span style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--accent)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                        Weibull Forecast Logic
+                      </span>
+                      <button className="btn-close-inline" onClick={() => toggleInfo('recurrence')}>✕</button>
+                    </div>
+                    <p className="text-secondary text-xs rpg-scrollbar" style={{ lineHeight: 1.4, margin: 0, overflowY: 'auto', maxHeight: '180px' }}>
+                      {EXPLANATIONS.recurrence.text}
+                    </p>
+                  </div>
+                  <div className="formula-box" style={{ marginTop: 'auto' }}>
+                    <Latex math={EXPLANATIONS.recurrence.formula} block />
+                  </div>
+                </div>
+              )}
+
+              <div className="method-banner" style={{ marginBottom: 'var(--space-4)' }}>
+                <span className="font-pixel" style={{ color: 'var(--accent)', fontWeight: 700, fontSize: '0.55rem' }}>WEIBULL SURVIVAL MODEL</span>
+                <span style={{ marginLeft: '6px' }}>· forecasting 14-day recurrence probability from inter-arrival intervals</span>
+              </div>
+              <div className="flex flex-col gap-3">
+                {recurrence.slice(0, 10).map((item, i) => {
+                  const key = `${item.ward}-${item.category}-${i}`;
+                  const isOpen = expandedRisk === key;
+                  const color = item.probability > 0.7 ? 'var(--error)' : item.probability > 0.4 ? 'var(--warning)' : 'var(--success)';
                   return (
-                    <div key={asset.id} style={{ borderBottom: '1px dashed var(--border-subtle)', paddingBottom: '6px', fontSize: '0.72rem' }}>
-                      <div className="flex justify-between items-center" style={{ marginBottom: '4px' }}>
-                        <span style={{ color: 'var(--ink-primary)', fontWeight: 600 }}>{asset.name}</span>
-                        <span style={{ color, fontWeight: 'bold' }}>{asset.health}%</span>
+                    <div key={key}>
+                      <div className="recurrence-row" onClick={() => setExpandedRisk(isOpen ? null : key)}>
+                        <div className="flex items-center gap-3">
+                          <span className="bullet font-pixel" style={{ color }}>{isOpen ? '▼' : '▶'}</span>
+                          <span style={{ color: 'var(--ink-primary)', fontWeight: 600 }}>{item.category.replace('_', ' ').toUpperCase()}</span>
+                          <span style={{ color: 'var(--ink-muted)' }}>in {item.ward.toUpperCase()}</span>
+                        </div>
+                        <div className="flex items-center gap-4">
+                          <span className="badge font-pixel" style={{ background: color, color: '#000', fontSize: '9px', borderRadius: 0, padding: '2px 6px' }}>
+                            {Math.round(item.probability * 100)}% RISK
+                          </span>
+                        </div>
                       </div>
-                      <div className="flex justify-between text-xs text-muted">
-                        <span>Ward: {asset.ward.toUpperCase()} · Type: {asset.type.toUpperCase()}</span>
-                        <span>{asset.open_issues_count || 0} active faults</span>
-                      </div>
-                      <div className="priority-bar" style={{ height: '4px', marginTop: '4px', borderRadius: 0 }}>
-                        <div className="priority-bar-fill" style={{ width: `${asset.health}%`, background: color, borderRadius: 0 }} />
-                      </div>
+                      
+                      {isOpen && (
+                        <motion.div 
+                          initial={{ opacity: 0, y: -8 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          className="recurrence-detail-box"
+                        >
+                          <p style={{ margin: '0 0 var(--space-4) 0', color: 'var(--ink-secondary)', fontSize: '0.72rem', lineHeight: 1.4 }}>
+                            <strong>Analysis:</strong> {item.recommendedAction}
+                          </p>
+                          <div className="flex flex-wrap gap-6">
+                            <div className="flex flex-col gap-4" style={{ minWidth: 160 }}>
+                              <div className="flex flex-col gap-1">
+                                <span className="label font-pixel" style={{ fontSize: '0.45rem' }}>SCALE FACTOR (λ)</span>
+                                <span className="font-mono text-base font-semibold">{item.lambda}h</span>
+                              </div>
+                              <div className="flex flex-col gap-1">
+                                <span className="label font-pixel" style={{ fontSize: '0.45rem' }}>SHAPE METRIC (k)</span>
+                                <span className="font-mono text-base font-semibold">{item.k}</span>
+                              </div>
+                              <div className="flex flex-col gap-1">
+                                <span className="label font-pixel" style={{ fontSize: '0.45rem' }}>LAST RESOLVED</span>
+                                <span className="font-mono text-sm font-medium">
+                                  {item.lastResolved ? new Date(item.lastResolved).toLocaleDateString() : '—'}
+                                </span>
+                              </div>
+                              <div className="flex flex-col gap-1">
+                                <span className="label font-pixel" style={{ fontSize: '0.45rem' }}>ELAPSED TIME</span>
+                                <span className="font-mono text-sm font-medium text-secondary">
+                                  {item.lastResolved 
+                                    ? `${Math.round(Math.max((new Date() - new Date(item.lastResolved)) / 3600000, 0))} hours` 
+                                    : '—'}
+                                </span>
+                              </div>
+                            </div>
+                            <div style={{ flex: 1, minWidth: 280, height: 180 }}>
+                              <WeibullCurve lambda={item.lambda} k={item.k} lastResolved={item.lastResolved} />
+                            </div>
+                          </div>
+                        </motion.div>
+                      )}
                     </div>
                   );
                 })}
               </div>
-            )}
-          </div>
-
-          {/* Column 2: Healthy Infrastructure Registry */}
-          <div style={{ padding: 'var(--space-3)', background: 'var(--bg-primary)', border: '1px solid var(--border-subtle)' }}>
-            <h4 className="font-pixel" style={{ fontSize: '0.55rem', color: 'var(--success)', marginBottom: 'var(--space-3)' }}>
-              ✓ STABLE INFRASTRUCTURE REGISTRY
-            </h4>
-            <div className="rpg-scrollbar" style={{ maxHeight: '280px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '8px' }}>
-              {assets.filter(a => a.health === 100).map(asset => (
-                <div key={asset.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px dashed var(--border-subtle)', paddingBottom: '6px', fontSize: '0.72rem' }}>
-                  <div>
-                    <span style={{ color: 'var(--ink-secondary)' }}>{asset.name}</span>
-                    <div style={{ fontSize: '0.6rem', color: 'var(--ink-muted)' }}>Ward: {asset.ward.toUpperCase()} · Type: {asset.type.toUpperCase()}</div>
-                  </div>
-                  <span className="font-pixel" style={{ fontSize: '0.45rem', color: 'var(--success)', border: '1px solid var(--success)', padding: '2px 4px' }}>OPERATIONAL</span>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      </motion.div>
-
-      {departments.length > 0 && (
-        <motion.div variants={itemAnim} className="card rpg-panel" style={{ display: 'flex', flexDirection: 'column', position: 'relative', borderRadius: 0 }}>
-          <div className="flex items-center justify-between" style={{ marginBottom: 'var(--space-4)' }}>
-            <div className="flex items-center gap-2">
-              <h3 className="font-pixel" style={{ fontSize: '0.65rem', margin: 0, color: 'var(--accent)' }}>[ 🛡️ DEPARTMENT GUILD AUDIT ]</h3>
-              <button className="btn-info-icon" onClick={() => toggleInfo('departments')} aria-label="Formula details for Departments">ⓘ</button>
-            </div>
-            <span className="font-pixel text-muted" style={{ fontSize: '0.45rem' }}>SLA AUDIT</span>
-          </div>
-
-          {activeInfo.departments && (
-            <div 
-              className="metric-explanation-panel" 
-              style={{ 
-                position: 'absolute', 
-                top: 0, 
-                left: 0, 
-                width: '100%', 
-                height: '100%', 
-                backgroundColor: 'rgba(21, 22, 29, 0.96)', 
-                backdropFilter: 'blur(4px)',
-                borderRadius: 0,
-                zIndex: 30,
-                display: 'flex',
-                flexDirection: 'column',
-                justifyContent: 'space-between',
-                margin: 0,
-                padding: 'var(--space-5)',
-                boxSizing: 'border-box'
-              }}
-            >
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-2)' }}>
-                <div className="flex justify-between items-center">
-                  <span style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--accent)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                    SLA & Performance Metric
-                  </span>
-                  <button className="btn-close-inline" onClick={() => toggleInfo('departments')}>✕</button>
-                </div>
-                <p className="text-secondary text-xs rpg-scrollbar" style={{ lineHeight: 1.4, margin: 0, overflowY: 'auto', maxHeight: '140px' }}>
-                  {EXPLANATIONS.departments.text}
-                </p>
-              </div>
-              <div className="formula-box" style={{ marginTop: 'auto' }}>
-                <Latex math={EXPLANATIONS.departments.formula} block />
-              </div>
-            </div>
+            </motion.div>
           )}
-
-          <div className="table-container">
-            <table>
-              <thead>
-                <tr>
-                  <th className="font-pixel" style={{ fontSize: '0.45rem' }}>DEPARTMENT GUILD</th>
-                  <th className="font-pixel" style={{ fontSize: '0.45rem' }}>QUESTS ASSIGNED</th>
-                  <th className="font-pixel" style={{ fontSize: '0.45rem' }}>RESOLVED</th>
-                  <th className="font-pixel" style={{ fontSize: '0.45rem' }}>SUCCESS RATE</th>
-                  <th className="font-pixel" style={{ fontSize: '0.45rem' }}>AVG RESOLVE SPEED</th>
-                </tr>
-              </thead>
-              <tbody>
-                {departments.map((dept, i) => (
-                  <tr key={dept.name} style={i === 0 ? { background: 'oklch(0.25 0.06 85 / 0.15)' } : undefined}>
-                    <td className="font-medium" style={{ color: 'var(--ink-primary)' }}>
-                      {dept.name}{i === 0 && <span className="badge font-pixel" style={{ marginLeft: 'var(--space-2)', background: 'var(--rank-gold)', color: '#000', fontSize: '0.45rem', borderRadius: 0, padding: '2px 4px' }}>TOP</span>}
-                    </td>
-                    <td>{dept.total}</td>
-                    <td>{dept.resolved}</td>
-                    <td>
-                      <div className="flex items-center gap-2">
-                        <span style={{ color: dept.resolution_rate >= 70 ? 'var(--success)' : dept.resolution_rate >= 40 ? 'var(--warning)' : 'var(--error)' }}>
-                          {dept.resolution_rate != null ? `${Math.round(dept.resolution_rate)}%` : '—'}
-                        </span>
-                        <div className="dept-bar-mini" style={{ borderRadius: 0 }}>
-                          <div className="dept-bar-mini-fill" style={{ width: `${dept.resolution_rate || 0}%`, background: dept.resolution_rate >= 70 ? 'var(--success)' : dept.resolution_rate >= 40 ? 'var(--warning)' : 'var(--error)', borderRadius: 0 }} />
-                        </div>
-                      </div>
-                    </td>
-                    <td>{formatHours(dept.avg_hours)}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </motion.div>
-      )}
-
-      {recurrence.length > 0 && (
-        <motion.div variants={itemAnim} className="card rpg-panel" style={{ display: 'flex', flexDirection: 'column', position: 'relative', borderRadius: 0 }}>
-          <div className="flex items-center justify-between" style={{ marginBottom: 'var(--space-4)' }}>
-            <div className="flex items-center gap-2">
-              <h3 className="font-pixel" style={{ fontSize: '0.65rem', margin: 0, color: 'var(--accent)' }}>[ 🔮 RECURRENCE FORECAST ORACLE ]</h3>
-              <button className="btn-info-icon" onClick={() => toggleInfo('recurrence')} aria-label="Formula details for Recurrence Risk">ⓘ</button>
-            </div>
-            <span className="font-pixel text-muted" style={{ fontSize: '0.45rem' }}>WEIBULL ANALYSIS</span>
-          </div>
-
-          {activeInfo.recurrence && (
-            <div 
-              className="metric-explanation-panel"
-              style={{ 
-                position: 'absolute', 
-                top: 0, 
-                left: 0, 
-                width: '100%', 
-                height: '100%', 
-                backgroundColor: 'rgba(21, 22, 29, 0.96)', 
-                backdropFilter: 'blur(4px)',
-                borderRadius: 0,
-                zIndex: 30,
-                display: 'flex',
-                flexDirection: 'column',
-                justifyContent: 'space-between',
-                margin: 0,
-                padding: 'var(--space-5)',
-                boxSizing: 'border-box'
-              }}
-            >
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-2)' }}>
-                <div className="flex justify-between items-center">
-                  <span style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--accent)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                    Weibull Forecast Logic
-                  </span>
-                  <button className="btn-close-inline" onClick={() => toggleInfo('recurrence')}>✕</button>
-                </div>
-                <p className="text-secondary text-xs rpg-scrollbar" style={{ lineHeight: 1.4, margin: 0, overflowY: 'auto', maxHeight: '180px' }}>
-                  {EXPLANATIONS.recurrence.text}
-                </p>
-              </div>
-              <div className="formula-box" style={{ marginTop: 'auto' }}>
-                <Latex math={EXPLANATIONS.recurrence.formula} block />
-              </div>
-            </div>
-          )}
-
-          <div className="method-banner" style={{ marginBottom: 'var(--space-4)' }}>
-            <span className="font-pixel" style={{ color: 'var(--accent)', fontWeight: 700, fontSize: '0.55rem' }}>WEIBULL SURVIVAL MODEL</span>
-            <span style={{ marginLeft: '6px' }}>· forecasting 14-day recurrence probability from inter-arrival intervals</span>
-          </div>
-          <div className="flex flex-col gap-3">
-            {recurrence.slice(0, 10).map((item, i) => {
-              const key = `${item.ward}-${item.category}-${i}`;
-              const isOpen = expandedRisk === key;
-              const color = item.probability > 0.7 ? 'var(--error)' : item.probability > 0.4 ? 'var(--warning)' : 'var(--success)';
-              return (
-                <div key={key}>
-                  <div className="recurrence-row" onClick={() => setExpandedRisk(isOpen ? null : key)}>
-                    <div className="flex flex-col" style={{ minWidth: 180 }}>
-                      <span className="text-sm font-medium">{item.ward}</span>
-                      <span className="recurrence-meta font-pixel" style={{ fontSize: '0.45rem' }}>{CATEGORY_LABELS[item.category] || capitalize(item.category)}</span>
-                    </div>
-                    <div style={{ flex: 1 }}>
-                      <div className="flex justify-between text-xs" style={{ marginBottom: '4px' }}>
-                        <span className="text-muted">{item.recommendedAction || item.recommendation}</span>
-                        <span className="font-mono font-semibold" style={{ color }}>{Math.round((item.probability || 0) * 100)}%</span>
-                      </div>
-                      <div className="priority-bar" style={{ borderRadius: 0 }}>
-                        <motion.div
-                          className="priority-bar-fill"
-                          initial={{ width: 0 }}
-                          animate={{ width: `${Math.max(Math.round((item.probability || 0) * 100), 2)}%` }}
-                          transition={{ duration: 1, ease: 'easeOut', delay: 0.2 }}
-                          style={{ background: color, borderRadius: 0 }}
-                        />
-                      </div>
-                    </div>
-                    <span className="text-xs text-muted" aria-hidden="true">{isOpen ? '▾' : '▸'}</span>
-                  </div>
-                  {isOpen && (
-                    <motion.div
-                      initial={{ opacity: 0, height: 0 }}
-                      animate={{ opacity: 1, height: 'auto' }}
-                      transition={{ duration: 0.25 }}
-                      style={{ overflow: 'hidden' }}
-                    >
-                      <div className="flex gap-8" style={{ padding: 'var(--space-5)', flexWrap: 'wrap', alignItems: 'center' }}>
-                        <div className="flex flex-col gap-4" style={{ minWidth: 160 }}>
-                          <div className="flex flex-col gap-1">
-                            <span className="label font-pixel" style={{ fontSize: '0.45rem' }}>SCALE FACTOR (λ)</span>
-                            <span className="font-mono text-base font-semibold">{item.lambda}h</span>
-                          </div>
-                          <div className="flex flex-col gap-1">
-                            <span className="label font-pixel" style={{ fontSize: '0.45rem' }}>SHAPE METRIC (k)</span>
-                            <span className="font-mono text-base font-semibold">{item.k}</span>
-                          </div>
-                          <div className="flex flex-col gap-1">
-                            <span className="label font-pixel" style={{ fontSize: '0.45rem' }}>LAST RESOLVED</span>
-                            <span className="font-mono text-sm font-medium">
-                              {item.lastResolved ? new Date(item.lastResolved).toLocaleDateString() : '—'}
-                            </span>
-                          </div>
-                          <div className="flex flex-col gap-1">
-                            <span className="label font-pixel" style={{ fontSize: '0.45rem' }}>ELAPSED TIME</span>
-                            <span className="font-mono text-sm font-medium text-secondary">
-                              {item.lastResolved 
-                                ? `${Math.round(Math.max((new Date() - new Date(item.lastResolved)) / 3600000, 0))} hours` 
-                                : '—'}
-                            </span>
-                          </div>
-                        </div>
-                        <div style={{ flex: 1, minWidth: 280, height: 180 }}>
-                          <WeibullCurve lambda={item.lambda} k={item.k} lastResolved={item.lastResolved} />
-                        </div>
-                      </div>
-                    </motion.div>
-                  )}
-                </div>
-              );
-            })}
-          </div>
-        </motion.div>
+        </>
       )}
     </motion.div>
   );
