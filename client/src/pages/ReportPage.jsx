@@ -297,7 +297,7 @@ function ReportPage() {
         ))}
       </div>
 
-      <div className="animate-fade-up stagger-3" style={{ minHeight: 320, position: 'relative' }}>
+      <div className="card rpg-panel animate-fade-up stagger-3" style={{ minHeight: 320, position: 'relative', padding: 'var(--space-6) var(--space-7)', borderRadius: 0, background: 'var(--bg-surface)' }}>
         {step === 0 && (
           <div className="flex flex-col gap-6 animate-fade-up">
             <div className="flex items-center justify-between">
@@ -566,33 +566,32 @@ function ReportPage() {
             )}
           </div>
         )}
-      </div>
-
-      <div className="flex justify-between items-center animate-fade-up stagger-4" style={{ marginTop: 'var(--space-8)', paddingTop: 'var(--space-6)', borderTop: '1px solid var(--border-subtle)' }}>
-        {step > 0 && !result && (
-          <button
-            className="btn btn-ghost text-secondary"
-            style={{ fontSize: '1.125rem', borderRadius: 0 }}
-            onClick={() => setStep(s => s - 1)}
-          >
-            ← Back
-          </button>
-        )}
-        {step < 3 && !result && (
-          <div className="flex flex-col items-end gap-1" style={{ marginLeft: 'auto' }}>
+        <div className="flex justify-between items-center animate-fade-up stagger-4" style={{ marginTop: 'var(--space-8)', paddingTop: 'var(--space-6)', borderTop: '1px solid var(--border)' }}>
+          {step > 0 && !result && (
             <button
-              className="btn btn-secondary"
-              style={{ fontSize: '1.125rem', padding: 'var(--space-3) var(--space-6)', borderRadius: 0 }}
-              onClick={() => setStep(s => s + 1)}
-              disabled={!canNext()}
+              className="btn btn-ghost text-secondary"
+              style={{ fontSize: '1.125rem', borderRadius: 0 }}
+              onClick={() => setStep(s => s - 1)}
             >
-              Continue →
+              ← Back
             </button>
-            {stepError() && (
-              <span className="text-xs" style={{ color: 'var(--error)' }}>{stepError()}</span>
-            )}
-          </div>
-        )}
+          )}
+          {step < 3 && !result && (
+            <div className="flex flex-col items-end gap-1" style={{ marginLeft: 'auto' }}>
+              <button
+                className="btn btn-secondary"
+                style={{ fontSize: '1.125rem', padding: 'var(--space-3) var(--space-6)', borderRadius: 0 }}
+                onClick={() => setStep(s => s + 1)}
+                disabled={!canNext()}
+              >
+                Continue →
+              </button>
+              {stepError() && (
+                <span className="text-xs" style={{ color: 'var(--error)' }}>{stepError()}</span>
+              )}
+            </div>
+          )}
+        </div>
       </div>
 
       <AnimatePresence>

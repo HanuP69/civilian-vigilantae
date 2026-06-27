@@ -72,15 +72,23 @@ function MissionsPage() {
             const isCompleted = mission.status === 'completed';
             const progressRatio = Math.min((mission.current_confirmations / mission.target_confirmations) * 100, 100);
             
+            const handleCardClick = () => {
+              if (mission.ticket_id) {
+                navigate(`/ticket/${mission.ticket_id}`);
+              }
+            };
+
             return (
               <motion.div 
                 key={mission.id}
                 variants={itemAnim}
                 className={`card rpg-panel ${isCompleted ? 'success' : ''}`}
+                onClick={handleCardClick}
                 style={{ 
                   borderRadius: 0,
                   position: 'relative',
-                  borderLeft: isCompleted ? '4px solid var(--success)' : '4px solid var(--accent)'
+                  borderLeft: isCompleted ? '4px solid var(--success)' : '4px solid var(--accent)',
+                  cursor: mission.ticket_id ? 'pointer' : 'default'
                 }}
               >
                 <div className="flex justify-between items-start" style={{ flexWrap: 'wrap', gap: 'var(--space-4)' }}>
@@ -158,7 +166,7 @@ function MissionsPage() {
                           padding: '8px 12px',
                           letterSpacing: '0.5px'
                         }}
-                        onClick={() => handleDepart(mission)}
+                        onClick={(e) => { e.stopPropagation(); handleDepart(mission); }}
                       >
                         🧭 FIND ON MAP
                       </button>
