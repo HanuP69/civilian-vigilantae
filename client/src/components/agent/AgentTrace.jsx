@@ -66,11 +66,14 @@ function AgentTrace({ trace = [] }) {
           const color = STEP_COLORS[stepName] || 'var(--ink-muted)';
           const isError = step.status === 'error';
           const isPending = step.status === 'pending';
-          const hasDetail = step.input || step.output || step.error || step.text || step.reasoning;
-          const outputText = step.text || step.output?.text || step.reasoning;
-          const outputWithoutText = step.output && typeof step.output === 'object'
-            ? Object.fromEntries(Object.entries(step.output).filter(([k]) => k !== 'text'))
-            : step.output;
+           const outputText = step.text || step.output?.text;
+           const outputWithoutText = step.output && typeof step.output === 'object'
+             ? Object.fromEntries(Object.entries(step.output).filter(([k]) => k !== 'text'))
+             : step.output;
+           const hasDetail = (step.input && Object.keys(step.input).length > 0) || 
+                             (outputWithoutText && Object.keys(outputWithoutText).length > 0) || 
+                             step.error || 
+                             outputText;
 
           return (
             <motion.div
