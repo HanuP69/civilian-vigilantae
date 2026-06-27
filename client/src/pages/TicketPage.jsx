@@ -307,7 +307,7 @@ function TicketPage() {
             {[
               { id: 'diagnostics', label: '🧠 AI DIAGNOSTICS' },
               { id: 'telemetry', label: '📊 TELEMETRY' },
-              ...(ticket.dispatch_plan ? [{ id: 'dispatch', label: '📋 RESPONSE' }] : [])
+              ...(ticket.dispatch_plan ? [{ id: 'dispatch', label: '📋 SUBMITTED EVIDENCE' }] : [])
             ].map((tab) => (
               <button
                 key={tab.id}
@@ -506,7 +506,7 @@ function TicketPage() {
               /* 5. Resolution Plan */
               <div className="panel rpg-panel" style={{ borderRadius: 0 }}>
                 <h3 className="section-title font-pixel" style={{ fontSize: '0.65rem', color: 'var(--success)', marginBottom: 'var(--space-3)' }}>
-                  [ 📋 RESPONSE PLAN ]
+                  [ 📋 SUBMITTED EVIDENCE ]
                 </h3>
                 <p className="text-secondary text-sm" style={{ lineHeight: 1.6, marginBottom: 'var(--space-4)' }}>
                   {ticket.dispatch_plan.explanation}
