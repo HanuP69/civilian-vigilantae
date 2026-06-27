@@ -180,7 +180,7 @@ function AgentTrace({ trace = [] }) {
                       {step.input && Object.keys(step.input).length > 0 && (
                         <div>
                           <span className="font-semibold block mb-1" style={{ color: 'var(--accent)' }}>&gt; PAYLOAD_IN</span>
-                          <pre className="rpg-scrollbar" style={{ overflowX: 'auto', background: 'transparent', color: 'var(--ink-muted)', maxHeight: 150, overflowY: 'auto', fontSize: '0.8rem' }}>
+                          <pre className="rpg-scrollbar" style={{ overflowX: 'auto', background: 'var(--bg-primary)', color: 'var(--ink-muted)', maxHeight: 200, overflowY: 'auto', fontSize: '0.8rem', padding: '10px', border: '1px solid var(--border)', borderRadius: '2px' }}>
                             {JSON.stringify(step.input, null, 2)}
                           </pre>
                         </div>
@@ -188,7 +188,7 @@ function AgentTrace({ trace = [] }) {
                       {outputWithoutText && Object.keys(outputWithoutText).length > 0 && (
                         <div>
                           <span className="font-semibold block mb-1" style={{ color: 'var(--accent)' }}>&gt; PAYLOAD_OUT</span>
-                          <pre className="rpg-scrollbar" style={{ overflowX: 'auto', background: 'transparent', color: 'var(--ink-muted)', maxHeight: 150, overflowY: 'auto', fontSize: '0.8rem' }}>
+                          <pre className="rpg-scrollbar" style={{ overflowX: 'auto', background: 'var(--bg-primary)', color: 'var(--ink-muted)', maxHeight: 200, overflowY: 'auto', fontSize: '0.8rem', padding: '10px', border: '1px solid var(--border)', borderRadius: '2px' }}>
                             {JSON.stringify(outputWithoutText, null, 2)}
                           </pre>
                         </div>
@@ -196,7 +196,7 @@ function AgentTrace({ trace = [] }) {
                       {step.error && (
                         <div>
                           <span className="font-semibold block mb-1" style={{ color: 'var(--error)' }}>&gt; STDERR</span>
-                          <pre style={{ color: 'var(--error)', overflowX: 'auto', background: 'transparent' }}>
+                          <pre className="rpg-scrollbar" style={{ color: 'var(--error)', overflowX: 'auto', background: 'var(--bg-primary)', padding: '10px', border: '1px solid var(--error)', borderRadius: '2px', maxHeight: 150, overflowY: 'auto', fontSize: '0.8rem' }}>
                             {step.error}
                           </pre>
                         </div>
