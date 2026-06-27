@@ -1354,8 +1354,25 @@ tr:hover td { background: var(--bg-surface); }
 }
 
 @media (max-width: 600px) {
-  .layer-toggle { top: var(--space-2); right: var(--space-2); flex-wrap: wrap; max-width: 180px; }
-  .layer-chip { padding: 4px 8px; font-size: 0.65rem; }
+  .layer-toggle {
+    top: var(--space-2) !important;
+    right: var(--space-2) !important;
+    flex-direction: column !important;
+    align-items: stretch !important;
+    max-width: 160px !important;
+    border-radius: 0 !important;
+    padding: var(--space-1) !important;
+    gap: var(--space-1) !important;
+    background: oklch(0.12 0.01 260 / 0.95) !important;
+    border: 2px solid var(--border) !important;
+  }
+  .layer-chip {
+    padding: 6px 8px !important;
+    font-size: 0.6rem !important;
+    border-radius: 0 !important;
+    text-align: left !important;
+    justify-content: flex-start !important;
+  }
   .layer-legend { display: none; }
 }
 
