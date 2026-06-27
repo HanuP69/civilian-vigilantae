@@ -40,14 +40,6 @@ function AgentTrace({ trace = [] }) {
   const [isDetailOpen, setIsDetailOpen] = useState(true);
   const [showHistory, setShowHistory] = useState(false);
 
-  if (!trace || trace.length === 0) {
-    return (
-      <div className="flex items-center justify-center p-8 text-muted">
-        <span>No agent trace logs available</span>
-      </div>
-    );
-  }
-
   // Deduplicate trace to find the latest run of each step type
   const latestSteps = [];
   const seenSteps = new Set();
@@ -95,6 +87,14 @@ function AgentTrace({ trace = [] }) {
       setCurrentIndex(0);
     }
   }, [stepsToRender.length, currentIndex]);
+
+  if (!trace || trace.length === 0) {
+    return (
+      <div className="flex items-center justify-center p-8 text-muted">
+        <span>No agent trace logs available</span>
+      </div>
+    );
+  }
 
   const handlePrev = () => {
     setCurrentIndex((prev) => (prev > 0 ? prev - 1 : stepsToRender.length - 1));
