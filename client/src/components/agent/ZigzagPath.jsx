@@ -368,7 +368,7 @@ function ZigzagPath({ steps = [], isComplete }) {
           pointerEvents: 'none'
         }}
         animate={{
-          x: activeCoord.x - 32,
+          x: activeCoord.x - 16,
           y: activeCoord.y - 20
         }}
         transition={{ type: 'spring', stiffness: 120, damping: 14 }}
