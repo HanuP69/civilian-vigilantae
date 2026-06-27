@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { mergeAgentTrace } from './agentStreamUtils.js';
 
-const COMPLETE_STEPS = ['create_ticket', 'merge_into_ticket', 'agent_response'];
+const COMPLETE_STEPS = ['create_ticket', 'merge_into_ticket', 'agent_response', 'notify_reporters'];
 
 export function useAgentStream(reportId, initialSteps = []) {
   const [steps, setSteps] = useState([]);

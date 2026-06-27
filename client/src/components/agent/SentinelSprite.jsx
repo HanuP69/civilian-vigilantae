@@ -1,5 +1,3 @@
-
-
 import { motion } from 'framer-motion';
 
 /**
@@ -50,7 +48,7 @@ function SentinelSprite({ scale = 3, flip = false, celebrating = false }) {
       className="sentinel-sprite"
       style={{
         imageRendering: 'pixelated',
-        transform: flip ? 'scaleX(-1) rotate(180deg)' : 'scaleX(1) rotate(180deg)',
+        transform: flip ? 'scaleX(-1)' : 'scaleX(1)',
         transformOrigin: 'center center',
       }}
       animate={bobAnim}
