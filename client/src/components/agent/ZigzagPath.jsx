@@ -3,55 +3,56 @@ import { motion, AnimatePresence } from 'framer-motion';
 import SentinelSprite from './SentinelSprite.jsx';
 
 const ClassifyNodeIcon = () => (
-  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="square">
-    <rect x="3" y="3" width="10" height="10" stroke="currentColor" strokeWidth="2" />
-    <line x1="8" y1="6" x2="12" y2="6" stroke="currentColor" />
-    <line x1="8" y1="10" x2="11" y2="10" stroke="currentColor" />
-    <circle cx="16" cy="16" r="4" stroke="currentColor" strokeWidth="2" />
-    <line x1="19" y1="19" x2="22" y2="22" stroke="currentColor" strokeWidth="3" />
+  <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="square">
+    <rect x="3" y="3" width="11" height="11" fill="rgba(255, 193, 7, 0.2)" stroke="#ffc107" strokeWidth="2.5" />
+    <circle cx="8.5" cy="8.5" r="1.5" fill="#ffc107" />
+    <circle cx="16" cy="16" r="4.5" fill="rgba(0, 229, 255, 0.15)" stroke="#00e5ff" strokeWidth="2.5" />
+    <line x1="19.5" y1="19.5" x2="22.5" y2="22.5" stroke="#00e5ff" strokeWidth="3.5" />
   </svg>
 );
 
 const DedupNodeIcon = () => (
-  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="square">
-    <rect x="3" y="7" width="10" height="12" stroke="currentColor" strokeWidth="2" />
-    <rect x="9" y="4" width="10" height="12" stroke="currentColor" strokeWidth="2" fill="rgba(0,0,0,0.25)" />
-    <path d="M6 10h4M6 14h4M12 7h4M12 11h4" stroke="currentColor" strokeWidth="1.5" />
+  <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="square">
+    <rect x="3" y="8" width="10" height="12" fill="rgba(255, 23, 68, 0.15)" stroke="#ff1744" strokeWidth="2" />
+    <rect x="9" y="4" width="10" height="12" fill="rgba(255, 145, 0, 0.2)" stroke="#ff9100" strokeWidth="2" />
+    <path d="M13 10h2v2h-2z" fill="#00e5ff" />
+    <line x1="6" y1="12" x2="10" y2="12" stroke="#ff1744" strokeWidth="1.5" />
+    <line x1="12" y1="8" x2="16" y2="8" stroke="#ff9100" strokeWidth="1.5" />
   </svg>
 );
 
 const EarthNodeIcon = () => (
-  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="square">
-    <circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="2" />
-    <circle cx="12" cy="12" r="9" fill="rgba(34, 197, 94, 0.15)" />
-    <path d="M8 8c1 0 2 1 1 2s-2 1-1 3" stroke="currentColor" strokeWidth="2" />
-    <path d="M14 10c2-1 3 1 2 2s-1 2-2 1" stroke="currentColor" strokeWidth="2" />
+  <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="square">
+    <circle cx="12" cy="12" r="9.5" fill="#2979ff" stroke="#2979ff" strokeWidth="1" />
+    <path d="M7 10c0-1.5 1-2 2-1.5s2 .5 1.5 2-1 2.5-2.5 1.5S7 11.5 7 10z" fill="#00e676" />
+    <path d="M13 14c0-1 1-1.5 2-1s1.5 .5 1 2-1 1.5-2 1-1-1-1-1z" fill="#00e676" />
+    <path d="M15 8c0-.8.8-1.2 1.5-.8s1 .4.8 1.2-.8.8-1.5.8-1-.4-1-.8z" fill="#00e676" />
+    <circle cx="12" cy="12" r="9.5" stroke="#ffffff" strokeWidth="2" />
   </svg>
 );
 
 const PriorityNodeIcon = () => (
-  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="square">
-    <path d="M12 3l9 16H3L12 3z" stroke="currentColor" strokeWidth="2" />
-    <line x1="12" y1="8" x2="12" y2="13" stroke="currentColor" strokeWidth="2" />
-    <circle cx="12" cy="16.5" r="1.2" fill="currentColor" stroke="currentColor" />
+  <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="square">
+    <path d="M12 2l10 18H2L12 2z" fill="rgba(255, 23, 68, 0.15)" stroke="#ff1744" strokeWidth="2.5" />
+    <line x1="12" y1="8" x2="12" y2="14" stroke="#ffea00" strokeWidth="3" />
+    <circle cx="12" cy="17.5" r="1.5" fill="#ffea00" stroke="#ffea00" />
   </svg>
 );
 
 const TicketNodeIcon = () => (
-  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="square">
-    <rect x="4" y="6" width="16" height="12" rx="1" stroke="currentColor" strokeWidth="2" />
-    <path d="M4 11a2 2 0 0 1 0 2M20 11a2 2 0 0 0 0 2" stroke="currentColor" strokeWidth="2" />
-    <line x1="9" y1="9" x2="15" y2="9" stroke="currentColor" strokeWidth="1.5" />
-    <line x1="9" y1="12" x2="15" y2="12" stroke="currentColor" strokeWidth="1.5" />
-    <line x1="9" y1="15" x2="15" y2="15" stroke="currentColor" strokeWidth="1.5" />
+  <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="square">
+    <rect x="3" y="6" width="18" height="12" rx="1.5" fill="rgba(255, 215, 0, 0.15)" stroke="#ffd700" strokeWidth="2.5" />
+    <path d="M3 10.5a1.5 1.5 0 0 1 0 3M21 10.5a1.5 1.5 0 0 0 0 3" stroke="#d500f9" strokeWidth="2.5" fill="#d500f9" />
+    <line x1="8" y1="10" x2="16" y2="10" stroke="#ffd700" strokeWidth="1.5" />
+    <line x1="8" y1="14" x2="16" y2="14" stroke="#ffd700" strokeWidth="1.5" />
   </svg>
 );
 
 const NotifyNodeIcon = () => (
-  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="square">
-    <path d="M12 18v3M10 21h4M7 14l5-9 5 9" stroke="currentColor" strokeWidth="2" />
-    <circle cx="12" cy="5" r="1.5" fill="currentColor" stroke="currentColor" />
-    <path d="M8 8a6 6 0 0 1 8 0M5 5a10 10 0 0 1 14 0" stroke="currentColor" strokeWidth="1.5" opacity="0.8" />
+  <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="square">
+    <path d="M12 17v4M9 21h6M6 13l6-9 6 9" stroke="#ffffff" strokeWidth="2.5" />
+    <circle cx="12" cy="4" r="2" fill="#00e676" stroke="#00e676" />
+    <path d="M8 7.5a5.5 5.5 0 0 1 8 0M5 4.5a9.5 9.5 0 0 1 14 0" stroke="#00e5ff" strokeWidth="2" opacity="0.8" />
   </svg>
 );
 
@@ -122,12 +123,12 @@ const MILESTONES = [
 const WALK_ORDER = MILESTONES.map(m => m.key);
 
 const NODE_COORDS = [
-  { x: 450, y: 55 },  // CLS (Classify)
-  { x: 260, y: 55 },  // FND (Dedup)
-  { x: 70, y: 55 },   // GEO (Locate)
-  { x: 70, y: 165 },  // PRI (Priority)
-  { x: 260, y: 165 }, // TKT (Create)
-  { x: 450, y: 165 }, // NOT (Notify)
+  { x: 520, y: 65 },  // CLS (Classify)
+  { x: 300, y: 65 },  // FND (Dedup)
+  { x: 80, y: 65 },   // GEO (Locate)
+  { x: 80, y: 205 },  // PRI (Priority)
+  { x: 300, y: 205 }, // TKT (Create)
+  { x: 520, y: 205 }, // NOT (Notify)
 ];
 
 function milestoneState(steps = [], key, alt) {
@@ -195,8 +196,8 @@ function ZigzagPath({ steps = [], isComplete }) {
   return (
     <div style={{
       width: '100%',
-      maxWidth: '520px',
-      height: '240px',
+      maxWidth: '600px',
+      height: '300px',
       margin: '0 auto var(--space-6) auto',
       position: 'relative',
       background: 'linear-gradient(180deg, #4d822b 0%, #3e6d20 100%)', // grass green pasture
@@ -209,33 +210,33 @@ function ZigzagPath({ steps = [], isComplete }) {
         {/* Decorative Grass & Flower clusters */}
         <g opacity="0.4" strokeWidth="0">
           {/* Yellow/White Flowers */}
-          <rect x="130" y="80" width="4" height="4" fill="#fff" />
-          <rect x="134" y="84" width="4" height="4" fill="#ffd54f" />
-          <rect x="370" y="110" width="4" height="4" fill="#fff" />
-          <rect x="366" y="114" width="4" height="4" fill="#ffd54f" />
+          <rect x="130" y="110" width="4" height="4" fill="#fff" />
+          <rect x="134" y="114" width="4" height="4" fill="#ffd54f" />
+          <rect x="370" y="130" width="4" height="4" fill="#fff" />
+          <rect x="366" y="134" width="4" height="4" fill="#ffd54f" />
           {/* Grass details */}
-          <line x1="180" y1="80" x2="182" y2="72" stroke="#223a11" strokeWidth="2" />
-          <line x1="184" y1="80" x2="188" y2="74" stroke="#223a11" strokeWidth="2" />
-          <line x1="290" y1="120" x2="292" y2="112" stroke="#223a11" strokeWidth="2" />
-          <line x1="294" y1="120" x2="298" y2="114" stroke="#223a11" strokeWidth="2" />
-          <line x1="80" y1="130" x2="82" y2="122" stroke="#223a11" strokeWidth="2" />
-          <line x1="84" y1="130" x2="88" y2="124" stroke="#223a11" strokeWidth="2" />
+          <line x1="180" y1="110" x2="182" y2="102" stroke="#223a11" strokeWidth="2" />
+          <line x1="184" y1="110" x2="188" y2="104" stroke="#223a11" strokeWidth="2" />
+          <line x1="290" y1="150" x2="292" y2="142" stroke="#223a11" strokeWidth="2" />
+          <line x1="294" y1="150" x2="298" y2="144" stroke="#223a11" strokeWidth="2" />
+          <line x1="80" y1="160" x2="82" y2="152" stroke="#223a11" strokeWidth="2" />
+          <line x1="84" y1="160" x2="88" y2="154" stroke="#223a11" strokeWidth="2" />
         </g>
 
         {/* Inactive connection path (gray/dirt track) */}
         <path
-          d="M 450 55 L 260 55 L 70 55 L 70 165 L 260 165 L 450 165"
+          d="M 520 65 L 300 65 L 80 65 L 80 205 L 300 205 L 520 205"
           fill="none"
           stroke="#251a0e" // dark dirt border
-          strokeWidth="14"
+          strokeWidth="18"
           strokeLinecap="round"
           strokeLinejoin="round"
         />
         <path
-          d="M 450 55 L 260 55 L 70 55 L 70 165 L 260 165 L 450 165"
+          d="M 520 65 L 300 65 L 80 65 L 80 205 L 300 205 L 520 205"
           fill="none"
           stroke="#684e2a" // lighter dirt core
-          strokeWidth="8"
+          strokeWidth="10"
           strokeLinecap="round"
           strokeLinejoin="round"
         />
@@ -247,7 +248,7 @@ function ZigzagPath({ steps = [], isComplete }) {
               d={activePathD}
               fill="none"
               stroke="var(--accent)"
-              strokeWidth="10"
+              strokeWidth="14"
               strokeLinecap="round"
               strokeLinejoin="round"
               opacity="0.3"
@@ -257,8 +258,8 @@ function ZigzagPath({ steps = [], isComplete }) {
               d={activePathD}
               fill="none"
               stroke="var(--accent)"
-              strokeWidth="4"
-              strokeDasharray="6 6" // stepping stone effect
+              strokeWidth="5"
+              strokeDasharray="8 8" // stepping stone effect
               strokeLinecap="round"
               strokeLinejoin="round"
             />
@@ -273,36 +274,32 @@ function ZigzagPath({ steps = [], isComplete }) {
 
           let nodeFill = '#1c2217'; // dark biome glass
           let nodeStroke = '#3d5231';
-          let textColor = 'var(--ink-muted)';
 
           if (state === 'done') {
             nodeFill = 'rgba(28, 59, 28, 0.9)';
             nodeStroke = 'var(--success)';
-            textColor = 'var(--success)';
           } else if (state === 'active') {
             nodeFill = 'rgba(61, 51, 24, 0.9)';
             nodeStroke = 'var(--accent)';
-            textColor = 'var(--accent)';
           } else if (state === 'error') {
             nodeFill = 'rgba(59, 28, 28, 0.9)';
             nodeStroke = 'var(--error)';
-            textColor = 'var(--error)';
           }
 
           return (
             <g key={m.key}>
-              {/* Outer square box */}
+              {/* Outer square box - Enlarged to 64x64 */}
               <rect
-                x={coord.x - 24}
-                y={coord.y - 24}
-                width="48"
-                height="48"
-                rx="6" // slightly rounded pixel corners
+                x={coord.x - 32}
+                y={coord.y - 32}
+                width="64"
+                height="64"
+                rx="8" // rounded pixel corners
                 fill={nodeFill}
                 stroke={nodeStroke}
-                strokeWidth={isActive ? '3' : '2'}
+                strokeWidth={isActive ? '3.5' : '2'}
                 style={{
-                  filter: isActive ? 'drop-shadow(0px 0px 6px var(--accent))' : 'none',
+                  filter: isActive ? 'drop-shadow(0px 0px 8px var(--accent))' : 'none',
                   transition: 'all 0.3s ease'
                 }}
               />
@@ -310,12 +307,12 @@ function ZigzagPath({ steps = [], isComplete }) {
               {/* Sub-label under the node */}
               <text
                 x={coord.x}
-                y={coord.y + 36}
+                y={coord.y + 46}
                 textAnchor="middle"
-                fill={state === 'idle' ? 'rgba(255,255,255,0.4)' : '#fff'}
+                fill={state === 'idle' ? 'rgba(255,255,255,0.45)' : '#fff'}
                 style={{
                   fontFamily: 'var(--font-mono)',
-                  fontSize: '9px',
+                  fontSize: '10px',
                   fontWeight: state === 'active' ? 'bold' : 'normal',
                   filter: 'drop-shadow(1px 1px 0px rgba(0,0,0,0.8))'
                 }}
@@ -327,34 +324,32 @@ function ZigzagPath({ steps = [], isComplete }) {
         })}
       </svg>
 
-      {/* Dynamic SVG Node Icons Overlay */}
+      {/* Dynamic SVG Node Icons Overlay - Enlarged and colored */}
       {MILESTONES.map((m, idx) => {
         const coord = NODE_COORDS[idx];
         const state = milestoneState(steps, m.key, m.alt);
         const isActive = idx === currentIdx;
 
-        let iconColor = 'rgba(255, 255, 255, 0.4)'; // idle
-        if (state === 'done') iconColor = 'var(--success)';
-        else if (state === 'active') iconColor = 'var(--accent)';
-        else if (state === 'error') iconColor = 'var(--error)';
+        // Keep icons colored/bright to see them clearly
+        const opacity = state === 'idle' ? '0.45' : '1';
 
         return (
           <div
             key={m.key}
             style={{
               position: 'absolute',
-              left: `${coord.x - 12}px`,
-              top: `${coord.y - 12}px`,
-              width: '24px',
-              height: '24px',
-              color: iconColor,
+              left: `${coord.x - 16}px`,
+              top: `${coord.y - 16}px`,
+              width: '32px',
+              height: '32px',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
               zIndex: 5,
               pointerEvents: 'none',
               transition: 'all 0.3s ease',
-              transform: isActive ? 'scale(1.2)' : 'scale(1)'
+              opacity: opacity,
+              transform: isActive ? 'scale(1.25)' : 'scale(1)'
             }}
           >
             {m.icon}
@@ -376,7 +371,7 @@ function ZigzagPath({ steps = [], isComplete }) {
         }}
         animate={{
           x: activeCoord.x - 32,
-          y: activeCoord.y - 4
+          y: activeCoord.y - 20
         }}
         transition={{ type: 'spring', stiffness: 120, damping: 14 }}
       >
@@ -398,7 +393,7 @@ function ZigzagPath({ steps = [], isComplete }) {
           )}
         </AnimatePresence>
         <SentinelSprite
-          scale={1.5}
+          scale={2.0} // Enlarged robot mascot
           flip={currentIdx < 3} // Face left when walking on the top row (right-to-left)
           celebrating={isComplete}
         />

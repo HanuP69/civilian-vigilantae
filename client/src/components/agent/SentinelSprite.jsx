@@ -15,37 +15,37 @@ function SentinelSprite({ scale = 3, flip = false, celebrating = false }) {
   const s = scale;
   const p = 1; // pixel size
 
-  // Color palette - Sleek Cyberpunk Gold Droid with Neon Cyan Visor & Thruster Flames
+  // Color palette - High-end Cyberpunk Gold Drone with Neon Visor & Flame Nozzles
   const colors = {
-    body: '#2d271c', // dark brass/gold charcoal
-    bodyLight: '#4d4330', // light brass
-    accent: '#ffb300', // gold chrome
-    accentBright: '#ffe57f', // glowing gold
-    accentDim: '#ff8f00', // orange accent
-    eye: '#00e5ff', // neon cyan sensor lens
-    eyeGlow: '#e0f7fa', // glowing cyan
-    visor: '#0e1d24', // dark cyber glass
-    boots: '#3e3f42', // metal nozzles
+    body: '#262421', // deep charcoal metal
+    bodyLight: '#4a4235', // dark copper
+    accent: '#ffb300', // golden chrome outer casing
+    accentBright: '#ffd54f', // bright gold highlight
+    accentDim: '#ff6f00', // hazard orange stripes
+    eye: '#00e5ff', // neon cyan circular core
+    eyeGlow: '#e0f7fa', // white-cyan glowing pupil
+    visor: '#09141a', // black cyber visor glass
+    boots: '#455a64', // slate blue thruster nozzles
     antenna: '#ffb300',
     antennaTip: '#00e5ff',
   };
 
-  // Hovering flight physics animations
+  // Hovering flight physics animations - active stabilizers
   const bobAnim = celebrating
     ? { 
         y: [0, -12, -4, -12, 0], 
         rotate: [0, 180, 360],
-        scale: [1, 1.25, 0.9, 1.25, 1]
+        scale: [1, 1.25, 0.95, 1.25, 1]
       }
     : { 
         y: [0, -6, 0],
-        rotate: [-2, 2, -2],
-        scale: [1, 1.03, 1]
+        rotate: [-3, 3, -3],
+        scale: [1, 1.04, 1]
       };
 
   const bobTransition = celebrating
     ? { duration: 1.2, repeat: Infinity, ease: 'easeInOut' }
-    : { duration: 0.9, repeat: Infinity, ease: 'easeInOut' };
+    : { duration: 0.8, repeat: Infinity, ease: 'easeInOut' };
 
   return (
     <motion.div
@@ -66,70 +66,56 @@ function SentinelSprite({ scale = 3, flip = false, celebrating = false }) {
         xmlns="http://www.w3.org/2000/svg"
         style={{ imageRendering: 'pixelated' }}
       >
-        {/* === Antenna === */}
-        <rect x={5 * p} y={0} width={2 * p} height={1 * p} fill={colors.antenna} />
-        <rect x={5 * p} y={0} width={1 * p} height={1 * p} fill={colors.antennaTip} />
+        {/* === Antenna details at top === */}
+        <rect x={5 * p} y={1 * p} width={2 * p} height={1 * p} fill={colors.body} />
+        <rect x={5 * p} y={0} width={2 * p} height={1 * p} fill={colors.eye} />
 
-        {/* === Head === */}
-        {/* Row 1-2: helmet top */}
-        <rect x={3 * p} y={1} width={6 * p} height={1 * p} fill={colors.body} />
-        <rect x={2 * p} y={2} width={8 * p} height={1 * p} fill={colors.body} />
-        {/* Row 3: visor band */}
-        <rect x={2 * p} y={3} width={8 * p} height={1 * p} fill={colors.visor} />
-        {/* Eyes — glowing neon cyan */}
-        <rect x={3 * p} y={3} width={2 * p} height={1 * p} fill={colors.eye} />
-        <rect x={7 * p} y={3} width={2 * p} height={1 * p} fill={colors.eye} />
-        {/* Eye highlight */}
-        <rect x={3 * p} y={3} width={1 * p} height={1 * p} fill={colors.eyeGlow} />
-        <rect x={7 * p} y={3} width={1 * p} height={1 * p} fill={colors.eyeGlow} />
-        {/* Row 4: chin / jaw */}
-        <rect x={3 * p} y={4} width={6 * p} height={1 * p} fill={colors.body} />
-        {/* Accent stripe on helmet */}
-        <rect x={3 * p} y={1} width={6 * p} height={1 * p} fill={colors.accentDim} />
-        <rect x={4 * p} y={1} width={4 * p} height={1 * p} fill={colors.accent} />
-
-        {/* === Body === */}
-        {/* Row 5-6: shoulders + chest */}
-        <rect x={2 * p} y={5} width={8 * p} height={1 * p} fill={colors.body} />
-        <rect x={2 * p} y={6} width={8 * p} height={1 * p} fill={colors.bodyLight} />
-        {/* Accent chest stripe */}
-        <rect x={4 * p} y={5} width={4 * p} height={1 * p} fill={colors.accentDim} />
-        <rect x={5 * p} y={6} width={2 * p} height={1 * p} fill={colors.accent} />
-        {/* Core light on chest */}
-        <rect x={5 * p} y={6} width={1 * p} height={1 * p} fill={colors.accentBright} />
-
-        {/* Row 7-8: mid body */}
-        <rect x={3 * p} y={7} width={6 * p} height={1 * p} fill={colors.body} />
-        <rect x={3 * p} y={8} width={6 * p} height={1 * p} fill={colors.bodyLight} />
-        {/* Belt */}
-        <rect x={3 * p} y={8} width={6 * p} height={1 * p} fill={colors.accentDim} />
-        <rect x={5 * p} y={8} width={2 * p} height={1 * p} fill={colors.accent} />
-
-        {/* === Arms === */}
-        {/* Left arm */}
-        <rect x={1 * p} y={5} width={1 * p} height={3 * p} fill={colors.body} />
-        <rect x={0} y={7} width={1 * p} height={1 * p} fill={colors.accentDim} />
-        {/* Right arm */}
-        <rect x={10 * p} y={5} width={1 * p} height={3 * p} fill={colors.body} />
-        <rect x={11 * p} y={7} width={1 * p} height={1 * p} fill={colors.accentDim} />
-
-        {/* === Jet Thrusters & Fire Flames (Replaced Legs/Boots) === */}
-        {/* Metal nozzles */}
-        <rect x={3 * p} y={9} width={2 * p} height={1 * p} fill={colors.boots} />
-        <rect x={7 * p} y={9} width={2 * p} height={1 * p} fill={colors.boots} />
-        {/* Flame core - fire orange & yellow */}
-        <rect x={3 * p} y={10} width={2 * p} height={2 * p} fill="#ff3d00" />
-        <rect x={7 * p} y={10} width={2 * p} height={2 * p} fill="#ff3d00" />
+        {/* === Spheroid Cyber Body === */}
+        {/* Row 2: top curve */}
+        <rect x={4 * p} y={2 * p} width={4 * p} height={1 * p} fill={colors.body} />
+        {/* Row 3: shoulder top */}
+        <rect x={3 * p} y={3 * p} width={6 * p} height={1 * p} fill={colors.body} />
+        <rect x={4 * p} y={3 * p} width={4 * p} height={1 * p} fill={colors.bodyLight} />
+        {/* Row 4-10: Main round body shell */}
+        <rect x={2 * p} y={4 * p} width={8 * p} height={7 * p} fill={colors.body} />
+        <rect x={3 * p} y={4 * p} width={6 * p} height={7 * p} fill={colors.bodyLight} />
         
-        <rect x={4 * p} y={10} width={1 * p} height={4 * p} fill="#ffeb3b" />
-        <rect x={8 * p} y={10} width={1 * p} height={4 * p} fill="#ffeb3b" />
-        
-        <rect x={3 * p} y={12} width={2 * p} height={1 * p} fill="#ff9100" />
-        <rect x={7 * p} y={12} width={2 * p} height={1 * p} fill="#ff9100" />
+        {/* Outer gold chrome plating stripes */}
+        <rect x={2 * p} y={5 * p} width={1 * p} height={5 * p} fill={colors.accent} />
+        <rect x={9 * p} y={5 * p} width={1 * p} height={5 * p} fill={colors.accent} />
+        <rect x={3 * p} y={4 * p} width={6 * p} height={1 * p} fill={colors.accentDim} />
+        <rect x={4 * p} y={4 * p} width={4 * p} height={1 * p} fill={colors.accent} />
 
-        {/* === Jetpack / backpack === */}
-        <rect x={11 * p} y={6} width={1 * p} height={2 * p} fill={colors.bodyLight} />
-        <rect x={11 * p} y={7} width={1 * p} height={1 * p} fill={colors.accent} />
+        {/* Row 11: bottom curve */}
+        <rect x={3 * p} y={11 * p} width={6 * p} height={1 * p} fill={colors.body} />
+        <rect x={4 * p} y={11 * p} width={4 * p} height={1 * p} fill={colors.accentDim} />
+        <rect x={4 * p} y={12 * p} width={4 * p} height={1 * p} fill={colors.body} />
+
+        {/* === HUGE GLOWING CYBER-EYE (Center) === */}
+        {/* Visor shield backing */}
+        <rect x={4 * p} y={5 * p} width={4 * p} height={4 * p} fill={colors.visor} />
+        {/* Cyan core ring */}
+        <rect x={5 * p} y={5 * p} width={2 * p} height={4 * p} fill={colors.eye} />
+        <rect x={4 * p} y={6 * p} width={4 * p} height={2 * p} fill={colors.eye} />
+        {/* Glowing pupil core */}
+        <rect x={5 * p} y={6 * p} width={2 * p} height={2 * p} fill={colors.eyeGlow} />
+        {/* Tiny white reflection spark */}
+        <rect x={5 * p} y={6 * p} width={1 * p} height={1 * p} fill="#ffffff" />
+
+        {/* === Fluttering Side Wings (Mechanical flap panels) === */}
+        {/* Left wing (angled) */}
+        <rect x={0} y={5 * p} width={2 * p} height={1 * p} fill={colors.accentDim} />
+        <rect x={1 * p} y={6 * p} width={1 * p} height={2 * p} fill={colors.body} />
+        <rect x={0} y={7 * p} width={1 * p} height={2 * p} fill={colors.accent} />
+        {/* Right wing (angled) */}
+        <rect x={10 * p} y={5 * p} width={2 * p} height={1 * p} fill={colors.accentDim} />
+        <rect x={10 * p} y={6 * p} width={1 * p} height={2 * p} fill={colors.body} />
+        <rect x={11 * p} y={7 * p} width={1 * p} height={2 * p} fill={colors.accent} />
+
+        {/* === Jet thruster fire at bottom center === */}
+        <rect x={5 * p} y={13 * p} width={2 * p} height={1 * p} fill={colors.boots} />
+        <rect x={4 * p} y={14 * p} width={4 * p} height={1 * p} fill="#ff3d00" />
+        <rect x={5 * p} y={15 * p} width={2 * p} height={1 * p} fill="#ffeb3b" />
 
         {/* Celebration sparkles */}
         {celebrating && (
