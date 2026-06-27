@@ -82,6 +82,55 @@ function PublicRoute({ children }) {
   return children;
 }
 
+function getArcPath(cx, cy, rOut, rIn, startAngleDeg, endAngleDeg) {
+  const toRad = (angle) => (angle - 90) * Math.PI / 180;
+  
+  const startRadOut = toRad(startAngleDeg);
+  const endRadOut = toRad(endAngleDeg);
+  
+  const x1Out = cx + rOut * Math.cos(startRadOut);
+  const y1Out = cy + rOut * Math.sin(startRadOut);
+  const x2Out = cx + rOut * Math.cos(endRadOut);
+  const y2Out = cy + rOut * Math.sin(endRadOut);
+  
+  const x1In = cx + rIn * Math.cos(endRadOut);
+  const y1In = cy + rIn * Math.sin(endRadOut);
+  const x2In = cx + rIn * Math.cos(startRadOut);
+  const y2In = cy + rIn * Math.sin(startRadOut);
+  
+  const largeArc = (endAngleDeg - startAngleDeg) > 180 ? 1 : 0;
+  
+  return [
+    `M ${x1Out} ${y1Out}`,
+    `A ${rOut} ${rOut} 0 ${largeArc} 1 ${x2Out} ${y2Out}`,
+    `L ${x1In} ${y1In}`,
+    `A ${rIn} ${rIn} 0 ${largeArc} 0 ${x2In} ${y2In}`,
+    `Z`
+  ].join(' ');
+}
+
+function RpgTriggerIcon({ isOpen }) {
+  if (isOpen) {
+    return (
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="square">
+        <line x1="18" y1="6" x2="6" y2="18" />
+        <line x1="6" y1="6" x2="18" y2="18" />
+      </svg>
+    );
+  }
+  
+  return (
+    <svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ filter: 'drop-shadow(0 0 8px var(--accent))' }}>
+      {/* Outer Gear Ring */}
+      <circle cx="16" cy="16" r="11" stroke="var(--accent)" strokeWidth="2" strokeDasharray="3 3" />
+      {/* Inner Scope Radar Crosshairs */}
+      <circle cx="16" cy="16" r="7" stroke="var(--accent)" strokeWidth="1.5" />
+      <circle cx="16" cy="16" r="3" fill="var(--accent)" />
+      <path d="M16 2v4M16 26v4M2 16h4M26 16h4" stroke="var(--accent)" strokeWidth="1.5" />
+    </svg>
+  );
+}
+
 function Navbar({ isConnected }) {
   const { isAuthenticated, user, logout } = useAuth();
   const [isOpen, setIsOpen] = useState(false);
@@ -191,14 +240,7 @@ function Navbar({ isConnected }) {
               border: isOpen ? '2px solid var(--border)' : 'none',
               boxShadow: isOpen ? '4px 4px 0 rgba(0,0,0,0.6)' : 'none'
             }}>
-              <span style={{ 
-                fontSize: isOpen ? '1.5rem' : '2.2rem', 
-                filter: isOpen ? 'none' : 'drop-shadow(0 0 10px rgba(99,102,241,0.9))',
-                transform: isOpen ? 'none' : 'rotate(-10deg)',
-                color: 'var(--ink-primary)'
-              }}>
-                {isOpen ? '✕' : '🛡️'}
-              </span>
+              <RpgTriggerIcon isOpen={isOpen} />
               
               {/* Notification Badge to intrigue user */}
               {!isOpen && (
@@ -294,80 +336,112 @@ function Navbar({ isConnected }) {
                 overflow: 'visible'
               }}
             >
-               {/* Subtle outer decorative ring orbit & connector lines */}
-              <svg style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', pointerEvents: 'none', zIndex: 1 }}>
-                <circle
-                  cx="160"
-                  cy="160"
-                  r={radius}
-                  fill="none"
-                  stroke="rgba(255, 255, 255, 0.05)"
-                  strokeWidth="1.5"
-                />
+              {/* Red glowing decorative line behind center (A Hat in Time style) */}
+              <div style={{
+                position: 'absolute',
+                top: '158px',
+                left: '10px',
+                right: '10px',
+                height: '4px',
+                background: '#ff003c',
+                boxShadow: '0 0 12px #ff003c',
+                zIndex: 0,
+                pointerEvents: 'none'
+              }} />
+              <div style={{
+                position: 'absolute',
+                top: '148px',
+                left: '148px',
+                width: '24px',
+                height: '24px',
+                borderRadius: '50%',
+                border: '4px solid #ff003c',
+                boxShadow: '0 0 12px #ff003c',
+                background: '#0c0d12',
+                zIndex: 0,
+                pointerEvents: 'none'
+              }} />
+
+              {/* Segmented Ring SVG container */}
+              <svg style={{ position: 'absolute', inset: 0, width: '320px', height: '320px', pointerEvents: 'auto', zIndex: 1 }}>
                 {slots.map((slot, index) => {
-                  const coord = coords[index];
+                  const startAngle = index * (360 / slots.length) + 3;
+                  const endAngle = (index + 1) * (360 / slots.length) - 3;
                   const isHovered = hoveredSlot?.name === slot.name;
+                  const pathData = getArcPath(160, 160, 135, 85, startAngle, endAngle);
+                  
                   return (
-                    <line
+                    <path
                       key={slot.name}
-                      x1="160"
-                      y1="160"
-                      x2={160 + coord.x}
-                      y2={160 + coord.y}
-                      stroke={isHovered ? 'rgba(99, 102, 241, 0.6)' : 'rgba(255, 255, 255, 0.05)'}
+                      d={pathData}
+                      fill={isHovered ? 'rgba(251, 191, 36, 0.4)' : 'rgba(255, 255, 255, 0.12)'}
+                      stroke={isHovered ? 'var(--accent)' : 'rgba(255, 255, 255, 0.15)'}
                       strokeWidth={isHovered ? '2' : '1'}
-                      style={{ transition: 'all 0.15s ease' }}
+                      style={{
+                        cursor: 'pointer',
+                        transition: 'all 0.15s cubic-bezier(0.16, 1, 0.3, 1)',
+                        filter: isHovered ? 'drop-shadow(0 0 10px rgba(251, 191, 36, 0.6))' : 'none'
+                      }}
+                      onMouseEnter={() => setHoveredSlot(slot)}
+                      onMouseLeave={() => setHoveredSlot(null)}
+                      onClick={() => handleNav(slot.path, slot.name)}
                     />
                   );
                 })}
               </svg>
 
-              {/* Center Display HUD (100px x 100px) */}
+              {/* Center Circular Display HUD */}
               <div 
-                className="rpg-panel flex flex-col items-center justify-center"
+                className="flex flex-col items-center justify-center"
                 style={{
                   position: 'absolute',
-                  left: '110px',
-                  top: '110px',
-                  width: '100px',
-                  height: '100px',
-                  borderRadius: 0,
-                  background: 'oklch(0.12 0.01 50)',
-                  boxShadow: 'inset 2px 2px 4px rgba(0,0,0,0.5)',
-                  padding: '4px',
-                  textAlign: 'center'
+                  left: '115px',
+                  top: '115px',
+                  width: '90px',
+                  height: '90px',
+                  borderRadius: '50%',
+                  background: 'rgba(12, 13, 18, 0.92)',
+                  border: '2px solid var(--border)',
+                  boxShadow: 'inset 0 0 10px rgba(0,0,0,0.8), 0 0 15px rgba(251, 191, 36, 0.2)',
+                  padding: '8px',
+                  textAlign: 'center',
+                  zIndex: 2,
+                  pointerEvents: 'none'
                 }}
               >
                 {hoveredSlot ? (
                   <div style={{ animation: 'fadeIn 0.15s ease-out' }}>
-                    <div className="font-pixel" style={{ fontSize: '9px', color: 'var(--accent)', fontWeight: 800, marginBottom: '4px' }}>
+                    <div className="font-pixel" style={{ fontSize: '8px', color: 'var(--accent)', fontWeight: 800, marginBottom: '2px' }}>
                       {hoveredSlot.label}
                     </div>
-                    <div style={{ fontSize: '10px', color: 'var(--ink-muted)', lineHeight: 1.2 }}>
+                    <div style={{ fontSize: '9px', color: 'var(--ink-muted)', lineHeight: 1.1, wordBreak: 'break-word' }}>
                       {hoveredSlot.desc}
                     </div>
                   </div>
                 ) : (
                   <div>
-                    <div className="font-pixel" style={{ fontSize: '9px', color: 'var(--accent)', fontWeight: 800, marginBottom: '2px' }}>
+                    <div className="font-pixel" style={{ fontSize: '8px', color: 'var(--accent)', fontWeight: 800, marginBottom: '2px' }}>
                       HUD STATUS
                     </div>
                     {isAuthenticated && (
-                      <div className="font-pixel" style={{ fontSize: '9px', color: 'var(--ink-primary)', marginBottom: '2px' }}>
+                      <div className="font-pixel" style={{ fontSize: '8px', color: 'var(--ink-primary)', marginBottom: '2px' }}>
                         LVL {user?.level || 1}
                       </div>
                     )}
-                    <div className="flex items-center justify-center gap-1.5" style={{ fontSize: '10px', color: 'var(--ink-secondary)' }}>
+                    <div className="flex items-center justify-center gap-1.5" style={{ fontSize: '9px', color: 'var(--ink-secondary)' }}>
                       <span style={liveDotStyle} />
-                      <span style={{ fontSize: '10px', fontFamily: 'var(--font-mono)' }}>{isConnected ? 'LIVE' : 'OFFLINE'}</span>
+                      <span style={{ fontSize: '9px', fontFamily: 'var(--font-mono)' }}>{isConnected ? 'LIVE' : 'OFFLINE'}</span>
                     </div>
                   </div>
                 )}
               </div>
 
-              {/* Radial slots (Buttons positioned at degrees) */}
+              {/* Radial slots (Buttons positioned at center of segments) */}
               {slots.map((slot, index) => {
-                const coord = coords[index];
+                const angle = (index + 0.5) * (360 / slots.length);
+                const rad = (angle - 90) * Math.PI / 180;
+                const x = 160 + 110 * Math.cos(rad);
+                const y = 160 + 110 * Math.sin(rad);
                 const isHovered = hoveredSlot?.name === slot.name;
 
                 return (
@@ -376,21 +450,25 @@ function Navbar({ isConnected }) {
                     onClick={() => handleNav(slot.path, slot.name)}
                     onMouseEnter={() => setHoveredSlot(slot)}
                     onMouseLeave={() => setHoveredSlot(null)}
-                    className="rpg-panel flex items-center justify-center"
                     style={{
                       position: 'absolute',
-                      left: `${160 + coord.x - 25}px`,
-                      top: `${160 + coord.y - 25}px`,
-                      width: '50px',
-                      height: '50px',
-                      borderRadius: 0,
+                      left: `${x - 20}px`,
+                      top: `${y - 20}px`,
+                      width: '40px',
+                      height: '40px',
+                      borderRadius: '50%',
                       cursor: 'pointer',
-                      fontSize: '1.25rem',
-                      boxShadow: isHovered ? '0 0 8px var(--accent)' : '3px 3px 0 rgba(0,0,0,0.5)',
-                      transform: isHovered ? 'scale(1.15)' : 'scale(1)',
-                      transition: 'transform 0.15s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.15s ease',
+                      fontSize: '1.4rem',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      background: 'transparent',
+                      transform: isHovered ? 'scale(1.2)' : 'scale(1)',
+                      transition: 'all 0.15s cubic-bezier(0.16, 1, 0.3, 1)',
                       border: 'none',
-                      padding: 0
+                      padding: 0,
+                      zIndex: 3,
+                      pointerEvents: 'auto'
                     }}
                     title={slot.name}
                   >
