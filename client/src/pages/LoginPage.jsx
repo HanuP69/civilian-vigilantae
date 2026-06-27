@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../hooks/AuthContext';
 import { useToast } from '../hooks/useToast.jsx';
@@ -13,6 +13,37 @@ function LoginPage() {
   const { login, register } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
+
+  useEffect(() => {
+    const handleAuthMessage = async (event) => {
+      if (event.origin !== window.location.origin) return;
+      if (event.data && event.data.type === 'GOOGLE_AUTH_SUCCESS') {
+        const { email: gEmail, displayName } = event.data;
+        setSubmitting(true);
+        toast('Google auth verified. Synchronizing session...', 'info');
+
+        try {
+          const pass = `google-auth-${gEmail.replace(/[^a-zA-Z0-9]/g, '')}`;
+          try {
+            await register(gEmail, pass, displayName);
+          } catch {
+            await login(gEmail, pass);
+          }
+          setIsSuccess(true);
+          toast(`Successfully logged in as ${displayName}!`, 'success');
+          setTimeout(() => {
+            navigate('/');
+          }, 1500);
+        } catch (err) {
+          toast('Failed to synchronize user session.', 'error');
+          setSubmitting(false);
+        }
+      }
+    };
+
+    window.addEventListener('message', handleAuthMessage);
+    return () => window.removeEventListener('message', handleAuthMessage);
+  }, [login, register, navigate, toast]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -35,29 +66,19 @@ function LoginPage() {
     }
   };
 
-  const handleGoogleLogin = async () => {
-    setSubmitting(true);
-    toast('Connecting to Google accounts...', 'info');
+  const handleGoogleLogin = () => {
+    const width = 500;
+    const height = 600;
+    const left = window.screen.width / 2 - width / 2;
+    const top = window.screen.height / 2 - height / 2;
     
-    // Simulate OAuth delay
-    setTimeout(async () => {
-      try {
-        try {
-          await register('google.hero@gmail.com', 'google-auth-hero', 'Google Hero');
-        } catch {
-          // If already registered, login directly
-          await login('google.hero@gmail.com', 'google-auth-hero');
-        }
-        setIsSuccess(true);
-        toast('Logged in with Google!', 'success');
-        setTimeout(() => {
-          navigate('/');
-        }, 1500);
-      } catch (err) {
-        toast('Google auth simulation failed', 'error');
-        setSubmitting(false);
-      }
-    }, 1000);
+    const popup = window.open(
+      '/google-auth.html',
+      'GoogleSignIntoSentinel',
+      `width=${width},height=${height},left=${left},top=${top},status=no,resizable=no`
+    );
+
+    if (popup) popup.focus();
   };
 
   return (

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../hooks/AuthContext';
 import { useToast } from '../hooks/useToast.jsx';
@@ -16,29 +16,50 @@ function RegisterPage() {
   const { toast } = useToast();
   const navigate = useNavigate();
 
-  const handleGoogleLogin = async () => {
-    setSubmitting(true);
-    toast('Connecting to Google accounts...', 'info');
-    
-    // Simulate OAuth delay
-    setTimeout(async () => {
-      try {
+  useEffect(() => {
+    const handleAuthMessage = async (event) => {
+      if (event.origin !== window.location.origin) return;
+      if (event.data && event.data.type === 'GOOGLE_AUTH_SUCCESS') {
+        const { email: gEmail, displayName: gName } = event.data;
+        setSubmitting(true);
+        toast('Google auth verified. Synchronizing session...', 'info');
+
         try {
-          await register('google.hero@gmail.com', 'google-auth-hero', 'Google Hero');
+          const pass = `google-auth-${gEmail.replace(/[^a-zA-Z0-9]/g, '')}`;
+          try {
+            await register(gEmail, pass, gName);
+          } catch {
+            await login(gEmail, pass);
+          }
+          setIsSuccess(true);
+          toast(`Successfully logged in as ${gName}!`, 'success');
+          setTimeout(() => {
+            navigate('/');
+          }, 1500);
         } catch (err) {
-          // If already registered, login directly
-          await login('google.hero@gmail.com', 'google-auth-hero');
+          toast('Failed to synchronize user session.', 'error');
+          setSubmitting(false);
         }
-        setIsSuccess(true);
-        toast('Account linked and logged in with Google!', 'success');
-        setTimeout(() => {
-          navigate('/');
-        }, 1500);
-      } catch (err) {
-        toast('Google auth simulation failed', 'error');
-        setSubmitting(false);
       }
-    }, 1000);
+    };
+
+    window.addEventListener('message', handleAuthMessage);
+    return () => window.removeEventListener('message', handleAuthMessage);
+  }, [login, register, navigate, toast]);
+
+  const handleGoogleLogin = () => {
+    const width = 500;
+    const height = 600;
+    const left = window.screen.width / 2 - width / 2;
+    const top = window.screen.height / 2 - height / 2;
+    
+    const popup = window.open(
+      '/google-auth.html',
+      'GoogleSignIntoSentinel',
+      `width=${width},height=${height},left=${left},top=${top},status=no,resizable=no`
+    );
+
+    if (popup) popup.focus();
   };
 
   const handleSubmit = async (e) => {
