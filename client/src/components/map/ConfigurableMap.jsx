@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
-import { MapContainer, TileLayer, Marker, Popup, Circle, Tooltip, useMap } from 'react-leaflet';
+import { MapContainer, TileLayer, Marker, Popup, Circle, Tooltip, useMap, ZoomControl } from 'react-leaflet';
 
 const getTimestampMs = (val) => {
   if (!val) return 0;
@@ -468,13 +468,14 @@ function ConfigurableMap({
           center={center}
           zoom={zoom}
           style={{ height: '100%', width: '100%' }}
-          zoomControl={true}
+          zoomControl={false}
           attributionControl={true}
         >
           <TileLayer
             attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
             url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png"
           />
+          <ZoomControl position="bottomright" />
           
           <MapController
             tickets={tickets}

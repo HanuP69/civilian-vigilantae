@@ -2479,3 +2479,31 @@ tr:hover td { background: var(--bg-surface); }
   to { box-shadow: 0 0 10px rgba(255, 192, 0, 0.6), inset 0 0 4px rgba(255, 192, 0, 0.4); }
 }
 
+/* Retro Pixel Styling for Leaflet Zoom Controls */
+.leaflet-bar {
+  border: 2px solid var(--border) !important;
+  border-radius: 0 !important;
+  box-shadow: 3px 3px 0 rgba(0, 0, 0, 0.5) !important;
+  background: var(--bg-surface) !important;
+  overflow: hidden;
+}
+.leaflet-bar a {
+  background-color: var(--bg-surface) !important;
+  color: var(--ink-primary) !important;
+  border: none !important;
+  border-radius: 0 !important;
+  font-family: var(--font-pixel) !important;
+  font-size: 14px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  transition: all var(--transition-fast) !important;
+}
+.leaflet-bar a:first-child {
+  border-bottom: 2px solid var(--border) !important;
+}
+.leaflet-bar a:hover {
+  background-color: var(--bg-hover) !important;
+  color: var(--accent) !important;
+}
+
