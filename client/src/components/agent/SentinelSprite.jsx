@@ -15,37 +15,33 @@ function SentinelSprite({ scale = 3, flip = false, celebrating = false }) {
   const s = scale;
   const p = 1; // pixel size
 
-  // Color palette - High-end Cyberpunk Gold Drone with Neon Visor & Flame Nozzles
+  // Color palette - Cyberpunk Ginger Cat
   const colors = {
-    body: '#262421', // deep charcoal metal
-    bodyLight: '#4a4235', // dark copper
-    accent: '#ffb300', // golden chrome outer casing
-    accentBright: '#ffd54f', // bright gold highlight
-    accentDim: '#ff6f00', // hazard orange stripes
-    eye: '#00e5ff', // neon cyan circular core
-    eyeGlow: '#e0f7fa', // white-cyan glowing pupil
-    visor: '#09141a', // black cyber visor glass
-    boots: '#455a64', // slate blue thruster nozzles
-    antenna: '#ffb300',
-    antennaTip: '#00e5ff',
+    fur: '#e69d45',       // warm ginger cat orange
+    furLight: '#ffb766',  // light orange fur highlight
+    furDark: '#b86d1d',   // dark orange fur shadows/stripes
+    belly: '#ffffff',     // white kitty belly/paws
+    visor: '#00e5ff',     // neon cyan cyber-goggles
+    visorGlow: '#e0f7fa', // glowing visor shine
+    pink: '#ff80ab',      // cute pink nose & inner ears
+    collar: '#ff1744',    // red collar
+    bell: '#ffd700',      // gold collar bell
   };
 
-  // Hovering flight physics animations - active stabilizers
+  // Hovering/walking physics animations (No rotation)
   const bobAnim = celebrating
     ? { 
-        y: [0, -12, -4, -12, 0], 
-        rotate: [0, 180, 360],
-        scale: [1, 1.25, 0.95, 1.25, 1]
+        y: [0, -10, -2, -10, 0], 
+        scale: [1, 1.2, 0.95, 1.2, 1]
       }
     : { 
-        y: [0, -6, 0],
-        rotate: [-3, 3, -3],
-        scale: [1, 1.04, 1]
+        y: [0, -4, 0],
+        scale: [1, 1.03, 1]
       };
 
   const bobTransition = celebrating
-    ? { duration: 1.2, repeat: Infinity, ease: 'easeInOut' }
-    : { duration: 0.8, repeat: Infinity, ease: 'easeInOut' };
+    ? { duration: 1.0, repeat: Infinity, ease: 'easeInOut' }
+    : { duration: 0.7, repeat: Infinity, ease: 'easeInOut' };
 
   return (
     <motion.div
@@ -66,64 +62,65 @@ function SentinelSprite({ scale = 3, flip = false, celebrating = false }) {
         xmlns="http://www.w3.org/2000/svg"
         style={{ imageRendering: 'pixelated' }}
       >
-        {/* === Antenna details at top === */}
-        <rect x={5 * p} y={1 * p} width={2 * p} height={1 * p} fill={colors.body} />
-        <rect x={5 * p} y={0} width={2 * p} height={1 * p} fill={colors.eye} />
+        {/* === EARS === */}
+        {/* Left ear */}
+        <rect x={2 * p} y={1 * p} width={2 * p} height={2 * p} fill={colors.fur} />
+        <rect x={3 * p} y={2 * p} width={1 * p} height={1 * p} fill={colors.pink} />
+        {/* Right ear */}
+        <rect x={8 * p} y={1 * p} width={2 * p} height={2 * p} fill={colors.fur} />
+        <rect x={8 * p} y={2 * p} width={1 * p} height={1 * p} fill={colors.pink} />
 
-        {/* === Spheroid Cyber Body === */}
-        {/* Row 2: top curve */}
-        <rect x={4 * p} y={2 * p} width={4 * p} height={1 * p} fill={colors.body} />
-        {/* Row 3: shoulder top */}
-        <rect x={3 * p} y={3 * p} width={6 * p} height={1 * p} fill={colors.body} />
-        <rect x={4 * p} y={3 * p} width={4 * p} height={1 * p} fill={colors.bodyLight} />
-        {/* Row 4-10: Main round body shell */}
-        <rect x={2 * p} y={4 * p} width={8 * p} height={7 * p} fill={colors.body} />
-        <rect x={3 * p} y={4 * p} width={6 * p} height={7 * p} fill={colors.bodyLight} />
-        
-        {/* Outer gold chrome plating stripes */}
-        <rect x={2 * p} y={5 * p} width={1 * p} height={5 * p} fill={colors.accent} />
-        <rect x={9 * p} y={5 * p} width={1 * p} height={5 * p} fill={colors.accent} />
-        <rect x={3 * p} y={4 * p} width={6 * p} height={1 * p} fill={colors.accentDim} />
-        <rect x={4 * p} y={4 * p} width={4 * p} height={1 * p} fill={colors.accent} />
+        {/* === HEAD === */}
+        <rect x={2 * p} y={3 * p} width={8 * p} height={4 * p} fill={colors.fur} />
+        <rect x={3 * p} y={3 * p} width={6 * p} height={3 * p} fill={colors.furLight} />
+        {/* Stripes */}
+        <rect x={5 * p} y={3 * p} width={2 * p} height={1 * p} fill={colors.furDark} />
 
-        {/* Row 11: bottom curve */}
-        <rect x={3 * p} y={11 * p} width={6 * p} height={1 * p} fill={colors.body} />
-        <rect x={4 * p} y={11 * p} width={4 * p} height={1 * p} fill={colors.accentDim} />
-        <rect x={4 * p} y={12 * p} width={4 * p} height={1 * p} fill={colors.body} />
+        {/* === CYBER GOGGLES (Visor) === */}
+        <rect x={2 * p} y={4 * p} width={8 * p} height={2 * p} fill="#0d1f2d" />
+        <rect x={3 * p} y={4 * p} width={3 * p} height={1 * p} fill={colors.visor} />
+        <rect x={7 * p} y={4 * p} width={3 * p} height={1 * p} fill={colors.visor} />
+        <rect x={3 * p} y={4 * p} width={1 * p} height={1 * p} fill={colors.visorGlow} />
+        <rect x={7 * p} y={4 * p} width={1 * p} height={1 * p} fill={colors.visorGlow} />
 
-        {/* === HUGE GLOWING CYBER-EYE (Center) === */}
-        {/* Visor shield backing */}
-        <rect x={4 * p} y={5 * p} width={4 * p} height={4 * p} fill={colors.visor} />
-        {/* Cyan core ring */}
-        <rect x={5 * p} y={5 * p} width={2 * p} height={4 * p} fill={colors.eye} />
-        <rect x={4 * p} y={6 * p} width={4 * p} height={2 * p} fill={colors.eye} />
-        {/* Glowing pupil core */}
-        <rect x={5 * p} y={6 * p} width={2 * p} height={2 * p} fill={colors.eyeGlow} />
-        {/* Tiny white reflection spark */}
-        <rect x={5 * p} y={6 * p} width={1 * p} height={1 * p} fill="#ffffff" />
+        {/* === SNOUT & NOSE === */}
+        <rect x={4 * p} y={6 * p} width={4 * p} height={1 * p} fill={colors.belly} />
+        <rect x={5 * p} y={5 * p} width={2 * p} height={1 * p} fill={colors.pink} />
 
-        {/* === Fluttering Side Wings (Mechanical flap panels) === */}
-        {/* Left wing (angled) */}
-        <rect x={0} y={5 * p} width={2 * p} height={1 * p} fill={colors.accentDim} />
-        <rect x={1 * p} y={6 * p} width={1 * p} height={2 * p} fill={colors.body} />
-        <rect x={0} y={7 * p} width={1 * p} height={2 * p} fill={colors.accent} />
-        {/* Right wing (angled) */}
-        <rect x={10 * p} y={5 * p} width={2 * p} height={1 * p} fill={colors.accentDim} />
-        <rect x={10 * p} y={6 * p} width={1 * p} height={2 * p} fill={colors.body} />
-        <rect x={11 * p} y={7 * p} width={1 * p} height={2 * p} fill={colors.accent} />
+        {/* === COLLAR & BELL === */}
+        <rect x={3 * p} y={7 * p} width={6 * p} height={1 * p} fill={colors.collar} />
+        <rect x={5 * p} y={8 * p} width={2 * p} height={1 * p} fill={colors.bell} />
 
-        {/* === Jet thruster fire at bottom center === */}
-        <rect x={5 * p} y={13 * p} width={2 * p} height={1 * p} fill={colors.boots} />
-        <rect x={4 * p} y={14 * p} width={4 * p} height={1 * p} fill="#ff3d00" />
-        <rect x={5 * p} y={15 * p} width={2 * p} height={1 * p} fill="#ffeb3b" />
+        {/* === BODY === */}
+        <rect x={3 * p} y={9 * p} width={6 * p} height={4 * p} fill={colors.fur} />
+        <rect x={4 * p} y={9 * p} width={4 * p} height={4 * p} fill={colors.belly} />
+
+        {/* === TAIL === */}
+        <rect x={9 * p} y={11 * p} width={2 * p} height={1 * p} fill={colors.fur} />
+        <rect x={10 * p} y={9 * p} width={1 * p} height={2 * p} fill={colors.furDark} />
+        <rect x={9 * p} y={8 * p} width={2 * p} height={1 * p} fill={colors.fur} />
+
+        {/* === LEGS & PAWS === */}
+        {/* Front Left */}
+        <rect x={3 * p} y={13 * p} width={1 * p} height={2 * p} fill={colors.fur} />
+        <rect x={3 * p} y={15 * p} width={1 * p} height={1 * p} fill={colors.belly} />
+        {/* Front Right */}
+        <rect x={5 * p} y={13 * p} width={1 * p} height={2 * p} fill={colors.fur} />
+        <rect x={5 * p} y={15 * p} width={1 * p} height={1 * p} fill={colors.belly} />
+        {/* Back Left */}
+        <rect x={7 * p} y={13 * p} width={1 * p} height={2 * p} fill={colors.fur} />
+        <rect x={7 * p} y={15 * p} width={1 * p} height={1 * p} fill={colors.belly} />
+        {/* Back Right */}
+        <rect x={9 * p} y={13 * p} width={1 * p} height={2 * p} fill={colors.fur} />
+        <rect x={9 * p} y={15 * p} width={1 * p} height={1 * p} fill={colors.belly} />
 
         {/* Celebration sparkles */}
         {celebrating && (
           <>
-            <rect x={0} y={1} width={1} height={1} fill={colors.accentBright} opacity={0.8} />
-            <rect x={11} y={2} width={1} height={1} fill={colors.eyeGlow} opacity={0.6} />
-            <rect x={1} y={4} width={1} height={1} fill={colors.accent} opacity={0.7} />
-            <rect x={10} y={5} width={1} height={1} fill={colors.accentBright} opacity={0.5} />
+            <rect x={0} y={1} width={1} height={1} fill={colors.visor} opacity={0.8} />
+            <rect x={11} y={2} width={1} height={1} fill={colors.visorGlow} opacity={0.6} />
+            <rect x={1} y={4} width={1} height={1} fill={colors.collar} opacity={0.7} />
+            <rect x={10} y={5} width={1} height={1} fill={colors.bell} opacity={0.5} />
           </>
         )}
       </svg>
