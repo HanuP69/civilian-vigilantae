@@ -2515,23 +2515,29 @@ tr:hover td { background: var(--bg-surface); }
 @media (max-width: 768px) {
   .mobile-rpg-hotbar {
     position: fixed;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    height: 60px;
-    background: oklch(0.12 0.01 260 / 0.95);
-    border-top: 4px double var(--border);
+    bottom: 16px;
+    left: 50%;
+    transform: translateX(-50%);
+    height: 52px;
+    background: rgba(18, 20, 28, 0.85);
+    backdrop-filter: blur(12px);
+    border: 2px solid var(--border);
+    border-radius: 0; /* RPG flat pixel edges */
     display: flex;
-    justify-content: space-around;
+    justify-content: center;
     align-items: center;
+    gap: var(--space-4);
     z-index: 1200;
-    padding: 0 8px;
-    box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.6);
+    padding: 0 16px;
+    box-shadow: 6px 6px 0 rgba(0, 0, 0, 0.7);
+    width: auto;
+    min-width: 280px;
+    max-width: 90%;
   }
   
   /* Ensure main view bottom padding handles hotbar height */
   .app-main {
-    padding-bottom: 80px !important;
+    padding-bottom: 90px !important;
   }
 }
 
@@ -2544,32 +2550,35 @@ tr:hover td { background: var(--bg-surface); }
   border: none;
   color: var(--ink-muted);
   cursor: pointer;
-  padding: 4px;
-  gap: 2px;
+  padding: 6px 12px;
   transition: all var(--transition-fast);
-  flex: 1;
+  position: relative;
 }
 
 .hotbar-item span:first-child {
-  font-size: 1.15rem;
-  transition: transform 0.15s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-}
-
-.hotbar-item span:last-child {
-  font-family: var(--font-pixel);
-  font-size: 7px;
-  letter-spacing: 0.5px;
-  color: var(--ink-muted);
+  font-size: 1.35rem;
+  transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
 
 .hotbar-item:hover span:first-child,
 .hotbar-item.active span:first-child {
-  transform: scale(1.25) translateY(-3px);
-  filter: drop-shadow(0 0 5px var(--accent));
+  transform: scale(1.3) translateY(-4px);
+  filter: drop-shadow(0 0 8px var(--accent));
 }
 
-.hotbar-item:hover span:last-child,
-.hotbar-item.active span:last-child {
+.hotbar-item.active::after {
+  content: '';
+  position: absolute;
+  bottom: -4px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 4px;
+  height: 4px;
+  background: var(--accent);
+  box-shadow: 0 0 6px var(--accent);
+}
+
+.hotbar-item:hover,
+.hotbar-item.active {
   color: var(--accent);
 }
-
