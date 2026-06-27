@@ -48,8 +48,6 @@ function SentinelSprite({ scale = 3, flip = false, celebrating = false }) {
       className="sentinel-sprite"
       style={{
         imageRendering: 'pixelated',
-        transform: flip ? 'scaleX(-1)' : 'scaleX(1)',
-        transformOrigin: 'center bottom',
       }}
       animate={bobAnim}
       transition={bobTransition}
@@ -60,7 +58,11 @@ function SentinelSprite({ scale = 3, flip = false, celebrating = false }) {
         viewBox="0 0 12 16"
         fill="none"
         xmlns="http://www.w3.org/2000/svg"
-        style={{ imageRendering: 'pixelated' }}
+        style={{ 
+          imageRendering: 'pixelated',
+          transform: flip ? 'scaleX(-1) rotate(90deg)' : 'scaleX(1) rotate(90deg)',
+          transformOrigin: 'center center'
+        }}
       >
         {/* === EARS === */}
         {/* Left ear */}
