@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo, useRef } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, Link, useSearchParams } from 'react-router-dom';
 import { fetchTickets, fetchRecurrenceRisk, fetchMissions } from '../services/api';
 import { useSSE } from '../hooks/useSSE';
 import { useToast } from '../hooks/useToast.jsx';
@@ -40,14 +40,33 @@ const haversineApprox = (a, b) => {
 };
 
 function HomePage() {
+  const [searchParams] = useSearchParams();
   const [tickets, setTickets] = useState([]);
   const [recurrence, setRecurrence] = useState([]);
   const [missions, setMissions] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [filters, setFilters] = useState({ status: '', category: '', ward: '' });
+  const [filters, setFilters] = useState({
+    status: '',
+    category: searchParams.get('category') || '',
+    ward: searchParams.get('ward') || ''
+  });
   const [activeTicketId, setActiveTicketId] = useState(null);
   const [map, setMap] = useState(null);
-  const [layer, setLayer] = useState('reports');
+  const [layer, setLayer] = useState(() => {
+    return searchParams.get('isHotspot') === 'true' ? 'recurrence' : 'reports';
+  });
+  const focusCoords = useMemo(() => {
+    const lat = searchParams.get('lat');
+    const lng = searchParams.get('lng');
+    if (lat && lng) {
+      return {
+        lat: parseFloat(lat),
+        lng: parseFloat(lng),
+        isHotspot: searchParams.get('isHotspot') === 'true'
+      };
+    }
+    return null;
+  }, [searchParams]);
   const mapProvider = import.meta.env.VITE_MAP_PROVIDER || 'maps';
   const { events } = useSSE();
   const { toast } = useToast();
@@ -346,6 +365,7 @@ function HomePage() {
             categoryColors={CATEGORY_COLORS}
             categoryLabels={CATEGORY_LABELS}
             capitalize={capitalize}
+            focusCoords={focusCoords}
           />
           <div className="layer-toggle" role="tablist" aria-label="Map layers">
             {LAYERS.map(l => (

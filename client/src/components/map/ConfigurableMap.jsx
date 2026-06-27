@@ -99,6 +99,32 @@ function createLeafletIcon(priorityScore, isActive, isVerified, isSla, currentLa
   });
 }
 
+function createTempMarkerIcon(isHotspot) {
+  const mainColor = isHotspot ? '#ffc000' : '#00b0ff';
+  const innerColor = isHotspot ? '#ff3b30' : '#00e5ff';
+  const label = isHotspot ? '🔥 HOTSPOT TARGET' : '🧭 MISSION TARGET';
+  const svg = `
+    <svg width="40" height="40" viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg">
+      <circle cx="20" cy="20" r="18" fill="none" stroke="${mainColor}" stroke-width="3" stroke-dasharray="3 3" />
+      <circle cx="20" cy="20" r="10" fill="none" stroke="${innerColor}" stroke-width="2" />
+      <circle cx="20" cy="20" r="4" fill="${innerColor}" />
+      <path d="M20 2v6M20 32v6M2 20h6M32 20h6" stroke="${mainColor}" stroke-width="2" />
+    </svg>
+  `;
+  return L.divIcon({
+    className: 'custom-temp-marker-wrapper leaflet-temp-pulse',
+    html: `
+      <div class="rpg-temp-pin-container" style="display: flex; flex-direction: column; align-items: center; position: relative; width: 40px; height: 40px;">
+        <div class="rpg-temp-pin-label font-pixel" style="background: rgba(0,0,0,0.9); color: ${mainColor}; border: 1px solid ${mainColor}; font-size: 7px; padding: 2px 4px; white-space: nowrap; position: absolute; top: -18px; left: 50%; transform: translateX(-50%); letter-spacing: 0.5px;">${label}</div>
+        <div style="width: 40px; height: 40px;">${svg}</div>
+      </div>
+    `,
+    iconSize: [40, 40],
+    iconAnchor: [20, 20],
+    popupAnchor: [0, -20]
+  });
+}
+
 function createGoogleMarkerIcon(priorityScore, isActive, currentLayer) {
   const color = currentLayer === 'sla' ? '#ff4d4f' : getMarkerColor(priorityScore);
   const svg = `
@@ -122,7 +148,7 @@ function createGoogleMarkerIcon(priorityScore, isActive, currentLayer) {
   };
 }
 
-function MapController({ tickets, clusterGroups, recurrence, slaByWard, layer, center, zoom, wardCenters, onMapReady }) {
+function MapController({ tickets, clusterGroups, recurrence, slaByWard, layer, center, zoom, wardCenters, onMapReady, focusCoords }) {
   const map = useMap();
   const lastFitRef = useRef({ layer: null, dataLength: 0 });
 
@@ -140,6 +166,11 @@ function MapController({ tickets, clusterGroups, recurrence, slaByWard, layer, c
 
   useEffect(() => {
     if (!map) return;
+
+    if (focusCoords && Number.isFinite(Number(focusCoords.lat)) && Number.isFinite(Number(focusCoords.lng))) {
+      map.flyTo([Number(focusCoords.lat), Number(focusCoords.lng)], 15, { animate: true, duration: 1.5 });
+      return;
+    }
 
     let currentDataLength = 0;
     const positions = [];
@@ -190,7 +221,7 @@ function MapController({ tickets, clusterGroups, recurrence, slaByWard, layer, c
       }
       lastFitRef.current = { layer, dataLength: currentDataLength };
     }
-  }, [tickets, clusterGroups, recurrence, slaByWard, layer, center, zoom, wardCenters, map]);
+  }, [tickets, clusterGroups, recurrence, slaByWard, layer, center, zoom, wardCenters, map, focusCoords]);
 
   return null;
 }
@@ -213,6 +244,7 @@ function ConfigurableMap({
   categoryColors = {},
   categoryLabels = {},
   capitalize = (value) => value,
+  focusCoords = null,
 }) {
   const mapContainerRef = useRef(null);
   const mapInstanceRef = useRef(null);
@@ -454,7 +486,27 @@ function ConfigurableMap({
             zoom={zoom}
             wardCenters={wardCenters}
             onMapReady={onMapReady}
+            focusCoords={focusCoords}
           />
+
+          {focusCoords && Number.isFinite(Number(focusCoords.lat)) && Number.isFinite(Number(focusCoords.lng)) && (
+            <Marker
+              position={[Number(focusCoords.lat), Number(focusCoords.lng)]}
+              icon={createTempMarkerIcon(focusCoords.isHotspot)}
+            >
+              <Popup>
+                <div className="font-pixel" style={{ padding: '4px', color: 'var(--ink-primary)', maxWidth: '200px' }}>
+                  <strong style={{ color: focusCoords.isHotspot ? 'var(--warning)' : 'var(--accent)', fontSize: '10px' }}>
+                    {focusCoords.isHotspot ? '🎯 PREDICTED HOTSPOT' : '📍 ACTIVE MISSION OBJECTIVE'}
+                  </strong>
+                  <p className="text-secondary" style={{ marginTop: '4px', fontSize: '9px', lineHeight: 1.3 }}>
+                    Status: Scan target loaded from your Active Missions list.<br/>
+                    Coords: {Number(focusCoords.lat).toFixed(5)}, {Number(focusCoords.lng).toFixed(5)}
+                  </p>
+                </div>
+              </Popup>
+            </Marker>
+          )}
 
           {(layer === 'reports' || layer === 'verified' || layer === 'sla') &&
             tickets

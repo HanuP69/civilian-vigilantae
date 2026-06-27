@@ -32,7 +32,7 @@ function MissionsPage() {
 
   const handleDepart = (mission) => {
     // Navigate back to map with the specific coordinates and category filters
-    navigate(`/?category=${mission.category || ''}&ward=${mission.ward || ''}`);
+    navigate(`/?category=${mission.category || ''}&ward=${mission.ward || ''}&lat=${mission.lat || ''}&lng=${mission.lng || ''}&isHotspot=${mission.type === 'hotspot_prediction' ? 'true' : 'false'}`);
   };
 
   if (loading) {
