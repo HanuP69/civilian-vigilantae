@@ -26,8 +26,6 @@ export function calculateVerificationScore({
   const ai = Math.min(Math.max(aiConfidence ?? 0.5, 0.1), 0.9);
   const rep = Math.min(Math.max(reporterTrust ?? 0.5, 0.1), 0.9);
   const near = Math.min(Math.max(nearbyEvidence ?? 0.0, 0.0), 1.0);
-  const comm = Math.min(Math.max(communityVotes ?? 0.5, 0.1), 0.9);
-
   // 1. Initial prior probability based on AI confidence
   const prior = ai;
   const l0 = Math.log(prior / (1 - prior));
@@ -40,8 +38,12 @@ export function calculateVerificationScore({
   const pNear = 0.5 + 0.4 * (near - 0.5);
   const lNearby = Math.log(pNear / (1 - pNear));
 
-  // 4. Update with Community votes
-  const lComm = Math.log(comm / (1 - comm));
+  // 4. Update with Community votes (only if votes exist)
+  let lComm = 0;
+  if (communityVotes !== null && communityVotes !== undefined) {
+    const comm = Math.min(Math.max(communityVotes, 0.1), 0.9);
+    lComm = Math.log(comm / (1 - comm));
+  }
 
   // Final log-odds
   const lFinal = l0 + lReporter + lNearby + lComm;

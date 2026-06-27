@@ -44,62 +44,76 @@ export async function getUser(uid) {
 }
 
 export async function registerUser(email, password, displayName) {
-  const snap = await db.collection('users').where('email', '==', email).get();
-  if (!snap.empty) throw new Error('Email already registered');
+  if (!password || password.length < 8) {
+    throw new Error('Password must be at least 8 characters long');
+  }
 
-  const uid = `user-${Math.random().toString(36).slice(2, 8)}`;
-  const hashedPassword = await bcrypt.hash(password, 10);
-  const newUser = {
-    uid,
-    display_name: displayName || 'Citizen Hero',
-    email,
-    password: hashedPassword,
-    photo_url: null,
-    xp: 0,
-    level: 1,
-    title: 'Novice Watchman',
-    gold: 50,
-    badges: [],
-    reports_submitted: 0,
-    verifications_made: 0,
-    accurate_verifications: 0,
-    trust_score: 0.5,
-    reports_verified: 0,
-    reports_rejected: 0,
-    verification_accuracy: 1.0,
-    unique_wards: [],
-    unlocked_avatars: [],
-    unlocked_badges: [],
-    quests: INITIAL_QUESTS.map(q => ({
-      ...q,
-      current: 0,
-      completed: false,
-      claimed: false
-    })),
-    joined_at: new Date().toISOString(),
-  };
+  const normalizedEmail = (email || '').toLowerCase().trim();
+  if (!normalizedEmail) {
+    throw new Error('Email is required');
+  }
 
-  await db.collection('users').doc(uid).set(newUser);
-  const stripped = { ...newUser };
-  delete stripped.password;
-  return stripped;
+  return db.runTransaction(async (transaction) => {
+    const query = db.collection('users').where('email', '==', normalizedEmail);
+    const snap = await transaction.get(query);
+    if (!snap.empty) throw new Error('Email already registered');
+
+    const uid = `user-${Math.random().toString(36).slice(2, 8)}`;
+    const hashedPassword = await bcrypt.hash(password, 10);
+    const newUser = {
+      uid,
+      display_name: displayName || 'Citizen Hero',
+      email: normalizedEmail,
+      password: hashedPassword,
+      photo_url: null,
+      xp: 0,
+      level: 1,
+      title: 'Novice Watchman',
+      gold: 50,
+      badges: [],
+      reports_submitted: 0,
+      verifications_made: 0,
+      accurate_verifications: 0,
+      trust_score: 0.0,
+      reports_verified: 0,
+      reports_rejected: 0,
+      verification_accuracy: null,
+      unique_wards: [],
+      unlocked_avatars: [],
+      unlocked_badges: [],
+      quests: INITIAL_QUESTS.map(q => ({
+        ...q,
+        current: 0,
+        completed: false,
+        claimed: false
+      })),
+      joined_at: new Date().toISOString(),
+    };
+
+    const docRef = db.collection('users').doc(uid);
+    transaction.set(docRef, newUser);
+
+    const stripped = { ...newUser };
+    delete stripped.password;
+    return stripped;
+  });
 }
 
 export async function loginUser(email, password) {
-  const snap = await db.collection('users').where('email', '==', email).get();
+  const normalizedEmail = (email || '').toLowerCase().trim();
+  const snap = await db.collection('users').where('email', '==', normalizedEmail).get();
   if (snap.empty) throw new Error('Invalid email or password');
 
-  let user = null;
-  const docs = [];
-  snap.forEach(doc => docs.push(doc.data()));
-  for (const u of docs) {
-    if (u.password && await bcrypt.compare(password, u.password)) { user = u; break; }
+  const doc = snap.docs[0];
+  const u = doc.data();
+
+  if (!u.password || !(await bcrypt.compare(password, u.password))) {
+    throw new Error('Invalid email or password');
   }
 
-  if (!user) throw new Error('Invalid email or password');
-  const u = await ensureUser(user.uid);
-  delete u.password;
-  return u;
+  const user = await ensureUser(u.uid);
+  delete user.password;
+  return user;
 }
 
 export async function ensureUser(uid) {
@@ -129,10 +143,15 @@ export async function ensureUser(uid) {
     if (data.unlocked_avatars === undefined) { updates.unlocked_avatars = []; needsUpdate = true; }
     if (data.unlocked_badges === undefined) { updates.unlocked_badges = []; needsUpdate = true; }
     if (data.unique_wards === undefined) { updates.unique_wards = []; needsUpdate = true; }
-    if (data.trust_score === undefined) { updates.trust_score = 0.5; needsUpdate = true; }
+    if (data.trust_score === undefined) { updates.trust_score = 0.0; needsUpdate = true; }
     if (data.reports_verified === undefined) { updates.reports_verified = 0; needsUpdate = true; }
     if (data.reports_rejected === undefined) { updates.reports_rejected = 0; needsUpdate = true; }
-    if (data.verification_accuracy === undefined) { updates.verification_accuracy = 1.0; needsUpdate = true; }
+    if (data.verification_accuracy === undefined) { 
+      updates.verification_accuracy = (data.verifications_made && data.verifications_made > 0) 
+        ? (data.reports_verified / data.verifications_made) 
+        : null; 
+      needsUpdate = true; 
+    }
 
     if (needsUpdate) {
       const merged = { ...data, ...updates };
@@ -159,10 +178,10 @@ export async function ensureUser(uid) {
     reports_submitted: 0,
     verifications_made: 0,
     accurate_verifications: 0,
-    trust_score: 0.5,
+    trust_score: 0.0,
     reports_verified: 0,
     reports_rejected: 0,
-    verification_accuracy: 1.0,
+    verification_accuracy: null,
     unique_wards: [],
     unlocked_avatars: [],
     unlocked_badges: [],

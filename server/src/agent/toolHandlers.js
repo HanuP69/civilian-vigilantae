@@ -347,7 +347,7 @@ Respond with a JSON object:
     }
     const commVotesValue = (weightedUp + weightedDown) > 0
       ? (weightedUp / (weightedUp + weightedDown))
-      : 0.5;
+      : null;
 
     // Get components for verification score recalculation
     let reporterTrust = t.reporter_trust;
@@ -411,6 +411,8 @@ Respond with a JSON object:
       createdAt: t.created_at,
     });
 
+    const verificationExplanation = `Consensus updated. Resolved to ${newVScore}% probability based on ${newUp} positive and ${newDown} negative citizen verification checks, combined with spatial cluster indicators.`;
+
     const update = {
       updated_at: new Date().toISOString(),
       votes,
@@ -418,6 +420,7 @@ Respond with a JSON object:
       verification_up: newUp,
       verification_down: newDown,
       verification_score: newVScore,
+      verification_explanation: verificationExplanation,
       status: finalStatus,
       resolved_at: resolvedAt,
       priority_score: priorityResult.score,

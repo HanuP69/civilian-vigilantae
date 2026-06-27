@@ -153,7 +153,7 @@ export async function processReport(reportData, onStep) {
 
       const commVotesValue = (weightedUp + weightedDown) > 0
         ? (weightedUp / (weightedUp + weightedDown))
-        : 0.5;
+        : null;
 
       const aiConfidence = t.ai_confidence ?? t.classificationResult?.confidence ?? 0.7;
       const nearbyEvidence = t.nearby_evidence ?? (t.cluster_detail?.found ? Math.min((t.cluster_detail.cluster_size || 1) / 5, 1.0) : 0.0);
@@ -239,7 +239,7 @@ export async function processReport(reportData, onStep) {
         aiConfidence: ctx.classificationResult.confidence,
         reporterTrust,
         nearbyEvidence: 0.0,
-        communityVotes: 0.5
+        communityVotes: null
       });
       const vStatus = statusFromVerificationScore(vScore);
       ctx.vScore = vScore;

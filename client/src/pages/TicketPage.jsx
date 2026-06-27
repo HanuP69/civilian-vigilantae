@@ -293,15 +293,16 @@ function TicketPage() {
                 {/* 1. Verification Consensus Outcome */}
                 <div className="panel rpg-panel" style={{ borderRadius: 0 }}>
                   <h3 className="section-title font-pixel" style={{ fontSize: '0.65rem', color: 'var(--success)', marginBottom: 'var(--space-3)' }}>
-                    [ ✅ VERIFICATION CONSENSUS OUTCOME ]
+                    [ ✅ VERIFICATION PROBABILITY P(V) ]
                   </h3>
                   <div className="flex items-center gap-4" style={{ marginBottom: 'var(--space-2)' }}>
                     <span className="font-pixel" style={{ fontSize: '1.25rem', color: 'var(--success)', lineHeight: 1 }}>
-                      {displayScore}%
+                      P(V) = {displayScore}%
                     </span>
                     <span className="badge badge-outline font-pixel" style={{ color: 'var(--success)', borderRadius: 0, fontSize: '10px', padding: '2px 4px' }}>
                       {ticket.status?.toUpperCase()}
                     </span>
+                    <span className="text-xs text-muted font-mono" style={{ marginLeft: 'auto' }}>Verification Probability</span>
                   </div>
                   <p className="text-secondary text-sm" style={{ lineHeight: 1.6 }}>
                     {displayExplanation}
@@ -319,7 +320,7 @@ function TicketPage() {
                         Probable Cause: {ticket.root_cause.cause}
                       </span>
                       <span className="badge badge-outline font-pixel" style={{ color: 'var(--accent)', borderRadius: 0, fontSize: '10px', padding: '2px 4px' }}>
-                        Confidence: {ticket.root_cause.confidence}%
+                        Confidence Index: {ticket.root_cause.confidence}/100
                       </span>
                     </div>
                     <p className="text-secondary text-sm" style={{ lineHeight: 1.6 }}>
@@ -393,7 +394,7 @@ function TicketPage() {
                 {/* 2. Why This Priority? */}
                 <div className="panel rpg-panel" style={{ borderRadius: 0 }}>
                   <h3 className="section-title font-pixel" style={{ fontSize: '0.65rem', color: 'var(--warning)', marginBottom: 'var(--space-3)' }}>
-                    [ ⚖️ WHY THIS PRIORITY? ]
+                    [ ⚖️ PRIORITY SCORE (CONFIDENCE INDEX) ]
                   </h3>
                   <p className="text-secondary text-sm" style={{ lineHeight: 1.6, marginBottom: 'var(--space-4)' }}>
                     {ticket.priority_explanation || 'Priority calculations loading.'}
@@ -438,13 +439,13 @@ function TicketPage() {
                 {/* 4. SLA Risk */}
                 <div className="panel rpg-panel" style={{ borderRadius: 0 }}>
                   <h3 className="section-title font-pixel" style={{ fontSize: '0.65rem', color: 'var(--error)', marginBottom: 'var(--space-3)' }}>
-                    [ 🔮 SLA BREACH RISK FORECAST ]
+                    [ 🔮 SLA BREACH PROBABILITY P(B) ]
                   </h3>
                   <div className="flex items-center gap-4" style={{ marginBottom: 'var(--space-2)' }}>
                     <span className="font-pixel" style={{ fontSize: '1.25rem', color: 'var(--error)', lineHeight: 1 }}>
-                      {ticket.sla_risk_score != null ? `${ticket.sla_risk_score}%` : '0%'}
+                      P(B) = {ticket.sla_risk_score != null ? `${ticket.sla_risk_score}%` : '0%'}
                     </span>
-                    <span className="text-xs text-muted">breach likelihood</span>
+                    <span className="text-xs text-muted">SLA Breach Probability</span>
                   </div>
                   <p className="text-secondary text-sm" style={{ lineHeight: 1.6, marginBottom: 'var(--space-3)' }}>
                     {ticket.sla_risk_explanation || 'Weibull time-to-resolution forecasting loading.'}
@@ -615,10 +616,10 @@ function TicketPage() {
           {/* 3. Priority Rating Block */}
           {ticket.priority_score != null && !isNaN(ticket.priority_score) && (
             <div className="panel rpg-panel" style={{ borderColor: 'var(--accent-muted)', borderRadius: 0 }}>
-              <h4 className="label font-pixel" style={{ fontSize: '10px', marginBottom: 'var(--space-2)' }}>PRIORITY RATING</h4>
+              <h4 className="label font-pixel" style={{ fontSize: '10px', marginBottom: 'var(--space-2)' }}>PRIORITY SCORE INDEX (0-100)</h4>
               <div className="flex items-end justify-between" style={{ marginBottom: 'var(--space-3)' }}>
                 <span className="font-pixel" style={{ fontSize: '1.25rem', lineHeight: 1, color: ticket.priority_score > 70 ? 'var(--error)' : 'var(--accent)' }}>
-                  {Math.round(ticket.priority_score)}
+                  {Math.round(ticket.priority_score)} / 100
                 </span>
                 <span className="font-pixel text-secondary" style={{ fontSize: '10px', paddingBottom: '4px' }}>
                   {ticket.priority_score > 70 ? '🔴 CRITICAL' : ticket.priority_score > 40 ? '🟡 MODERATE' : '🟢 LOW'}
