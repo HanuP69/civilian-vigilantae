@@ -40,7 +40,7 @@ const haversineApprox = (a, b) => {
 };
 
 function HomePage() {
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [tickets, setTickets] = useState([]);
   const [recurrence, setRecurrence] = useState([]);
   const [missions, setMissions] = useState([]);
@@ -151,7 +151,10 @@ function HomePage() {
     }
   }, [events, filters, toast]);
 
-  const handleFilter = (key, value) => setFilters(prev => ({ ...prev, [key]: value }));
+  const handleFilter = (key, value) => {
+    setFilters(prev => ({ ...prev, [key]: value }));
+    setSearchParams(new URLSearchParams());
+  };
   const handleHover = (ticket) => {
     setActiveTicketId(ticket?.id || null);
     if (map && ticket?.lat && ticket?.lng) {
