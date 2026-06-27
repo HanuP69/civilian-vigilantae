@@ -57,7 +57,7 @@ function AgentTrace({ trace = [] }) {
   };
 
   return (
-    <div className="flex flex-col gap-3" style={{ fontFamily: 'var(--font-mono)' }}>
+    <div className="flex flex-col gap-3" style={{ fontFamily: 'var(--font-mono)', maxWidth: '720px' }}>
       <AnimatePresence>
         {trace.map((step, idx) => {
           const isExpanded = expandedIndex === idx;
@@ -79,21 +79,23 @@ function AgentTrace({ trace = [] }) {
               transition={{ duration: 0.2 }}
               key={`${idx}-${stepName}`}
               className="card card-compact"
-              role="button"
-              tabIndex={0}
-              aria-expanded={isExpanded}
-              aria-label={`${stepName} step${step.reasoning ? ': ' + step.reasoning : ''}`}
-              onClick={() => toggleExpand(idx)}
-              onKeyDown={(e) => handleKey(e, idx)}
               style={{
                 border: `1px solid ${isError ? 'var(--error)' : 'var(--border)'}`,
                 padding: 'var(--space-3) var(--space-4)',
-                cursor: 'pointer',
                 background: 'var(--bg-secondary)',
                 borderRadius: 0,
               }}
             >
-              <div className="flex items-center justify-between">
+              <div 
+                className="flex items-center justify-between"
+                onClick={() => toggleExpand(idx)}
+                onKeyDown={(e) => handleKey(e, idx)}
+                role="button"
+                tabIndex={0}
+                aria-expanded={isExpanded}
+                aria-label={`${stepName} step${step.reasoning ? ': ' + step.reasoning : ''}`}
+                style={{ cursor: 'pointer', width: '100%', userSelect: 'none' }}
+              >
                 <div className="flex items-center gap-3">
                   <span className="text-xs" style={{ background: color, color: '#111', padding: '2px 6px', fontWeight: 700, borderRadius: '2px' }}>
                     {icon}
