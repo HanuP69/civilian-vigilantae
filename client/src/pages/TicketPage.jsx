@@ -345,16 +345,13 @@ function TicketPage() {
                       {ticket.status?.toUpperCase()}
                     </span>
                   </div>
-                  <div style={{ padding: '8px 12px', background: 'var(--bg-primary)', borderLeft: '3px solid var(--success)', marginBottom: '10px', fontSize: '0.8rem', color: 'var(--ink-secondary)' }}>
-                    <strong>Consensus:</strong> Verified with {displayScore}% confidence, based on: AI analysis, citizen votes, and nearby duplication check.
-                  </div>
                   <p className="text-secondary text-sm" style={{ lineHeight: 1.6 }}>
                     {displayExplanation}
                   </p>
                 </div>
 
                 {/* Root Cause Diagnosis */}
-                {ticket.root_cause && (
+                {ticket.root_cause && ticket.root_cause.explanation !== displayExplanation && (
                   <div className="panel rpg-panel" style={{ borderRadius: 0 }}>
                     <h3 className="section-title font-pixel" style={{ fontSize: '0.65rem', color: 'var(--accent)', marginBottom: 'var(--space-3)' }}>
                       [ 🧠 ROOT CAUSE DIAGNOSIS ]
@@ -384,7 +381,6 @@ function TicketPage() {
                         </h3>
                         <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)', position: 'relative' }}>
                           {[
-                            { label: 'CIVIC CATEGORY', val: capitalize(ticket.category), icon: graphNode.icon || '📌', color: 'var(--ink-primary)' },
                             { label: 'MUNICIPAL ASSET', val: graphNode.asset, icon: '🏢', color: 'var(--accent)' },
                             { label: 'DIRECT IMPACT', val: graphNode.directImpact, icon: '💥', color: 'var(--warning)' },
                             { label: 'CASCADING RISK', val: graphNode.cascadingRisk, icon: '⚠️', color: 'var(--error)' },
