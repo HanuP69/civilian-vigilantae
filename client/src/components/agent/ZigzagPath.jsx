@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import SentinelSprite from './SentinelSprite.jsx';
 
@@ -63,12 +63,12 @@ const MILESTONES = [
 const WALK_ORDER = MILESTONES.map(m => m.key);
 
 const NODE_COORDS = [
-  { x: 70, y: 55 },   // CLS (Classify)
+  { x: 450, y: 55 },  // CLS (Classify)
   { x: 260, y: 55 },  // FND (Dedup)
-  { x: 450, y: 55 },  // GEO (Locate)
-  { x: 450, y: 165 }, // PRI (Priority)
+  { x: 70, y: 55 },   // GEO (Locate)
+  { x: 70, y: 165 },  // PRI (Priority)
   { x: 260, y: 165 }, // TKT (Create)
-  { x: 70, y: 165 },  // NOT (Notify)
+  { x: 450, y: 165 }, // NOT (Notify)
 ];
 
 function milestoneState(steps, key, alt) {
@@ -88,8 +88,10 @@ function stepActualName(steps, key, alt) {
 }
 
 function ZigzagPath({ steps, isComplete }) {
-  // Find current step index (first pending or last successful)
-  const currentIdx = useMemo(() => {
+  const [visualIdx, setVisualIdx] = useState(0);
+
+  // Find target step index based on actual database updates
+  const targetIdx = useMemo(() => {
     let lastDone = -1;
     for (let i = 0; i < WALK_ORDER.length; i++) {
       const m = MILESTONES[i];
@@ -97,13 +99,31 @@ function ZigzagPath({ steps, isComplete }) {
       if (state === 'active') return i;
       if (state === 'done') lastDone = i;
     }
-    return lastDone;
+    return lastDone >= 0 ? lastDone : 0;
   }, [steps]);
 
-  const activeCoord = currentIdx >= 0 ? NODE_COORDS[currentIdx] : NODE_COORDS[0];
-  const speechMs = currentIdx >= 0 ? MILESTONES[currentIdx] : null;
+  // Pace the visual walk index behind targetIdx by 2000ms per step
+  useEffect(() => {
+    if (visualIdx < targetIdx) {
+      const timer = setTimeout(() => {
+        setVisualIdx(prev => prev + 1);
+      }, 2000);
+      return () => clearTimeout(timer);
+    }
+  }, [visualIdx, targetIdx]);
 
-  // Compute SVG active path up to current index
+  // Reset visual index if target index falls (new report intakes)
+  useEffect(() => {
+    if (targetIdx < visualIdx) {
+      setVisualIdx(targetIdx);
+    }
+  }, [targetIdx]);
+
+  const currentIdx = visualIdx;
+  const activeCoord = NODE_COORDS[currentIdx];
+  const speechMs = MILESTONES[currentIdx];
+
+  // Compute SVG active path up to current visual index
   const activePathD = useMemo(() => {
     if (currentIdx <= 0) return '';
     const points = NODE_COORDS.slice(0, currentIdx + 1);
@@ -133,7 +153,7 @@ function ZigzagPath({ steps, isComplete }) {
 
         {/* Inactive connection path (gray track) */}
         <path
-          d="M 70 55 L 260 55 L 450 55 L 450 165 L 260 165 L 70 165"
+          d="M 450 55 L 260 55 L 70 55 L 70 165 L 260 165 L 450 165"
           fill="none"
           stroke="oklch(0.2 0.01 260)"
           strokeWidth="6"
@@ -278,7 +298,7 @@ function ZigzagPath({ steps, isComplete }) {
         </AnimatePresence>
         <SentinelSprite
           scale={1.5}
-          flip={currentIdx >= 3} // Face left when returning on the bottom row
+          flip={currentIdx < 3} // Face left when walking on the top row (right-to-left)
           celebrating={isComplete}
         />
       </motion.div>

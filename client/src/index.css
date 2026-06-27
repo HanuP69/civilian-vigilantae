@@ -1827,18 +1827,18 @@ tr:hover td { background: var(--bg-surface); }
 /* RPG Speech Bubble / Dialog Box */
 .rpg-dialog-bubble {
   position: absolute;
-  bottom: 64px;
-  width: 190px;
+  bottom: 74px;
+  width: 250px;
   background: linear-gradient(135deg, oklch(0.24 0.03 50) 0%, oklch(0.18 0.02 50) 100%) !important;
   border: 4px solid oklch(0.12 0.01 50) !important;
   box-shadow: 
     inset 2px 2px 0 oklch(0.40 0.04 50),
     inset -2px -2px 0 oklch(0.10 0.01 50),
     4px 4px 0 oklch(0 0 0 / 0.5) !important;
-  padding: 8px 10px;
+  padding: 10px 14px;
   color: var(--ink-primary);
   font-family: var(--font-mono);
-  font-size: 0.65rem;
+  font-size: 0.78rem;
   text-align: center;
   white-space: normal;
   word-wrap: break-word;
