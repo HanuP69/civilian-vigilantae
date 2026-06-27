@@ -260,54 +260,13 @@ function TicketPage() {
             </p>
           </section>
 
-          {ticket.media_urls && ticket.media_urls.length > 0 && (
-            <section style={{ borderTop: '1px solid var(--border-subtle)', paddingTop: 'var(--space-6)' }}>
-              <h3 className="section-title font-pixel" style={{ fontSize: '0.65rem', color: 'var(--accent)' }}>[ 📷 VISUAL EVIDENCE ]</h3>
-              <div className="flex flex-col gap-4">
-                {ticket.media_urls.map((url, i) => {
-                  const type = ticket.media_type || (
-                    /\.(mp4|webm|mov|avi)$/i.test(url) ? 'video' :
-                    /\.(mp3|wav|webm|ogg|m4a)$/i.test(url) ? 'audio' : 'image'
-                  );
-                  if (type === 'video') return (
-                    <div key={i} style={{ borderRadius: 0, overflow: 'hidden', background: 'var(--bg-secondary)', border: '1px solid var(--border-subtle)' }}>
-                      <video
-                        src={url}
-                        controls
-                        style={{ width: '100%', maxHeight: 400, display: 'block', borderRadius: 0 }}
-                      />
-                    </div>
-                  );
-                  if (type === 'audio') return (
-                    <div key={i} className="panel rpg-panel flex items-center gap-4" style={{ padding: 'var(--space-4)', borderRadius: 0 }}>
-                      <div style={{ width: 40, height: 40, borderRadius: 0, background: 'var(--accent-muted)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
-                      </div>
-                      <audio src={url} controls style={{ flex: 1, minWidth: 0 }} />
-                    </div>
-                  );
-                  // image (default)
-                  return (
-                    <a key={i} href={url} target="_blank" rel="noopener noreferrer" style={{ display: 'block', borderRadius: 0, overflow: 'hidden', border: '1px solid var(--border-subtle)' }}>
-                      <img
-                        src={url}
-                        alt={`Attachment ${i + 1}`}
-                        style={{ width: '100%', maxHeight: 480, objectFit: 'cover', display: 'block' }}
-                        onError={e => { e.target.style.display = 'none'; }}
-                      />
-                    </a>
-                  );
-                })}
-              </div>
-            </section>
-          )}
-
           {/* Phase 6: UI Explainability Panels (Tabbed HUD Console) */}
           <div style={{ display: 'flex', gap: '4px', borderBottom: '2px solid var(--border)', paddingBottom: 'var(--space-3)', marginTop: 'var(--space-6)', width: '100%', maxWidth: '720px' }}>
             {[
               { id: 'diagnostics', label: '🧠 AI DIAGNOSTICS' },
               { id: 'telemetry', label: '📊 TELEMETRY' },
-              ...(ticket.dispatch_plan ? [{ id: 'dispatch', label: '📋 SUBMITTED EVIDENCE' }] : [])
+              ...(ticket.dispatch_plan ? [{ id: 'dispatch', label: '📋 RESPONSE PLAN' }] : []),
+              ...(ticket.media_urls && ticket.media_urls.length > 0 ? [{ id: 'evidence', label: '📷 SUBMITTED EVIDENCE' }] : [])
             ].map((tab) => (
               <button
                 key={tab.id}
@@ -506,7 +465,7 @@ function TicketPage() {
               /* 5. Resolution Plan */
               <div className="panel rpg-panel" style={{ borderRadius: 0 }}>
                 <h3 className="section-title font-pixel" style={{ fontSize: '0.65rem', color: 'var(--success)', marginBottom: 'var(--space-3)' }}>
-                  [ 📋 SUBMITTED EVIDENCE ]
+                  [ 📋 RESPONSE PLAN ]
                 </h3>
                 <p className="text-secondary text-sm" style={{ lineHeight: 1.6, marginBottom: 'var(--space-4)' }}>
                   {ticket.dispatch_plan.explanation}
@@ -527,6 +486,51 @@ function TicketPage() {
                 </div>
                 <div style={{ marginTop: 'var(--space-3)', fontSize: '0.65rem' }} className="font-mono text-muted">
                   <strong>Supplies:</strong> {ticket.dispatch_plan.materials?.join(', ')}
+                </div>
+              </div>
+            )}
+
+            {activeExplainTab === 'evidence' && ticket.media_urls && ticket.media_urls.length > 0 && (
+              /* 6. Submitted Evidence Media List */
+              <div className="panel rpg-panel" style={{ borderRadius: 0 }}>
+                <h3 className="section-title font-pixel" style={{ fontSize: '0.65rem', color: 'var(--accent)', marginBottom: 'var(--space-4)' }}>
+                  [ 📷 SUBMITTED EVIDENCE ]
+                </h3>
+                <div className="flex flex-col gap-4">
+                  {ticket.media_urls.map((url, i) => {
+                    const type = ticket.media_type || (
+                      /\.(mp4|webm|mov|avi)$/i.test(url) ? 'video' :
+                      /\.(mp3|wav|webm|ogg|m4a)$/i.test(url) ? 'audio' : 'image'
+                    );
+                    if (type === 'video') return (
+                      <div key={i} style={{ borderRadius: 0, overflow: 'hidden', background: 'var(--bg-secondary)', border: '1px solid var(--border-subtle)' }}>
+                        <video
+                          src={url}
+                          controls
+                          style={{ width: '100%', maxHeight: 400, display: 'block', borderRadius: 0 }}
+                        />
+                      </div>
+                    );
+                    if (type === 'audio') return (
+                      <div key={i} className="panel rpg-panel flex items-center gap-4" style={{ padding: 'var(--space-4)', borderRadius: 0 }}>
+                        <div style={{ width: 40, height: 40, borderRadius: 0, background: 'var(--accent-muted)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
+                        </div>
+                        <audio src={url} controls style={{ flex: 1, minWidth: 0 }} />
+                      </div>
+                    );
+                    // image (default)
+                    return (
+                      <a key={i} href={url} target="_blank" rel="noopener noreferrer" style={{ display: 'block', borderRadius: 0, overflow: 'hidden', border: '1px solid var(--border-subtle)' }}>
+                        <img
+                          src={url}
+                          alt={`Attachment ${i + 1}`}
+                          style={{ width: '100%', maxHeight: 480, objectFit: 'cover', display: 'block' }}
+                          onError={e => { e.target.style.display = 'none'; }}
+                        />
+                      </a>
+                    );
+                  })}
                 </div>
               </div>
             )}
