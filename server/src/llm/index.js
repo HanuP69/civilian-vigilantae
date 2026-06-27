@@ -31,7 +31,7 @@ export function getLLMClient() {
   const backend = config.llmBackend;
 
   if (backend === 'gemini') {
-    console.log('[LLM] Using Gemini backend: gemini-2.0-flash');
+    console.log('[LLM] Using Gemini backend: gemini-2.5-flash');
     _instance = new GeminiClient();
   } else {
     console.log('[LLM] Using Ollama backend:', config.ollamaModel);
