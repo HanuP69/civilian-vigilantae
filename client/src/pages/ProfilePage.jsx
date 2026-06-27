@@ -254,7 +254,7 @@ function ProfilePage() {
 
   const accuracyRate = user.verifications_made > 0 
     ? Math.round((user.accurate_verifications / user.verifications_made) * 100) 
-    : 100;
+    : null;
 
   return (
     <div style={{ maxWidth: 1200, margin: '0 auto', paddingBottom: 'var(--space-10)' }}>
@@ -455,7 +455,9 @@ function ProfilePage() {
               </div>
               <div className="flex justify-between items-center">
                 <span className="font-pixel text-muted" style={{ fontSize: '0.5rem' }}>ACCURACY RATING</span>
-                <span className="font-pixel" style={{ fontSize: '0.65rem', color: accuracyRate >= 70 ? 'var(--success)' : 'var(--warning)' }}>{accuracyRate}%</span>
+                <span className="font-pixel" style={{ fontSize: '0.65rem', color: accuracyRate === null ? 'var(--ink-muted)' : accuracyRate >= 70 ? 'var(--success)' : 'var(--warning)' }}>
+                  {accuracyRate === null ? 'N/A' : `${accuracyRate}%`}
+                </span>
               </div>
             </div>
           </div>
