@@ -21,7 +21,7 @@ export function AuthProvider({ children }) {
     } catch (err) {
       console.error('[AuthContext] Profile fetch failed:', err.message);
       // If profile fails and token exists, fallback to standard mock user structure
-      setUser({
+      setUser(prev => prev || {
         uid: authToken,
         display_name: 'Citizen Hero',
         xp: 0,

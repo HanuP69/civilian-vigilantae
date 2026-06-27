@@ -126,7 +126,7 @@ export async function ensureUser(uid) {
     if (data.gold === undefined) { updates.gold = 50; needsUpdate = true; }
     if (data.level === undefined) { updates.level = getLevelFromXP(data.xp); needsUpdate = true; }
     if (data.title === undefined) { updates.title = getTitleFromLevel(updates.level || data.level || 1); needsUpdate = true; }
-    if (data.quests === undefined) {
+    if (data.quests === undefined || (Array.isArray(data.quests) && data.quests.length === 0)) {
       updates.quests = INITIAL_QUESTS.map(q => {
         let current = 0;
         if (q.type === 'reports') current = data.reports_submitted || 0;
