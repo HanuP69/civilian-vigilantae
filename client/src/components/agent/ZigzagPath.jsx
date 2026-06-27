@@ -2,12 +2,66 @@ import { useMemo, useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import SentinelSprite from './SentinelSprite.jsx';
 
+const ClassifyNodeIcon = () => (
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="square">
+    <rect x="3" y="3" width="10" height="10" stroke="currentColor" strokeWidth="2" />
+    <line x1="8" y1="6" x2="12" y2="6" stroke="currentColor" />
+    <line x1="8" y1="10" x2="11" y2="10" stroke="currentColor" />
+    <circle cx="16" cy="16" r="4" stroke="currentColor" strokeWidth="2" />
+    <line x1="19" y1="19" x2="22" y2="22" stroke="currentColor" strokeWidth="3" />
+  </svg>
+);
+
+const DedupNodeIcon = () => (
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="square">
+    <rect x="3" y="7" width="10" height="12" stroke="currentColor" strokeWidth="2" />
+    <rect x="9" y="4" width="10" height="12" stroke="currentColor" strokeWidth="2" fill="rgba(0,0,0,0.25)" />
+    <path d="M6 10h4M6 14h4M12 7h4M12 11h4" stroke="currentColor" strokeWidth="1.5" />
+  </svg>
+);
+
+const EarthNodeIcon = () => (
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="square">
+    <circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="2" />
+    <circle cx="12" cy="12" r="9" fill="rgba(34, 197, 94, 0.15)" />
+    <path d="M8 8c1 0 2 1 1 2s-2 1-1 3" stroke="currentColor" strokeWidth="2" />
+    <path d="M14 10c2-1 3 1 2 2s-1 2-2 1" stroke="currentColor" strokeWidth="2" />
+  </svg>
+);
+
+const PriorityNodeIcon = () => (
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="square">
+    <path d="M12 3l9 16H3L12 3z" stroke="currentColor" strokeWidth="2" />
+    <line x1="12" y1="8" x2="12" y2="13" stroke="currentColor" strokeWidth="2" />
+    <circle cx="12" cy="16.5" r="1.2" fill="currentColor" stroke="currentColor" />
+  </svg>
+);
+
+const TicketNodeIcon = () => (
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="square">
+    <rect x="4" y="6" width="16" height="12" rx="1" stroke="currentColor" strokeWidth="2" />
+    <path d="M4 11a2 2 0 0 1 0 2M20 11a2 2 0 0 0 0 2" stroke="currentColor" strokeWidth="2" />
+    <line x1="9" y1="9" x2="15" y2="9" stroke="currentColor" strokeWidth="1.5" />
+    <line x1="9" y1="12" x2="15" y2="12" stroke="currentColor" strokeWidth="1.5" />
+    <line x1="9" y1="15" x2="15" y2="15" stroke="currentColor" strokeWidth="1.5" />
+  </svg>
+);
+
+const NotifyNodeIcon = () => (
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="square">
+    <path d="M12 18v3M10 21h4M7 14l5-9 5 9" stroke="currentColor" strokeWidth="2" />
+    <circle cx="12" cy="5" r="1.5" fill="currentColor" stroke="currentColor" />
+    <path d="M8 8a6 6 0 0 1 8 0M5 5a10 10 0 0 1 14 0" stroke="currentColor" strokeWidth="1.5" opacity="0.8" />
+  </svg>
+);
+
 /**
  * Pipeline milestone definitions in walk order.
  */
 const MILESTONES = [
   {
     key: 'classify_issue',
+    icon: <ClassifyNodeIcon />,
     label: 'CLS',
     fullLabel: 'Classify',
     getSpeech: (out) => out
@@ -16,6 +70,7 @@ const MILESTONES = [
   },
   {
     key: 'find_cluster',
+    icon: <DedupNodeIcon />,
     label: 'FND',
     fullLabel: 'Dedup',
     getSpeech: (out) => {
@@ -27,6 +82,7 @@ const MILESTONES = [
   },
   {
     key: 'geo_resolve',
+    icon: <EarthNodeIcon />,
     label: 'GEO',
     fullLabel: 'Locate',
     getSpeech: (out) => out?.ward
@@ -35,6 +91,7 @@ const MILESTONES = [
   },
   {
     key: 'compute_priority',
+    icon: <PriorityNodeIcon />,
     label: 'PRI',
     fullLabel: 'Priority',
     getSpeech: (out) => out?.priority_score != null
@@ -43,6 +100,7 @@ const MILESTONES = [
   },
   {
     key: 'create_ticket',
+    icon: <TicketNodeIcon />,
     label: 'TKT',
     fullLabel: 'Create',
     alt: 'merge_into_ticket',
@@ -54,6 +112,7 @@ const MILESTONES = [
   },
   {
     key: 'notify_reporters',
+    icon: <NotifyNodeIcon />,
     label: 'NOT',
     fullLabel: 'Notify',
     getSpeech: () => 'SLA alerts dispatched to Guild Wards ✓',
@@ -140,48 +199,66 @@ function ZigzagPath({ steps = [], isComplete }) {
       height: '240px',
       margin: '0 auto var(--space-6) auto',
       position: 'relative',
-      background: 'rgba(0, 0, 0, 0.25)',
-      border: '2px solid var(--border)',
-      boxShadow: 'inset 2px 2px 8px rgba(0,0,0,0.5)',
+      background: 'linear-gradient(180deg, #4d822b 0%, #3e6d20 100%)', // grass green pasture
+      border: '4px solid #284414', // dark forest green border
+      boxShadow: 'inset 0 4px 0 rgba(255,255,255,0.15), 0 8px 0 rgba(0,0,0,0.5), inset 2px 2px 10px rgba(0,0,0,0.4)',
       overflow: 'hidden'
     }}>
-      {/* Maze Grid lines in background */}
+      {/* Maze Grid lines & paths in background */}
       <svg style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', pointerEvents: 'none' }}>
-        <defs>
-          <pattern id="maze-grid" width="20" height="20" patternUnits="userSpaceOnUse">
-            <path d="M 20 0 L 0 0 0 20" fill="none" stroke="rgba(255,255,255,0.02)" strokeWidth="1" />
-          </pattern>
-        </defs>
-        <rect width="100%" height="100%" fill="url(#maze-grid)" />
+        {/* Decorative Grass & Flower clusters */}
+        <g opacity="0.4" strokeWidth="0">
+          {/* Yellow/White Flowers */}
+          <rect x="130" y="80" width="4" height="4" fill="#fff" />
+          <rect x="134" y="84" width="4" height="4" fill="#ffd54f" />
+          <rect x="370" y="110" width="4" height="4" fill="#fff" />
+          <rect x="366" y="114" width="4" height="4" fill="#ffd54f" />
+          {/* Grass details */}
+          <line x1="180" y1="80" x2="182" y2="72" stroke="#223a11" strokeWidth="2" />
+          <line x1="184" y1="80" x2="188" y2="74" stroke="#223a11" strokeWidth="2" />
+          <line x1="290" y1="120" x2="292" y2="112" stroke="#223a11" strokeWidth="2" />
+          <line x1="294" y1="120" x2="298" y2="114" stroke="#223a11" strokeWidth="2" />
+          <line x1="80" y1="130" x2="82" y2="122" stroke="#223a11" strokeWidth="2" />
+          <line x1="84" y1="130" x2="88" y2="124" stroke="#223a11" strokeWidth="2" />
+        </g>
 
-        {/* Inactive connection path (gray track) */}
+        {/* Inactive connection path (gray/dirt track) */}
         <path
           d="M 450 55 L 260 55 L 70 55 L 70 165 L 260 165 L 450 165"
           fill="none"
-          stroke="oklch(0.2 0.01 260)"
-          strokeWidth="6"
+          stroke="#251a0e" // dark dirt border
+          strokeWidth="14"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+        <path
+          d="M 450 55 L 260 55 L 70 55 L 70 165 L 260 165 L 450 165"
+          fill="none"
+          stroke="#684e2a" // lighter dirt core
+          strokeWidth="8"
           strokeLinecap="round"
           strokeLinejoin="round"
         />
 
-        {/* Active connection path (glowing blue-gold energy pipe) */}
+        {/* Active connection path (glowing gold stepping stones) */}
         {activePathD && (
           <>
             <path
               d={activePathD}
               fill="none"
               stroke="var(--accent)"
-              strokeWidth="8"
+              strokeWidth="10"
               strokeLinecap="round"
               strokeLinejoin="round"
-              opacity="0.35"
-              style={{ filter: 'blur(4px)' }}
+              opacity="0.3"
+              style={{ filter: 'blur(3px)' }}
             />
             <path
               d={activePathD}
               fill="none"
               stroke="var(--accent)"
-              strokeWidth="3"
+              strokeWidth="4"
+              strokeDasharray="6 6" // stepping stone effect
               strokeLinecap="round"
               strokeLinejoin="round"
             />
@@ -194,20 +271,20 @@ function ZigzagPath({ steps = [], isComplete }) {
           const state = milestoneState(steps, m.key, m.alt);
           const isActive = idx === currentIdx;
 
-          let nodeFill = 'oklch(0.18 0.01 260)';
-          let nodeStroke = 'var(--border)';
+          let nodeFill = '#1c2217'; // dark biome glass
+          let nodeStroke = '#3d5231';
           let textColor = 'var(--ink-muted)';
 
           if (state === 'done') {
-            nodeFill = 'oklch(0.25 0.05 155 / 0.8)';
+            nodeFill = 'rgba(28, 59, 28, 0.9)';
             nodeStroke = 'var(--success)';
             textColor = 'var(--success)';
           } else if (state === 'active') {
-            nodeFill = 'oklch(0.32 0.05 85 / 0.8)';
+            nodeFill = 'rgba(61, 51, 24, 0.9)';
             nodeStroke = 'var(--accent)';
             textColor = 'var(--accent)';
           } else if (state === 'error') {
-            nodeFill = 'oklch(0.25 0.05 25 / 0.8)';
+            nodeFill = 'rgba(59, 28, 28, 0.9)';
             nodeStroke = 'var(--error)';
             textColor = 'var(--error)';
           }
@@ -220,6 +297,7 @@ function ZigzagPath({ steps = [], isComplete }) {
                 y={coord.y - 24}
                 width="48"
                 height="48"
+                rx="6" // slightly rounded pixel corners
                 fill={nodeFill}
                 stroke={nodeStroke}
                 strokeWidth={isActive ? '3' : '2'}
@@ -229,32 +307,17 @@ function ZigzagPath({ steps = [], isComplete }) {
                 }}
               />
 
-              {/* Node Icon / Check */}
-              <text
-                x={coord.x}
-                y={coord.y}
-                textAnchor="middle"
-                dominantBaseline="central"
-                fill={textColor}
-                style={{
-                  fontFamily: 'var(--font-mono)',
-                  fontSize: '11px',
-                  fontWeight: 'bold'
-                }}
-              >
-                {state === 'done' ? '✓' : m.label}
-              </text>
-
               {/* Sub-label under the node */}
               <text
                 x={coord.x}
                 y={coord.y + 36}
                 textAnchor="middle"
-                fill={state === 'idle' ? 'var(--ink-muted)' : 'var(--ink-secondary)'}
+                fill={state === 'idle' ? 'rgba(255,255,255,0.4)' : '#fff'}
                 style={{
-                  fontFamily: 'var(--font-sans)',
-                  fontSize: '10px',
-                  fontWeight: state === 'active' ? 'bold' : 'normal'
+                  fontFamily: 'var(--font-mono)',
+                  fontSize: '9px',
+                  fontWeight: state === 'active' ? 'bold' : 'normal',
+                  filter: 'drop-shadow(1px 1px 0px rgba(0,0,0,0.8))'
                 }}
               >
                 {m.fullLabel}
@@ -263,6 +326,41 @@ function ZigzagPath({ steps = [], isComplete }) {
           );
         })}
       </svg>
+
+      {/* Dynamic SVG Node Icons Overlay */}
+      {MILESTONES.map((m, idx) => {
+        const coord = NODE_COORDS[idx];
+        const state = milestoneState(steps, m.key, m.alt);
+        const isActive = idx === currentIdx;
+
+        let iconColor = 'rgba(255, 255, 255, 0.4)'; // idle
+        if (state === 'done') iconColor = 'var(--success)';
+        else if (state === 'active') iconColor = 'var(--accent)';
+        else if (state === 'error') iconColor = 'var(--error)';
+
+        return (
+          <div
+            key={m.key}
+            style={{
+              position: 'absolute',
+              left: `${coord.x - 12}px`,
+              top: `${coord.y - 12}px`,
+              width: '24px',
+              height: '24px',
+              color: iconColor,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              zIndex: 5,
+              pointerEvents: 'none',
+              transition: 'all 0.3s ease',
+              transform: isActive ? 'scale(1.2)' : 'scale(1)'
+            }}
+          >
+            {m.icon}
+          </div>
+        );
+      })}
 
       {/* Mascot sprite with speech bubble */}
       <motion.div
