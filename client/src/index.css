@@ -2582,3 +2582,15 @@ tr:hover td { background: var(--bg-surface); }
 .hotbar-item.active {
   color: var(--accent);
 }
+
+/* Responsive Scale Down for Segmented Radial HUD Menu Overlay */
+@media (max-width: 500px) {
+  .rpg-radial-menu-container {
+    transform: scale(0.8) !important;
+  }
+}
+@media (max-width: 400px) {
+  .rpg-radial-menu-container {
+    transform: scale(0.68) !important;
+  }
+}

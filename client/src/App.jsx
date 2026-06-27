@@ -322,53 +322,27 @@ function Navbar({ isConnected }) {
             }}
           >
             <motion.div
-              className="rpg-panel"
+              className="rpg-panel rpg-radial-menu-container"
               initial={{ scale: 0.9, rotate: -15 }}
               animate={{ scale: 1, rotate: 0 }}
               exit={{ scale: 0.9, rotate: 15 }}
               transition={{ type: 'spring', stiffness: 150, damping: 16 }}
               style={{
-                width: '320px',
-                height: '320px',
+                width: '420px',
+                height: '420px',
                 borderRadius: 0,
                 position: 'relative',
-                boxShadow: '12px 12px 0 rgba(0,0,0,0.7)',
+                boxShadow: '16px 16px 0 rgba(0,0,0,0.8)',
                 overflow: 'visible'
               }}
             >
-              {/* Red glowing decorative line behind center (A Hat in Time style) */}
-              <div style={{
-                position: 'absolute',
-                top: '158px',
-                left: '10px',
-                right: '10px',
-                height: '4px',
-                background: '#ff003c',
-                boxShadow: '0 0 12px #ff003c',
-                zIndex: 0,
-                pointerEvents: 'none'
-              }} />
-              <div style={{
-                position: 'absolute',
-                top: '148px',
-                left: '148px',
-                width: '24px',
-                height: '24px',
-                borderRadius: '50%',
-                border: '4px solid #ff003c',
-                boxShadow: '0 0 12px #ff003c',
-                background: '#0c0d12',
-                zIndex: 0,
-                pointerEvents: 'none'
-              }} />
-
               {/* Segmented Ring SVG container */}
-              <svg style={{ position: 'absolute', inset: 0, width: '320px', height: '320px', pointerEvents: 'auto', zIndex: 1 }}>
+              <svg style={{ position: 'absolute', inset: 0, width: '420px', height: '420px', pointerEvents: 'auto', zIndex: 1 }}>
                 {slots.map((slot, index) => {
                   const startAngle = index * (360 / slots.length) + 3;
                   const endAngle = (index + 1) * (360 / slots.length) - 3;
                   const isHovered = hoveredSlot?.name === slot.name;
-                  const pathData = getArcPath(160, 160, 135, 85, startAngle, endAngle);
+                  const pathData = getArcPath(210, 210, 180, 115, startAngle, endAngle);
                   
                   return (
                     <path
@@ -395,15 +369,15 @@ function Navbar({ isConnected }) {
                 className="flex flex-col items-center justify-center"
                 style={{
                   position: 'absolute',
-                  left: '115px',
-                  top: '115px',
-                  width: '90px',
-                  height: '90px',
+                  left: '150px',
+                  top: '150px',
+                  width: '120px',
+                  height: '120px',
                   borderRadius: '50%',
-                  background: 'rgba(12, 13, 18, 0.92)',
+                  background: 'rgba(12, 13, 18, 0.94)',
                   border: '2px solid var(--border)',
-                  boxShadow: 'inset 0 0 10px rgba(0,0,0,0.8), 0 0 15px rgba(251, 191, 36, 0.2)',
-                  padding: '8px',
+                  boxShadow: 'inset 0 0 12px rgba(0,0,0,0.85), 0 0 20px rgba(251, 191, 36, 0.25)',
+                  padding: '12px',
                   textAlign: 'center',
                   zIndex: 2,
                   pointerEvents: 'none'
@@ -411,26 +385,26 @@ function Navbar({ isConnected }) {
               >
                 {hoveredSlot ? (
                   <div style={{ animation: 'fadeIn 0.15s ease-out' }}>
-                    <div className="font-pixel" style={{ fontSize: '8px', color: 'var(--accent)', fontWeight: 800, marginBottom: '2px' }}>
+                    <div className="font-pixel" style={{ fontSize: '10px', color: 'var(--accent)', fontWeight: 800, marginBottom: '4px' }}>
                       {hoveredSlot.label}
                     </div>
-                    <div style={{ fontSize: '9px', color: 'var(--ink-muted)', lineHeight: 1.1, wordBreak: 'break-word' }}>
+                    <div style={{ fontSize: '10px', color: 'var(--ink-muted)', lineHeight: 1.2, wordBreak: 'break-word' }}>
                       {hoveredSlot.desc}
                     </div>
                   </div>
                 ) : (
                   <div>
-                    <div className="font-pixel" style={{ fontSize: '8px', color: 'var(--accent)', fontWeight: 800, marginBottom: '2px' }}>
+                    <div className="font-pixel" style={{ fontSize: '9px', color: 'var(--accent)', fontWeight: 800, marginBottom: '3px' }}>
                       HUD STATUS
                     </div>
                     {isAuthenticated && (
-                      <div className="font-pixel" style={{ fontSize: '8px', color: 'var(--ink-primary)', marginBottom: '2px' }}>
+                      <div className="font-pixel" style={{ fontSize: '9px', color: 'var(--ink-primary)', marginBottom: '3px' }}>
                         LVL {user?.level || 1}
                       </div>
                     )}
-                    <div className="flex items-center justify-center gap-1.5" style={{ fontSize: '9px', color: 'var(--ink-secondary)' }}>
+                    <div className="flex items-center justify-center gap-1.5" style={{ fontSize: '10px', color: 'var(--ink-secondary)' }}>
                       <span style={liveDotStyle} />
-                      <span style={{ fontSize: '9px', fontFamily: 'var(--font-mono)' }}>{isConnected ? 'LIVE' : 'OFFLINE'}</span>
+                      <span style={{ fontSize: '10px', fontFamily: 'var(--font-mono)' }}>{isConnected ? 'LIVE' : 'OFFLINE'}</span>
                     </div>
                   </div>
                 )}
@@ -440,8 +414,8 @@ function Navbar({ isConnected }) {
               {slots.map((slot, index) => {
                 const angle = (index + 0.5) * (360 / slots.length);
                 const rad = (angle - 90) * Math.PI / 180;
-                const x = 160 + 110 * Math.cos(rad);
-                const y = 160 + 110 * Math.sin(rad);
+                const x = 210 + 147.5 * Math.cos(rad);
+                const y = 210 + 147.5 * Math.sin(rad);
                 const isHovered = hoveredSlot?.name === slot.name;
 
                 return (
@@ -452,13 +426,13 @@ function Navbar({ isConnected }) {
                     onMouseLeave={() => setHoveredSlot(null)}
                     style={{
                       position: 'absolute',
-                      left: `${x - 20}px`,
-                      top: `${y - 20}px`,
-                      width: '40px',
-                      height: '40px',
+                      left: `${x - 25}px`,
+                      top: `${y - 25}px`,
+                      width: '50px',
+                      height: '50px',
                       borderRadius: '50%',
                       cursor: 'pointer',
-                      fontSize: '1.4rem',
+                      fontSize: '1.75rem',
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
