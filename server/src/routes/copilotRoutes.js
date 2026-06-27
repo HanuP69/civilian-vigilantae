@@ -4,6 +4,7 @@ import { getLLMClient } from '../llm/index.js';
 import { db } from '../config/firebase.js';
 import { getDashboardStats } from '../services/ticketService.js';
 import { computeRecurrenceRisk } from '../math/recurrence.js';
+import { getLeaderboard } from '../services/userService.js';
 
 const router = Router();
 
@@ -113,6 +114,12 @@ router.post('/chat', requireAuth, async (req, res) => {
     // 3. Compute Recurrence Risk
     const risks = computeRecurrenceRisk(resolvedTickets, 14);
 
+    // Fetch Leaderboard data
+    const leaderboard = await getLeaderboard(10);
+    const leaderboardSummary = leaderboard.map((u, i) => 
+      `${i + 1}. User: "${u.username || u.name || 'Anonymous'}" (Level: ${u.level || 1}, XP: ${u.xp || 0}, Reputation Trust: ${u.reputationScore !== undefined ? u.reputationScore.toFixed(2) : '1.00'}, Reports: ${u.reportsCount || 0}, Votes: ${u.votesCount || 0})`
+    ).join('\n');
+
     // 4. Check for Budget/Knapsack Queries
     const detectedBudget = parseBudget(message);
     let knapsackOutput = '';
@@ -172,6 +179,9 @@ ${activeSummary || 'No active reports currently.'}
 
 [REAL-TIME CONTEXT: RECURRENCE RISK HAZARDS]
 ${recurrenceSummary || 'No high-risk recurrence hotspots forecasted at this time.'}
+
+[REAL-TIME CONTEXT: COMMUNITY LEADERBOARD (TOP CITIZENS)]
+${leaderboardSummary || 'No citizen data registered in the ledger.'}
 
 [REAL-TIME CONTEXT: METRICS]
 Active Ward Health stats: ${JSON.stringify(stats?.byWard || {})}
