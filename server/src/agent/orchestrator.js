@@ -33,7 +33,10 @@ export async function processReport(reportData, onStep) {
   // Pre-resolve nearest asset outside transaction (since it does a read of static assets)
   const resolvedWard = ctx.geoResult.ward;
   const { resolveNearestAsset, updateAssetHealth } = await import('../services/assetService.js');
-  const asset = await resolveNearestAsset(resolvedWard, ctx.classificationResult.category || 'other');
+  const asset = await resolveNearestAsset(resolvedWard, ctx.classificationResult.category || 'other') || {
+    id: 'unknown_asset',
+    name: 'General Ward Asset'
+  };
 
   // 2. Transaction Block: Atomic duplicate search, verification computation, and ticket creation/merge
   const { db } = await import('../config/firebase.js');

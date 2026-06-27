@@ -71,7 +71,8 @@ const NODE_COORDS = [
   { x: 450, y: 165 }, // NOT (Notify)
 ];
 
-function milestoneState(steps, key, alt) {
+function milestoneState(steps = [], key, alt) {
+  if (!Array.isArray(steps)) return 'idle';
   const match = steps.find(s => s && (s.step === key || (alt && s.step === alt)));
   if (match?.status === 'error') return 'error';
   if (match?.status === 'success') return 'done';
@@ -79,15 +80,17 @@ function milestoneState(steps, key, alt) {
   return 'idle';
 }
 
-function stepOutput(steps, key, alt) {
+function stepOutput(steps = [], key, alt) {
+  if (!Array.isArray(steps)) return null;
   return steps.find(s => s && (s.step === key || (alt && s.step === alt)) && s.status === 'success')?.output || null;
 }
 
-function stepActualName(steps, key, alt) {
+function stepActualName(steps = [], key, alt) {
+  if (!Array.isArray(steps)) return key;
   return steps.find(s => s && (s.step === key || (alt && s.step === alt)))?.step || key;
 }
 
-function ZigzagPath({ steps, isComplete }) {
+function ZigzagPath({ steps = [], isComplete }) {
   const [visualIdx, setVisualIdx] = useState(0);
 
   // Find target step index based on actual database updates
@@ -119,9 +122,9 @@ function ZigzagPath({ steps, isComplete }) {
     }
   }, [targetIdx]);
 
-  const currentIdx = visualIdx;
-  const activeCoord = NODE_COORDS[currentIdx];
-  const speechMs = MILESTONES[currentIdx];
+  const currentIdx = Math.max(0, Math.min(visualIdx, NODE_COORDS.length - 1));
+  const activeCoord = NODE_COORDS[currentIdx] || NODE_COORDS[0];
+  const speechMs = MILESTONES[currentIdx] || MILESTONES[0];
 
   // Compute SVG active path up to current visual index
   const activePathD = useMemo(() => {
