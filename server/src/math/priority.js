@@ -111,10 +111,10 @@ export function computePriority({
   // ── 1. Severity (S_vis) ──────────────────────────────────────────
   const sVis = SEVERITY_MAP[severity] ?? SEVERITY_MAP.medium;
 
-  // ── 2. Report volume — log(1 + N) ───────────────────────────────
+  // ── 2. Report volume — log(N) (single report = zero bonus) ──────
   const maxExpectedReports = 100;
-  const logReports = Math.log(1 + Math.max(reportCount || 0, 0));
-  const logNorm = logReports / Math.log(1 + maxExpectedReports);
+  const logReports = Math.log(Math.max(reportCount || 1, 1));
+  const logNorm = logReports / Math.log(maxExpectedReports);
   const nReports = Math.min(logNorm, 1);
 
   // ── 3. Verification ratio ───────────────────────────────────────
@@ -152,8 +152,8 @@ export function computePriorityWithBreakdown(input) {
   const sVis = SEVERITY_MAP[input.severity] ?? SEVERITY_MAP.medium;
 
   const maxExpectedReports = 100;
-  const logReports = Math.log(1 + Math.max(input.reportCount || 0, 0));
-  const logNorm = logReports / Math.log(1 + maxExpectedReports);
+  const logReports = Math.log(Math.max(input.reportCount || 1, 1));
+  const logNorm = logReports / Math.log(maxExpectedReports);
   const nReports = Math.min(logNorm, 1);
 
   const up = Math.max(input.verificationUp || 0, 0);

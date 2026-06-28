@@ -158,18 +158,41 @@ function MissionsPage() {
                         ✓ MISSION COMPLETED
                       </div>
                     ) : (
-                      <button 
-                        className="btn btn-primary font-pixel" 
-                        style={{ 
-                          borderRadius: 0, 
-                          fontSize: '0.5rem',
-                          padding: '8px 12px',
-                          letterSpacing: '0.5px'
-                        }}
-                        onClick={(e) => { e.stopPropagation(); handleDepart(mission); }}
-                      >
-                        🧭 FIND ON MAP
-                      </button>
+                      <div className="flex gap-2">
+                        {mission.type === 'hotspot_prediction' && (
+                          <button 
+                            className="btn font-pixel" 
+                            style={{ 
+                              borderRadius: 0, 
+                              fontSize: '0.55rem',
+                              padding: '8px 12px',
+                              letterSpacing: '0.5px',
+                              background: 'var(--success)',
+                              color: '#000',
+                              border: '1px solid var(--success)',
+                              cursor: 'pointer'
+                            }}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              navigate(`/report?category=${mission.category || ''}&ward=${mission.ward || ''}&lat=${mission.lat || ''}&lng=${mission.lng || ''}`);
+                            }}
+                          >
+                            🧭 DEPART
+                          </button>
+                        )}
+                        <button 
+                          className="btn btn-secondary font-pixel" 
+                          style={{ 
+                            borderRadius: 0, 
+                            fontSize: '0.55rem',
+                            padding: '8px 12px',
+                            letterSpacing: '0.5px'
+                          }}
+                          onClick={(e) => { e.stopPropagation(); handleDepart(mission); }}
+                        >
+                          🔍 FIND ON MAP
+                        </button>
+                      </div>
                     )}
                   </div>
                 </div>

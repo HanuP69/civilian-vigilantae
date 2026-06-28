@@ -132,89 +132,102 @@ export function weibullHazard(t, lambda, k) {
  * @example
  * const { lambda, k } = weibullMLE([24, 48, 36, 72, 60]);
  */
-export function weibullMLE(times, { maxIterations = 20, convergenceThreshold = 1e-6 } = {}) {
-  if (!Array.isArray(times) || times.length === 0) {
-    throw new Error('times array must be non-empty');
-  }
-
-  const n = times.length;
-
-  // Validate — all times must be positive
-  for (let i = 0; i < n; i++) {
-    if (times[i] <= 0) {
-      throw new Error(`All times must be positive, got ${times[i]} at index ${i}`);
+export function weibullMLE(times, { maxIterations = 20, convergenceThreshold = 1e-6, fallback = { lambda: 168, k: 1.3 } } = {}) {
+  try {
+    if (!Array.isArray(times) || times.length === 0) {
+      return fallback;
     }
-  }
 
-  // Edge case: single observation — can't estimate shape, return defaults
-  if (n === 1) {
-    return { lambda: times[0], k: 1.0 };
-  }
+    const n = times.length;
 
-  // Pre-compute log(t_i)
-  const logT = times.map(Math.log);
-  const sumLogT = logT.reduce((a, b) => a + b, 0);
-  const meanLogT = sumLogT / n;
-
-  // ── Initial guess for k via method of moments ────────────────────
-  // Var(ln T) ≈ π² / (6 k²)  ⟹  k₀ ≈ π / (√6 · σ(ln T))
-  const varLogT = logT.reduce((s, v) => s + (v - meanLogT) ** 2, 0) / n;
-  if (varLogT < 1e-9) {
-    throw new Error('Variance of intervals is too close to zero for Weibull MLE');
-  }
-  let k = Math.PI / (Math.sqrt(6 * varLogT));
-
-  // Clamp initial guess to a sensible range
-  k = Math.max(0.1, Math.min(k, 10));
-
-  // ── Newton-Raphson on ∂ℓ/∂k = 0 ─────────────────────────────────
-  // Profile log-likelihood derivative with respect to k:
-  //   g(k) = n/k + Σ ln(t_i) − n · Σ[t_i^k · ln(t_i)] / Σ[t_i^k]
-  //
-  // Its derivative (for Newton step):
-  //   g'(k) = −n/k²  − n · { Σ[t_i^k · (ln t_i)²] · Σ[t_i^k]
-  //                          − (Σ[t_i^k · ln t_i])² } / (Σ[t_i^k])²
-
-  for (let iter = 0; iter < maxIterations; iter++) {
-    let sumTk = 0;
-    let sumTkLogT = 0;
-    let sumTkLogT2 = 0;
-
+    // Validate — all times must be positive
     for (let i = 0; i < n; i++) {
-      const tk = Math.pow(times[i], k);
-      const lt = logT[i];
-      sumTk += tk;
-      sumTkLogT += tk * lt;
-      sumTkLogT2 += tk * lt * lt;
+      if (times[i] <= 0) {
+        return fallback; // Graceful fallback instead of crashing
+      }
     }
 
-    const A = sumTkLogT / sumTk;
-    const g = n / k + sumLogT - n * A;
+    // Edge case: single observation — can't estimate shape, return defaults
+    if (n === 1) {
+      return { lambda: times[0], k: 1.0 };
+    }
 
-    // Derivative of g
-    const gPrime =
-      -n / (k * k) -
-      n * (sumTkLogT2 * sumTk - sumTkLogT * sumTkLogT) / (sumTk * sumTk);
+    // Pre-compute log(t_i)
+    const logT = times.map(Math.log);
+    const sumLogT = logT.reduce((a, b) => a + b, 0);
+    const meanLogT = sumLogT / n;
 
-    if (Math.abs(gPrime) < 1e-30) break; // avoid division by zero
+    // ── Initial guess for k via method of moments ────────────────────
+    // Var(ln T) ≈ π² / (6 k²)  ⟹  k₀ ≈ π / (√6 · σ(ln T))
+    const varLogT = logT.reduce((s, v) => s + (v - meanLogT) ** 2, 0) / n;
+    if (varLogT < 1e-9) {
+      return { lambda: times[0] || fallback.lambda, k: 1.0 };
+    }
+    let k = Math.PI / (Math.sqrt(6 * varLogT));
 
-    const delta = g / gPrime;
-    k -= delta;
+    // Clamp initial guess to a sensible range
+    k = Math.max(0.1, Math.min(k, 10));
 
-    // Keep k positive and bounded
-    k = Math.max(0.01, Math.min(k, 50));
+    // ── Newton-Raphson on ∂ℓ/∂k = 0 ─────────────────────────────────
+    for (let iter = 0; iter < maxIterations; iter++) {
+      let sumTk = 0;
+      let sumTkLogT = 0;
+      let sumTkLogT2 = 0;
 
-    if (Math.abs(delta) < convergenceThreshold) break;
+      for (let i = 0; i < n; i++) {
+        const tk = Math.pow(times[i], k);
+        const lt = logT[i];
+        sumTk += tk;
+        sumTkLogT += tk * lt;
+        sumTkLogT2 += tk * lt * lt;
+      }
+
+      if (sumTk === 0 || Number.isNaN(sumTk)) {
+        return fallback;
+      }
+
+      const A = sumTkLogT / sumTk;
+      const g = n / k + sumLogT - n * A;
+
+      // Derivative of g
+      const gPrime =
+        -n / (k * k) -
+        n * (sumTkLogT2 * sumTk - sumTkLogT * sumTkLogT) / (sumTk * sumTk);
+
+      if (Math.abs(gPrime) < 1e-30 || Number.isNaN(gPrime) || !Number.isFinite(gPrime)) break; // avoid division by zero
+
+      const delta = g / gPrime;
+      if (Number.isNaN(delta) || !Number.isFinite(delta)) break;
+      
+      k -= delta;
+
+      // Keep k positive and bounded
+      k = Math.max(0.01, Math.min(k, 50));
+
+      if (Math.abs(delta) < convergenceThreshold) break;
+    }
+
+    // ── Compute λ in closed form ─────────────────────────────────────
+    let sumTk = 0;
+    for (let i = 0; i < n; i++) {
+      sumTk += Math.pow(times[i], k);
+    }
+    
+    if (sumTk <= 0 || Number.isNaN(sumTk)) {
+      return fallback;
+    }
+    
+    const lambda = Math.pow(sumTk / n, 1 / k);
+
+    if (Number.isNaN(k) || !Number.isFinite(k) || k <= 0 || Number.isNaN(lambda) || !Number.isFinite(lambda) || lambda <= 0) {
+      return fallback;
+    }
+
+    return { lambda, k };
+  } catch (err) {
+    console.warn('[WeibullMLE] Fitting failed, returning fallback parameters:', err.message);
+    return fallback;
   }
-
-  // ── Compute λ in closed form ─────────────────────────────────────
-  let sumTk = 0;
-  for (let i = 0; i < n; i++) {
-    sumTk += Math.pow(times[i], k);
-  }
-  const lambda = Math.pow(sumTk / n, 1 / k);
-
-  return { lambda, k };
 }
 
 /**

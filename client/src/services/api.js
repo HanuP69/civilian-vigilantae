@@ -1,21 +1,56 @@
 const API = '/api';
 
-export async function fetchWithTimeout(url, options = {}, timeoutMs = 15000) {
-  const controller = new AbortController();
-  const id = setTimeout(() => controller.abort(), timeoutMs);
-  try {
-    const response = await fetch(url, {
-      ...options,
-      signal: controller.signal
-    });
-    clearTimeout(id);
-    return response;
-  } catch (err) {
-    clearTimeout(id);
-    if (err.name === 'AbortError') {
-      throw new Error(`Request timed out after ${timeoutMs}ms`);
+/**
+ * Fetch wrapper that enforces a timeout and retry logic.
+ * Note: Standard fetch() does not throw errors on 4xx/5xx status codes, meaning
+ * this logic will ONLY retry on actual network connection failures or timeouts.
+ */
+export async function fetchWithTimeout(url, options = {}, timeoutMs = 15000, retries = 2) {
+  const callerSignal = options.signal;
+  for (let attempt = 0; attempt <= retries; attempt++) {
+    const controller = new AbortController();
+    
+    if (callerSignal?.aborted) {
+      throw new DOMException('Aborted by caller', 'AbortError');
     }
-    throw err;
+
+    const onCallerAbort = () => {
+      controller.abort();
+    };
+    if (callerSignal) {
+      callerSignal.addEventListener('abort', onCallerAbort);
+    }
+
+    const id = setTimeout(() => controller.abort(), timeoutMs);
+    try {
+      const response = await fetch(url, {
+        ...options,
+        signal: controller.signal
+      });
+      clearTimeout(id);
+      if (callerSignal) {
+        callerSignal.removeEventListener('abort', onCallerAbort);
+      }
+      return response;
+    } catch (err) {
+      clearTimeout(id);
+      if (callerSignal) {
+        callerSignal.removeEventListener('abort', onCallerAbort);
+      }
+      const isTimeout = err.name === 'AbortError' && !callerSignal?.aborted;
+      if (callerSignal?.aborted) {
+        throw err;
+      }
+      if (attempt < retries) {
+        console.warn(`[API Retry] Request to ${url} failed (attempt ${attempt + 1}/${retries + 1}). Retrying...`);
+        await new Promise(resolve => setTimeout(resolve, 500 * (attempt + 1)));
+        continue;
+      }
+      if (isTimeout) {
+        throw new Error(`Request timed out after ${timeoutMs}ms`);
+      }
+      throw err;
+    }
   }
 }
 
@@ -36,18 +71,18 @@ async function handleResponse(res) {
   return res.json();
 }
 
-export async function fetchTickets(filters = {}) {
+export async function fetchTickets(filters = {}, options = {}) {
   const params = new URLSearchParams(filters);
-  const res = await fetchWithTimeout(`${API}/tickets?${params}`);
+  const res = await fetchWithTimeout(`${API}/tickets?${params}`, options);
   return handleResponse(res);
 }
 
-export async function fetchTicket(id) {
-  const res = await fetchWithTimeout(`${API}/tickets/${id}`);
+export async function fetchTicket(id, options = {}) {
+  const res = await fetchWithTimeout(`${API}/tickets/${id}`, options);
   return handleResponse(res);
 }
 
-export async function submitReport(formData) {
+export async function submitReport(formData, options = {}) {
   let userId = localStorage.getItem('userId');
   if (!userId) {
     userId = `user-${Math.random().toString(36).slice(2, 8)}`;
@@ -57,118 +92,131 @@ export async function submitReport(formData) {
   const reportId = existingId || `report-${Date.now()}`;
   if (!existingId) formData.append('report_id', reportId);
   const res = await fetchWithTimeout(`${API}/reports`, {
+    ...options,
     method: 'POST',
-    headers: { 'Authorization': `Bearer ${userId}` },
+    headers: { ...options.headers, 'Authorization': `Bearer ${userId}` },
     body: formData
   }, 45000);
   const data = await handleResponse(res);
   return { ...data, report_id: reportId };
 }
 
-export async function submitVerification(ticketId, voteType, userId, lat, lng, photo) {
+export async function submitVerification(ticketId, voteType, userId, lat, lng, photo, options = {}) {
   const token = localStorage.getItem('userId') || userId;
   const res = await fetchWithTimeout(`${API}/verify/${ticketId}`, {
+    ...options,
     method: 'POST',
     headers: { 
       'Content-Type': 'application/json',
-      'Authorization': `Bearer ${token}`
+      'Authorization': `Bearer ${token}`,
+      ...options.headers
     },
     body: JSON.stringify({ vote_type: voteType, user_id: userId, lat, lng, photo }),
   });
   return handleResponse(res);
 }
 
-export async function fetchDashboardStats() {
-  const res = await fetchWithTimeout(`${API}/dashboard/stats`);
+export async function fetchDashboardStats(options = {}) {
+  const res = await fetchWithTimeout(`${API}/dashboard/stats`, options);
   return handleResponse(res);
 }
 
-export async function fetchRecurrenceRisk() {
-  const res = await fetchWithTimeout(`${API}/dashboard/recurrence`);
+export async function fetchRecurrenceRisk(options = {}) {
+  const res = await fetchWithTimeout(`${API}/dashboard/recurrence`, options);
   return handleResponse(res);
 }
 
-export async function fetchLeaderboard() {
-  const res = await fetchWithTimeout(`${API}/users/leaderboard`);
+export async function fetchLeaderboard(options = {}) {
+  const res = await fetchWithTimeout(`${API}/users/leaderboard`, options);
   return handleResponse(res);
 }
 
-export async function apiRegister(email, password, displayName) {
+export async function apiRegister(email, password, displayName, options = {}) {
   const res = await fetchWithTimeout(`${API}/users/register`, {
+    ...options,
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: { 'Content-Type': 'application/json', ...options.headers },
     body: JSON.stringify({ email, password, display_name: displayName })
   });
   return handleResponse(res);
 }
 
-export async function apiLogin(email, password) {
+export async function apiLogin(email, password, options = {}) {
   const res = await fetchWithTimeout(`${API}/users/login`, {
+    ...options,
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: { 'Content-Type': 'application/json', ...options.headers },
     body: JSON.stringify({ email, password })
   });
   return handleResponse(res);
 }
 
-export async function apiClaimQuest(questId) {
+export async function apiClaimQuest(questId, options = {}) {
   const token = localStorage.getItem('userId');
   const res = await fetchWithTimeout(`${API}/users/quests/claim`, {
+    ...options,
     method: 'POST',
     headers: { 
       'Content-Type': 'application/json',
-      'Authorization': `Bearer ${token}`
+      'Authorization': `Bearer ${token}`,
+      ...options.headers
     },
     body: JSON.stringify({ quest_id: questId })
   });
   return handleResponse(res);
 }
 
-export async function apiBuyShopItem(itemId) {
+export async function apiBuyShopItem(itemId, options = {}) {
   const token = localStorage.getItem('userId');
   const res = await fetchWithTimeout(`${API}/users/shop/buy`, {
+    ...options,
     method: 'POST',
     headers: { 
       'Content-Type': 'application/json',
-      'Authorization': `Bearer ${token}`
+      'Authorization': `Bearer ${token}`,
+      ...options.headers
     },
     body: JSON.stringify({ item_id: itemId })
   });
   return handleResponse(res);
 }
 
-export async function apiEquipAvatar(avatarValue) {
+export async function apiEquipAvatar(avatarValue, options = {}) {
   const token = localStorage.getItem('userId');
   const res = await fetchWithTimeout(`${API}/users/shop/equip`, {
+    ...options,
     method: 'POST',
     headers: { 
       'Content-Type': 'application/json',
-      'Authorization': `Bearer ${token}`
+      'Authorization': `Bearer ${token}`,
+      ...options.headers
     },
     body: JSON.stringify({ avatar_value: avatarValue })
   });
   return handleResponse(res);
 }
 
-export async function sendCopilotMessage(message, chatHistory = []) {
+export async function sendCopilotMessage(message, chatHistory = [], options = {}) {
   const token = localStorage.getItem('userId');
   const res = await fetchWithTimeout(`${API}/copilot/chat`, {
+    ...options,
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      'Authorization': `Bearer ${token}`
+      'Authorization': `Bearer ${token}`,
+      ...options.headers
     },
     body: JSON.stringify({ message, chatHistory })
   });
   return handleResponse(res);
 }
 
-export async function fetchAssets() {
-  const res = await fetchWithTimeout(`${API}/dashboard/assets`);
+export async function fetchAssets(options = {}) {
+  const res = await fetchWithTimeout(`${API}/dashboard/assets`, options);
   return handleResponse(res);
 }
 
-export async function fetchMissions() {
-  const res = await fetchWithTimeout(`${API}/missions`);
+export async function fetchMissions(options = {}) {
+  const res = await fetchWithTimeout(`${API}/missions`, options);
   return handleResponse(res);
 }

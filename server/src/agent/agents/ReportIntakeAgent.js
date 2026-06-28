@@ -57,5 +57,13 @@ export const ReportIntakeAgent = {
     ctx.geoResult = geoResult;
     const geoReasoning = await enrichReasoning('geo_resolve', geoResult) || `Geospatial match resolved location coordinates to ward [${geoResult.ward}].`;
     completeGeo(geoResult, geoReasoning);
+
+    // Dispatch message to ClusteringAgent
+    ctx.messageBus?.sendMessage('ReportIntakeAgent', 'ClusteringAgent', 'intake_processed', {
+      category: ctx.classificationResult.category,
+      ward: geoResult.ward,
+      lat: latitude,
+      lng: longitude
+    });
   }
 };

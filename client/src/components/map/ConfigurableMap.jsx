@@ -1,8 +1,9 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
 import { MapContainer, TileLayer, Marker, Popup, Circle, Tooltip, useMap, ZoomControl } from 'react-leaflet';
+import { fetchMissions } from '../../services/api.js';
 
 const getTimestampMs = (val) => {
   if (!val) return 0;
@@ -233,7 +234,7 @@ function ConfigurableMap({
   tickets = [],
   clusterGroups = [],
   recurrence = [],
-  missions = [],
+  missions: missionsProp = [],
   slaByWard = {},
   layer = 'reports',
   activeTicketId = null,
@@ -253,6 +254,30 @@ function ConfigurableMap({
   const googleLastFitRef = useRef({ layer: null, dataLength: 0 });
   const [googleReady, setGoogleReady] = useState(false);
   const [loadError, setLoadError] = useState('');
+  const [missions, setMissions] = useState([]);
+  const [missionsLoading, setMissionsLoading] = useState(false);
+
+  // Fetch missions from API when component mounts
+  useEffect(() => {
+    const fetchMissionsData = async () => {
+      setMissionsLoading(true);
+      try {
+        const data = await fetchMissions();
+        if (Array.isArray(data)) {
+          setMissions(data);
+        }
+      } catch (error) {
+        console.error('Failed to fetch missions:', error);
+      } finally {
+        setMissionsLoading(false);
+      }
+    };
+
+    fetchMissionsData();
+  }, []);
+
+  // Use missions from props if provided, otherwise use fetched missions
+  const activeMissions = missionsProp.length > 0 ? missionsProp : missions;
 
   useEffect(() => {
     if (provider !== 'maps') return;
@@ -391,42 +416,115 @@ function ConfigurableMap({
     }
 
     // Render active missions as glowing sweeps on Google Maps
-    if (Array.isArray(missions)) {
-      missions.filter(m => m.status === 'active' && m.coordinates).forEach(mission => {
+    if (Array.isArray(activeMissions)) {
+      activeMissions.filter(m => m.status === 'active' && m.coordinates).forEach(mission => {
         const position = { lat: Number(mission.coordinates.lat), lng: Number(mission.coordinates.lng) };
+        
+        // Determine rarity based on mission rewards and type
+        const getRarity = (mission) => {
+          const totalReward = (mission.xp_reward || 0) + (mission.gold_reward || 0) * 2;
+          if (mission.type === 'hotspot_prediction' && totalReward >= 200) return 'legendary';
+          if (mission.type === 'hotspot_prediction' && totalReward >= 150) return 'epic';
+          if (totalReward >= 120) return 'rare';
+          if (totalReward >= 80) return 'uncommon';
+          return 'common';
+        };
+        
+        const rarity = getRarity(mission);
+        const rarityColors = {
+          common: '#10b981',
+          uncommon: '#3b82f6',
+          rare: '#8b5cf6',
+          epic: '#f59e0b',
+          legendary: '#ef4444'
+        };
+        const rarityColor = rarityColors[rarity];
+        const rarityLabel = rarity.toUpperCase();
+        
         const circle = new window.google.maps.Circle({
           map,
           center: position,
           radius: 200,
-          strokeColor: '#ffd700',
+          strokeColor: rarityColor,
           strokeOpacity: 0.8,
           strokeWeight: 2,
-          fillColor: '#ffd700',
-          fillOpacity: 0.25,
+          fillColor: rarityColor,
+          fillOpacity: 0.2,
         });
+
+        // Create enhanced quest pin marker with custom HTML
+        const pinHtml = `
+          <div class="rpg-quest-pin-enhanced rarity-${rarity} active" style="filter: drop-shadow(0 0 12px ${rarityColor});">
+            <div class="rpg-quest-ring"></div>
+            <div class="rpg-quest-particles">
+              <div class="rpg-quest-particle"></div>
+              <div class="rpg-quest-particle"></div>
+              <div class="rpg-quest-particle"></div>
+              <div class="rpg-quest-particle"></div>
+              <div class="rpg-quest-particle"></div>
+              <div class="rpg-quest-particle"></div>
+            </div>
+            <div class="rpg-quest-sparkles">
+              <div class="rpg-quest-sparkle" style="color: ${rarityColor};"></div>
+              <div class="rpg-quest-sparkle" style="color: ${rarityColor};"></div>
+              <div class="rpg-quest-sparkle" style="color: ${rarityColor};"></div>
+              <div class="rpg-quest-sparkle" style="color: ${rarityColor};"></div>
+              <div class="rpg-quest-sparkle" style="color: ${rarityColor};"></div>
+              <div class="rpg-quest-sparkle" style="color: ${rarityColor};"></div>
+            </div>
+            <div class="rpg-quest-trail" style="background: linear-gradient(to bottom, ${rarityColor}, transparent);"></div>
+            <div class="rpg-quest-pin-core" style="image-rendering: pixelated;">
+              <svg width="32" height="40" viewBox="0 0 32 40" xmlns="http://www.w3.org/2000/svg">
+                <path d="M6 2h20v4h4v12h-4v8h-4v4h-4v8h-4v-8h-4v-4h-4v-8H2V6h4V2z" fill="#000000" />
+                <path d="M8 4h16v4h4v8h-4v8h-4v4h-4v8h-4v-8H8v-4H4V8h4V4z" fill="${rarityColor}" />
+                <path d="M12 28v4h8v-4h-4v-4h-4zm-4-8h4v4h-4zm12 0h4v4h-4z" fill="#000000" opacity="0.25" />
+                <rect x="14" y="8" width="4" height="8" fill="#ffffff" />
+                <rect x="14" y="18" width="4" height="4" fill="#ffffff" />
+              </svg>
+            </div>
+            <div class="rpg-quest-label">${rarityLabel} QUEST</div>
+          </div>
+        `;
 
         const marker = new window.google.maps.Marker({
           position,
           map,
           title: `MISSION: ${mission.title}`,
           icon: {
-            path: window.google.maps.SymbolPath.CIRCLE,
-            scale: 8,
-            fillColor: '#ffd700',
-            fillOpacity: 0.9,
-            strokeWeight: 2,
-            strokeColor: '#ffffff',
+            url: 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(`
+              <svg width="40" height="48" viewBox="0 0 40 48" xmlns="http://www.w3.org/2000/svg">
+                <foreignObject width="40" height="48">
+                  <div xmlns="http://www.w3.org/1999/xhtml" style="width: 40px; height: 48px;">
+                    ${pinHtml}
+                  </div>
+                </foreignObject>
+              </svg>
+            `),
+            scaledSize: new window.google.maps.Size(40, 48),
+            anchor: new window.google.maps.Point(20, 48),
           },
         });
 
         marker.addListener('click', () => {
           const content = `
-            <div style="font-family: 'Press Start 2P', monospace; min-width: 180px; padding: 4px; line-height: 1.4;">
-              <strong style="font-size: 8px; color: var(--accent); display: block; margin-bottom: 4px;">🧭 ${mission.title}</strong>
-              <p style="font-size: 6.5px; color: var(--ink-secondary); margin-bottom: 6px;">${mission.description}</p>
-              <div style="font-size: 6px; color: var(--success); margin-bottom: 6px;">REWARDS: +${mission.xp_reward} XP · ${mission.gold_reward} GOLD</div>
-              <div style="font-size: 6px; color: var(--ink-muted); margin-bottom: 6px;">PROGRESS: ${mission.current_confirmations}/${mission.target_confirmations} CONFIRMATIONS</div>
-              <a href="/missions" style="color: var(--accent); font-size: 6px; text-decoration: underline;">GO TO MISSIONS →</a>
+            <div style="font-family: 'Press Start 2P', monospace; min-width: 200px; padding: 8px; line-height: 1.5;">
+              <strong style="font-size: 8px; color: ${rarityColor}; display: block; margin-bottom: 4px; font-weight: 600;">🧭 ${mission.title}</strong>
+              <span style="font-size: 6px; color: ${rarityColor}; display: inline-block; background: rgba(0,0,0,0.1); padding: 2px 6px; border-radius: 3px; margin-bottom: 6px; font-weight: 700; text-transform: uppercase;">
+                ${rarityLabel} QUEST
+              </span>
+              <p style="font-size: 6.5px; color: var(--ink-secondary); margin-bottom: 8px; line-height: 1.4;">${mission.description}</p>
+              <div style="font-size: 6px; color: var(--success); margin-bottom: 6px; font-weight: 600;">
+                REWARDS: +${mission.xp_reward} XP · ${mission.gold_reward} GOLD
+              </div>
+              <div style="font-size: 6px; color: var(--ink-muted); margin-bottom: 8px;">
+                PROGRESS: ${mission.current_confirmations} / ${mission.target_confirmations} CONFIRMATIONS
+              </div>
+              <div style="font-size: 5.5px; color: var(--ink-muted); margin-bottom: 8px; opacity: 0.8;">
+                WARD: ${mission.ward?.toUpperCase() || 'UNKNOWN'} · ${(categoryLabels[mission.category] || capitalize(mission.category)).toUpperCase()}
+              </div>
+              <a href="/missions" style="color: var(--accent); font-size: 6px; text-decoration: underline; font-weight: 600;">
+                GO TO MISSION BOARD →
+              </a>
             </div>
           `;
           infoWindow.setContent(content);
@@ -613,20 +711,42 @@ function ConfigurableMap({
                 );
               })}
 
-          {Array.isArray(missions) &&
-            missions
+          {Array.isArray(activeMissions) &&
+            activeMissions
               .filter(m => m.status === 'active' && m.coordinates)
               .map((mission, index) => {
                 const pos = [Number(mission.coordinates.lat), Number(mission.coordinates.lng)];
+                
+                // Determine rarity based on mission rewards and type
+                const getRarity = (mission) => {
+                  const totalReward = (mission.xp_reward || 0) + (mission.gold_reward || 0) * 2;
+                  if (mission.type === 'hotspot_prediction' && totalReward >= 200) return 'legendary';
+                  if (mission.type === 'hotspot_prediction' && totalReward >= 150) return 'epic';
+                  if (totalReward >= 120) return 'rare';
+                  if (totalReward >= 80) return 'uncommon';
+                  return 'common';
+                };
+                
+                const rarity = getRarity(mission);
+                const rarityColors = {
+                  common: '#10b981',
+                  uncommon: '#3b82f6',
+                  rare: '#8b5cf6',
+                  epic: '#f59e0b',
+                  legendary: '#ef4444'
+                };
+                const rarityColor = rarityColors[rarity];
+                const rarityLabel = rarity.toUpperCase();
+                
                 return (
                   <div key={`mission-${index}`}>
                     <Circle
                       center={pos}
                       radius={200}
                       pathOptions={{
-                        color: '#ffd700',
-                        fillColor: '#ffd700',
-                        fillOpacity: 0.25,
+                        color: rarityColor,
+                        fillColor: rarityColor,
+                        fillOpacity: 0.2,
                         weight: 2,
                         dashArray: '5, 5'
                       }}
@@ -636,25 +756,57 @@ function ConfigurableMap({
                       icon={L.divIcon({
                         className: 'custom-leaflet-marker-wrapper',
                         html: `
-                          <div class="rpg-quest-pin-container active" style="filter: drop-shadow(0 0 8px #ffd700);">
-                            <div class="rpg-quest-pin-shadow"></div>
-                            <div class="rpg-quest-pin" style="image-rendering: pixelated; font-size: 1.5rem;">🧭</div>
+                          <div class="rpg-quest-pin-enhanced rarity-${rarity} active" style="filter: drop-shadow(0 0 12px ${rarityColor});">
+                            <div class="rpg-quest-ring"></div>
+                            <div class="rpg-quest-particles">
+                              <div class="rpg-quest-particle"></div>
+                              <div class="rpg-quest-particle"></div>
+                              <div class="rpg-quest-particle"></div>
+                              <div class="rpg-quest-particle"></div>
+                              <div class="rpg-quest-particle"></div>
+                              <div class="rpg-quest-particle"></div>
+                            </div>
+                            <div class="rpg-quest-sparkles">
+                              <div class="rpg-quest-sparkle" style="color: ${rarityColor};"></div>
+                              <div class="rpg-quest-sparkle" style="color: ${rarityColor};"></div>
+                              <div class="rpg-quest-sparkle" style="color: ${rarityColor};"></div>
+                              <div class="rpg-quest-sparkle" style="color: ${rarityColor};"></div>
+                              <div class="rpg-quest-sparkle" style="color: ${rarityColor};"></div>
+                              <div class="rpg-quest-sparkle" style="color: ${rarityColor};"></div>
+                            </div>
+                            <div class="rpg-quest-trail" style="background: linear-gradient(to bottom, ${rarityColor}, transparent);"></div>
+                            <div class="rpg-quest-pin-core" style="image-rendering: pixelated;">
+                              <svg width="32" height="40" viewBox="0 0 32 40" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M6 2h20v4h4v12h-4v8h-4v4h-4v8h-4v-8h-4v-4h-4v-8H2V6h4V2z" fill="#000000" />
+                                <path d="M8 4h16v4h4v8h-4v8h-4v4h-4v8h-4v-8H8v-4H4V8h4V4z" fill="${rarityColor}" />
+                                <path d="M12 28v4h8v-4h-4v-4h-4zm-4-8h4v4h-4zm12 0h4v4h-4z" fill="#000000" opacity="0.25" />
+                                <rect x="14" y="8" width="4" height="8" fill="#ffffff" />
+                                <rect x="14" y="18" width="4" height="4" fill="#ffffff" />
+                              </svg>
+                            </div>
+                            <div class="rpg-quest-label">${rarityLabel} QUEST</div>
                           </div>
                         `,
-                        iconSize: [32, 40],
-                        iconAnchor: [16, 40],
-                        popupAnchor: [0, -40]
+                        iconSize: [40, 48],
+                        iconAnchor: [20, 48],
+                        popupAnchor: [0, -48]
                       })}
                     >
                       <Popup>
-                        <div className="font-sans" style={{ minWidth: 180, padding: '4px', lineHeight: 1.4 }}>
-                          <strong style={{ fontSize: '13px', color: 'var(--accent)', display: 'block', marginBottom: '4px', fontWeight: 600 }}>🧭 {mission.title}</strong>
-                          <p className="text-secondary" style={{ fontSize: '11px', marginBottom: '6px', lineHeight: 1.3 }}>{mission.description}</p>
+                        <div className="font-sans" style={{ minWidth: 200, padding: '8px', lineHeight: 1.5 }}>
+                          <strong style={{ fontSize: '13px', color: rarityColor, display: 'block', marginBottom: '4px', fontWeight: 600 }}>🧭 {mission.title}</strong>
+                          <span style={{ fontSize: '9px', color: rarityColor, display: 'inline-block', background: 'rgba(0,0,0,0.1)', padding: '2px 6px', borderRadius: '3px', marginBottom: '6px', fontWeight: 700, textTransform: 'uppercase' }}>
+                            {rarityLabel} QUEST
+                          </span>
+                          <p className="text-secondary" style={{ fontSize: '11px', marginBottom: '8px', lineHeight: 1.4 }}>{mission.description}</p>
                           <div className="text-success" style={{ fontSize: '11px', marginBottom: '6px', fontWeight: 600 }}>
                             REWARDS: +{mission.xp_reward} XP · {mission.gold_reward} GOLD
                           </div>
                           <div className="text-muted" style={{ fontSize: '11px', marginBottom: '8px' }}>
-                            PROGRESS: {mission.current_confirmations} / {mission.target_confirmations}
+                            PROGRESS: {mission.current_confirmations} / {mission.target_confirmations} CONFIRMATIONS
+                          </div>
+                          <div className="text-muted" style={{ fontSize: '10px', marginBottom: '8px', opacity: 0.8 }}>
+                            WARD: {mission.ward?.toUpperCase() || 'UNKNOWN'} · {(categoryLabels[mission.category] || capitalize(mission.category)).toUpperCase()}
                           </div>
                           <Link to="/missions" style={{ display: 'inline-block', color: 'var(--accent)', fontSize: '11px', textDecoration: 'underline', fontWeight: 600 }}>
                             GO TO MISSION BOARD →

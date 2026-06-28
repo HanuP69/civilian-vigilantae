@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, Link, useSearchParams } from 'react-router-dom';
 import { AnimatePresence } from 'framer-motion';
 import { submitReport, fetchWithTimeout } from '../services/api';
 import { capitalize } from '../utils/formatters';
@@ -7,7 +7,7 @@ import { useToast } from '../hooks/useToast.jsx';
 import { useAgentStream } from '../hooks/useAgentStream.js';
 import AgentReveal from '../components/agent/AgentReveal.jsx';
 
-const STEPS = ['Media', 'Location', 'Details', 'Review'];
+const STEPS = ['Location', 'Media', 'Details', 'Review'];
 
 const MEDIA_TYPES = {
   image: 'Image',
@@ -33,6 +33,37 @@ function ReportPage() {
   const [lng, setLng] = useState(null);
   const [detecting, setDetecting] = useState(false);
   const [geoError, setGeoError] = useState('');
+  const [searchParams] = useSearchParams();
+
+  useEffect(() => {
+    const queryLat = parseFloat(searchParams.get('lat'));
+    const queryLng = parseFloat(searchParams.get('lng'));
+    const queryCategory = searchParams.get('category');
+    const queryWard = searchParams.get('ward');
+
+    if (!Number.isNaN(queryLat) && !Number.isNaN(queryLng)) {
+      setLat(queryLat);
+      setLng(queryLng);
+      if (queryCategory) setClassification(queryCategory);
+      setStep(1); // Advance to Media step directly since location is already locked!
+      
+      // Auto-fetch geocoding address proxy
+      (async () => {
+        try {
+          const res = await fetch(`/api/reports/geocode/proxy?lat=${queryLat}&lng=${queryLng}`);
+          if (res.ok) {
+            const data = await res.json();
+            const readable = data.results?.[0]?.formatted_address || '';
+            setAddress(readable || `Lucknow Ward ${queryWard || ''} Area`);
+          } else {
+            setAddress(`Lucknow Ward ${queryWard || ''} Area`);
+          }
+        } catch {
+          setAddress(`Lucknow Ward ${queryWard || ''} Area`);
+        }
+      })();
+    }
+  }, [searchParams]);
 
   const [recording, setRecording] = useState(false);
   const [audioUrl, setAudioUrl] = useState(null);
@@ -88,9 +119,8 @@ function ReportPage() {
         setLat(latitude);
         setLng(longitude);
         try {
-          const mapsKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
           const res = await fetchWithTimeout(
-            `https://maps.googleapis.com/maps/api/geocode/json?latlng=${latitude},${longitude}&key=${mapsKey}`,
+            `/api/reports/geocode/proxy?lat=${latitude}&lng=${longitude}`,
             { headers: { 'Accept-Language': 'en' } }
           );
           if (res.ok) {
@@ -244,14 +274,14 @@ function ReportPage() {
   };
 
   const canNext = (stepIndex = step) => {
-    if (stepIndex === 0) return true;
-    if (stepIndex === 1) return address.trim().length > 0;
+    if (stepIndex === 0) return address.trim().length > 0;
+    if (stepIndex === 1) return true;
     if (stepIndex === 2) return description.trim().length > 0;
     return true;
   };
 
   const stepError = () => {
-    if (step === 1 && address.trim().length === 0) return 'A location is required';
+    if (step === 0 && address.trim().length === 0) return 'A location is required';
     if (step === 2 && description.trim().length === 0) return 'A description is required';
     return '';
   };
@@ -306,6 +336,43 @@ function ReportPage() {
 
       <div className="card rpg-panel animate-fade-up stagger-3" style={{ minHeight: 320, position: 'relative', padding: 'var(--space-6) var(--space-7)', borderRadius: 0, background: 'var(--bg-surface)' }}>
         {step === 0 && (
+          <div className="flex flex-col gap-6 animate-fade-up">
+            <h3 className="section-title" style={{ fontSize: '1.75rem' }}>Location Details</h3>
+            <div className="flex flex-col gap-4">
+              <label className="flex flex-col gap-1">
+                <span className="label">Street Address</span>
+                <div className="flex gap-3">
+                  <input
+                    type="text"
+                    placeholder="e.g. Near Hazratganj crossing, Lucknow"
+                    value={address}
+                    onChange={e => setAddress(e.target.value)}
+                    style={{ flex: 1, fontSize: '1.25rem', padding: 'var(--space-4)', background: 'var(--bg-secondary)', borderRadius: 0 }}
+                  />
+                  <button className="btn btn-secondary" onClick={getLocation} disabled={detecting} style={{ padding: '0 var(--space-6)', borderRadius: 0 }}>
+                    {detecting ? 'Locating...' : '📍 Auto-detect'}
+                  </button>
+                </div>
+              </label>
+              {geoError && (
+                <p className="text-sm" style={{ color: 'var(--error)' }}>{geoError}</p>
+              )}
+              {lat != null && !geoError && (
+                <div className="report-location-confirmed" style={{ borderRadius: 0 }}>
+                  <span>✓</span>
+                  <span>Location locked · coordinates captured for geo-clustering</span>
+                </div>
+              )}
+              <p className="text-xs text-secondary">
+                {lat != null
+                  ? <span className="report-coord-display">📐 {lat.toFixed(4)}, {lng.toFixed(4)}</span>
+                  : 'We use your location to cluster duplicate reports and route to the right ward.'}
+              </p>
+            </div>
+          </div>
+        )}
+
+        {step === 1 && (
           <div className="flex flex-col gap-6 animate-fade-up">
             <div className="flex items-center justify-between">
               <h3 className="section-title" style={{ fontSize: '1.75rem', marginBottom: 0 }}>Upload Media</h3>
@@ -398,43 +465,6 @@ function ReportPage() {
                 )}
               </>
             )}
-          </div>
-        )}
-
-        {step === 1 && (
-          <div className="flex flex-col gap-6 animate-fade-up">
-            <h3 className="section-title" style={{ fontSize: '1.75rem' }}>Location Details</h3>
-            <div className="flex flex-col gap-4">
-              <label className="flex flex-col gap-1">
-                <span className="label">Street Address</span>
-                <div className="flex gap-3">
-                  <input
-                    type="text"
-                    placeholder="e.g. Near Hazratganj crossing, Lucknow"
-                    value={address}
-                    onChange={e => setAddress(e.target.value)}
-                    style={{ flex: 1, fontSize: '1.25rem', padding: 'var(--space-4)', background: 'var(--bg-secondary)', borderRadius: 0 }}
-                  />
-                  <button className="btn btn-secondary" onClick={getLocation} disabled={detecting} style={{ padding: '0 var(--space-6)', borderRadius: 0 }}>
-                    {detecting ? 'Locating...' : '📍 Auto-detect'}
-                  </button>
-                </div>
-              </label>
-              {geoError && (
-                <p className="text-sm" style={{ color: 'var(--error)' }}>{geoError}</p>
-              )}
-              {lat != null && !geoError && (
-                <div className="report-location-confirmed" style={{ borderRadius: 0 }}>
-                  <span>✓</span>
-                  <span>Location locked · coordinates captured for geo-clustering</span>
-                </div>
-              )}
-              <p className="text-xs text-secondary">
-                {lat != null
-                  ? <span className="report-coord-display">📐 {lat.toFixed(4)}, {lng.toFixed(4)}</span>
-                  : 'We use your location to cluster duplicate reports and route to the right ward.'}
-              </p>
-            </div>
           </div>
         )}
 

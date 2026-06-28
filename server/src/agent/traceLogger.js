@@ -56,7 +56,25 @@ export function createTraceLogger(reportId, onStep) {
         onStep({ ...step, reportId, index: steps.length - 1 });
       }
 
-      return (output, reasoning = '', status = 'success') => {
+      // Persist pending step
+      (async () => {
+        try {
+          const { db } = await import('../config/firebase.js');
+          const ticketRef = db.collection('tickets').doc(reportId);
+          const ticketDoc = await ticketRef.get();
+          if (ticketDoc.exists) {
+            await ticketRef.update({ agent_trace: [...steps] });
+          } else {
+            const reportRef = db.collection('reports').doc(reportId);
+            const reportDoc = await reportRef.get();
+            if (reportDoc.exists) {
+              await reportRef.update({ agent_trace: [...steps] });
+            }
+          }
+        } catch {}
+      })();
+
+      return async (output, reasoning = '', status = 'success') => {
         step.output = output;
         step.reasoning = reasoning;
         step.status = status;
@@ -65,6 +83,24 @@ export function createTraceLogger(reportId, onStep) {
         // Notify listener that step completed
         if (onStep) {
           onStep({ ...step, reportId, index: steps.length - 1 });
+        }
+
+        // Persist completed step
+        try {
+          const { db } = await import('../config/firebase.js');
+          const ticketRef = db.collection('tickets').doc(reportId);
+          const ticketDoc = await ticketRef.get();
+          if (ticketDoc.exists) {
+            await ticketRef.update({ agent_trace: [...steps] });
+          } else {
+            const reportRef = db.collection('reports').doc(reportId);
+            const reportDoc = await reportRef.get();
+            if (reportDoc.exists) {
+              await reportRef.update({ agent_trace: [...steps] });
+            }
+          }
+        } catch (err) {
+          console.warn('[TraceLogger] Failed to persist step completion:', err.message);
         }
       };
     },
@@ -78,7 +114,7 @@ export function createTraceLogger(reportId, onStep) {
      * @param {string} [reasoning]
      * @param {number} [durationMs]
      */
-    logStep(stepName, input, output, reasoning = '', durationMs = 0) {
+    async logStep(stepName, input, output, reasoning = '', durationMs = 0) {
       const step = {
         step: stepName,
         timestamp: new Date().toISOString(),
@@ -93,6 +129,24 @@ export function createTraceLogger(reportId, onStep) {
 
       if (onStep) {
         onStep({ ...step, reportId, index: steps.length - 1 });
+      }
+
+      // Persist logged step
+      try {
+        const { db } = await import('../config/firebase.js');
+        const ticketRef = db.collection('tickets').doc(reportId);
+        const ticketDoc = await ticketRef.get();
+        if (ticketDoc.exists) {
+          await ticketRef.update({ agent_trace: [...steps] });
+        } else {
+          const reportRef = db.collection('reports').doc(reportId);
+          const reportDoc = await reportRef.get();
+          if (reportDoc.exists) {
+            await reportRef.update({ agent_trace: [...steps] });
+          }
+        }
+      } catch (err) {
+        console.warn('[TraceLogger] Failed to persist logStep:', err.message);
       }
     },
 

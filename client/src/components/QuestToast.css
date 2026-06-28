@@ -1,0 +1,356 @@
+/* QuestToast.css - RPG-style pixel-art notification toast system */
+
+.quest-toast-container {
+  position: fixed;
+  top: var(--space-6);
+  right: var(--space-6);
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  pointer-events: none;
+  max-width: 400px;
+  width: 100%;
+}
+
+@media (max-width: 640px) {
+  .quest-toast-container {
+    top: var(--space-4);
+    right: var(--space-4);
+    left: var(--space-4);
+    max-width: none;
+  }
+}
+
+/* Base Toast Styles */
+.quest-toast {
+  position: relative;
+  pointer-events: auto;
+  font-family: var(--font-pixel), cursive;
+  image-rendering: pixelated;
+  transform: translateX(120%) rotate(2deg);
+  opacity: 0;
+  transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.3s ease;
+}
+
+.quest-toast.visible {
+  transform: translateX(0) rotate(0deg);
+  opacity: 1;
+}
+
+.quest-toast.exiting {
+  transform: translateX(120%) rotate(-2deg);
+  opacity: 0;
+}
+
+/* Toast Background */
+.quest-toast-bg {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, rgba(0, 0, 0, 0.95), rgba(20, 20, 30, 0.95));
+  border: 2px solid var(--ink-muted);
+  border-radius: 4px;
+  overflow: hidden;
+  image-rendering: pixelated;
+}
+
+.quest-toast-border {
+  position: absolute;
+  inset: -2px;
+  background: linear-gradient(90deg, var(--rarity-color), var(--warning), var(--rarity-color));
+  background-size: 200% 100%;
+  animation: toast-border-flow 3s linear infinite;
+  border-radius: 6px;
+  opacity: 0.6;
+}
+
+@keyframes toast-border-flow {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+.quest-toast-glow {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse at center, var(--rarity-glow) 0%, transparent 70%);
+  pointer-events: none;
+}
+
+/* Toast Content */
+.quest-toast-content {
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  min-height: 72px;
+}
+
+.quest-toast-icon {
+  font-size: 24px;
+  flex-shrink: 0;
+  margin-top: 2px;
+  filter: drop-shadow(0 0 8px var(--rarity-color));
+  animation: toast-icon-bounce 1s ease-out;
+}
+
+@keyframes toast-icon-bounce {
+  0% { transform: scale(0) rotate(-180deg); }
+  50% { transform: scale(1.3) rotate(10deg); }
+  100% { transform: scale(1) rotate(0deg); }
+}
+
+.quest-toast-text {
+  flex: 1;
+  min-width: 0;
+}
+
+.quest-toast-title {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  line-height: 1.3;
+  margin-bottom: var(--space-1);
+  text-shadow: 1px 1px 0 #000;
+}
+
+.quest-toast-message {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ink);
+  line-height: 1.4;
+  margin-bottom: var(--space-1);
+  text-shadow: 1px 1px 0 rgba(255,255,255,0.1);
+}
+
+.quest-toast-subtitle {
+  font-size: 10px;
+  color: var(--ink-muted);
+  line-height: 1.3;
+  opacity: 0.8;
+}
+
+.quest-toast-close {
+  position: absolute;
+  top: var(--space-2);
+  right: var(--space-2);
+  width: 20px;
+  height: 20px;
+  background: rgba(0, 0, 0, 0.5);
+  border: 1px solid var(--ink-muted);
+  border-radius: 2px;
+  color: var(--ink-muted);
+  font-size: 14px;
+  line-height: 1;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  font-family: var(--font-pixel), cursive;
+  image-rendering: pixelated;
+}
+
+.quest-toast-close:hover {
+  background: var(--error);
+  border-color: var(--error);
+  color: #fff;
+  transform: scale(1.1);
+}
+
+/* Toast Actions */
+.quest-toast-actions {
+  display: flex;
+  gap: var(--space-2);
+  padding: 0 var(--space-3) var(--space-3);
+  border-top: 1px dashed var(--ink-muted);
+  margin-top: var(--space-2);
+}
+
+.quest-toast-action {
+  flex: 1;
+  padding: var(--space-1) var(--space-2);
+  background: transparent;
+  border: 1px solid;
+  border-radius: 2px;
+  font-family: var(--font-pixel), cursive;
+  font-size: 9px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  image-rendering: pixelated;
+}
+
+.quest-toast-action:hover {
+  background: currentColor;
+  color: #000;
+}
+
+/* Progress Bar */
+.quest-toast-progress {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: rgba(0, 0, 0, 0.5);
+}
+
+.quest-toast-progress-bar {
+  height: 100%;
+  width: 100%;
+  transform-origin: left center;
+  animation: toast-progress linear forwards;
+  image-rendering: pixelated;
+}
+
+@keyframes toast-progress {
+  from { transform: scaleX(1); }
+  to { transform: scaleX(0); }
+}
+
+/* Type-specific variants */
+.quest-toast-quest {
+  /* Quest notifications have a scroll-like appearance */
+}
+
+.quest-toast-quest .quest-toast-bg::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 8px;
+  background: repeating-linear-gradient(
+    45deg,
+    transparent,
+    transparent 4px,
+    rgba(255,255,255,0.03) 4px,
+    rgba(255,255,255,0.03) 8px
+  );
+}
+
+.quest-toast-xp {
+  /* XP toasts are smaller and more subtle */
+}
+
+.quest-toast-xp .quest-toast-icon {
+  animation: xp-icon-spin 0.8s ease-out;
+}
+
+@keyframes xp-icon-spin {
+  0% { transform: scale(0) rotate(0deg); }
+  50% { transform: scale(1.2) rotate(180deg); }
+  100% { transform: scale(1) rotate(360deg); }
+}
+
+.quest-toast-levelup {
+  /* Level up toasts are larger and more prominent */
+}
+
+.quest-toast-levelup .quest-toast-content {
+  min-height: 100px;
+  padding: var(--space-4) var(--space-5);
+}
+
+.quest-toast-levelup .quest-toast-title {
+  font-size: 14px;
+  animation: levelup-title-pulse 1s ease-in-out infinite;
+}
+
+@keyframes levelup-title-pulse {
+  0%, 100% { text-shadow: 1px 1px 0 #000, 0 0 8px var(--rarity-color); }
+  50% { text-shadow: 1px 1px 0 #000, 0 0 20px var(--warning); }
+}
+
+.quest-toast-levelup .quest-toast-message {
+  font-size: 18px;
+}
+
+.quest-toast-item {
+  /* Item toasts */
+}
+
+.quest-toast-achievement {
+  /* Achievement toasts */
+}
+
+.quest-toast-achievement .quest-toast-icon {
+  font-size: 28px;
+}
+
+.quest-toast-system {
+  /* System notifications */
+}
+
+/* Rarity variants */
+.quest-toast-common .quest-toast-title { color: #10b981; }
+.quest-toast-uncommon .quest-toast-title { color: #3b82f6; }
+.quest-toast-rare .quest-toast-title { color: #8b5cf6; }
+.quest-toast-epic .quest-toast-title { color: #f59e0b; }
+.quest-toast-legendary .quest-toast-title { color: #ef4444; }
+
+/* Legendary toast special effects */
+.quest-toast-legendary .quest-toast-bg::after {
+  content: '';
+  position: absolute;
+  inset: -4px;
+  background: linear-gradient(45deg, #ef4444, #f59e0b, #ef4444, #8b5cf6);
+  background-size: 400% 400%;
+  animation: legendary-shift 2s ease infinite;
+  border-radius: 8px;
+  z-index: -1;
+  opacity: 0.5;
+}
+
+@keyframes legendary-shift {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+/* Stack animation for multiple toasts */
+.quest-toast-container .quest-toast:nth-child(n+4) {
+  opacity: 0.5;
+  transform: translateX(120%) rotate(2deg) scale(0.95);
+}
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .quest-toast {
+    transition: none;
+    transform: none;
+    opacity: 1;
+  }
+  
+  .quest-toast.exiting {
+    display: none;
+  }
+  
+  .quest-toast-icon,
+  .quest-toast-title,
+  .quest-toast-progress-bar,
+  .quest-toast-border {
+    animation: none !important;
+  }
+  
+  .quest-toast-progress-bar {
+    transform: scaleX(0);
+  }
+}
+
+/* High contrast mode */
+@media (prefers-contrast: high) {
+  .quest-toast-bg {
+    background: #000;
+    border-width: 3px;
+  }
+  
+  .quest-toast-border {
+    opacity: 1;
+  }
+  
+  .quest-toast-close {
+    border-width: 2px;
+  }
+}

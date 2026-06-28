@@ -139,6 +139,32 @@ export async function ensureUser(uid) {
         };
       });
       needsUpdate = true;
+    } else if (data.quests && Array.isArray(data.quests)) {
+      let questUpdates = false;
+      const mergedQuests = data.quests.map(uq => {
+        const template = INITIAL_QUESTS.find(t => t.id === uq.id);
+        if (template) {
+          const hasAllFields = uq.xpReward !== undefined && uq.goldReward !== undefined && uq.target !== undefined && uq.description !== undefined && uq.name !== undefined;
+          if (!hasAllFields) {
+            questUpdates = true;
+            return {
+              ...template,
+              ...uq,
+              xpReward: template.xpReward,
+              goldReward: template.goldReward,
+              target: template.target,
+              description: template.description,
+              name: template.name
+            };
+          }
+        }
+        return uq;
+      });
+      if (questUpdates) {
+        updates.quests = mergedQuests;
+        needsUpdate = true;
+        data.quests = mergedQuests;
+      }
     }
     if (data.unlocked_avatars === undefined) { updates.unlocked_avatars = []; needsUpdate = true; }
     if (data.unlocked_badges === undefined) { updates.unlocked_badges = []; needsUpdate = true; }
@@ -248,7 +274,7 @@ export async function awardXP(uid, action, ticketIdOrWard = null) {
     if (q.completed) return q;
     let current = q.current || 0;
     if (q.type === 'reports' && action === 'report') current++;
-    if (q.type === 'votes' && action === 'vote') current++;
+    if (q.type === 'votes' && (action === 'vote' || action === 'vote_accurate')) current++;
     if (q.type === 'wards' && action === 'report' && ward) {
       const uniqueWards = user.unique_wards || [];
       if (!uniqueWards.includes(ward)) {

@@ -3,6 +3,7 @@ import { BrowserRouter, Routes, Route, NavLink, Link, useNavigate, Navigate, use
 import { motion, AnimatePresence } from 'framer-motion';
 import { useSSE } from './hooks/useSSE';
 import { ToastProvider } from './hooks/useToast.jsx';
+import { QuestToastProvider } from './components/QuestToast.jsx';
 import { AuthProvider, useAuth } from './hooks/AuthContext';
 import HomePage from './pages/HomePage';
 import ReportPage from './pages/ReportPage';
@@ -14,6 +15,8 @@ import RegisterPage from './pages/RegisterPage';
 import ProfilePage from './pages/ProfilePage';
 import MissionsPage from './pages/MissionsPage';
 import CopilotDrawer from './components/copilot/CopilotDrawer';
+import QuestTrackerSidebar from './components/QuestTrackerSidebar';
+import XPAnimation from './components/XPAnimation';
 import './index.css';
 
 function NotFoundPage() {
@@ -203,7 +206,7 @@ function RpgTriggerIcon({ isOpen }) {
   );
 }
 
-function Navbar({ isConnected }) {
+function Navbar({ isConnected, onOpenQuestSidebar }) {
   const { isAuthenticated, user, logout } = useAuth();
   const [isOpen, setIsOpen] = useState(false);
   const [hoveredSlot, setHoveredSlot] = useState(null);
@@ -277,9 +280,39 @@ function Navbar({ isConnected }) {
           pointerEvents: 'none',
           display: 'flex',
           justifyContent: 'flex-end',
-          alignItems: 'center'
+          alignItems: 'center',
+          gap: '12px'
         }}
       >
+
+        {/* Quest Tracker Button */}
+        {isAuthenticated && onOpenQuestSidebar && (
+          <motion.button
+            onClick={onOpenQuestSidebar}
+            whileHover={{ scale: 1.1 }}
+            whileTap={{ scale: 0.9 }}
+            className="rpg-panel flex items-center justify-center font-pixel"
+            style={{
+              padding: '12px 16px',
+              borderRadius: 0,
+              cursor: 'pointer',
+              boxShadow: '4px 4px 0 rgba(0,0,0,0.6)',
+              fontSize: '0.625rem',
+              outline: 'none',
+              border: '2px solid var(--border)',
+              color: 'var(--accent)',
+              background: 'var(--bg-surface)',
+              pointerEvents: 'auto',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px',
+              transition: 'all 0.2s ease'
+            }}
+            aria-label="Open Quest Tracker"
+          >
+            📜 QUESTS
+          </motion.button>
+        )}
 
         {/* Floating Backpack Trigger Button (Top-Right) or Sign In button */}
         {isAuthenticated ? (
@@ -549,6 +582,7 @@ function Navbar({ isConnected }) {
 
 function AppContent() {
   const { isConnected } = useSSE();
+  const [isQuestSidebarOpen, setIsQuestSidebarOpen] = useState(false);
 
   const hour = new Date().getHours();
   let timeClass = 'time-night';
@@ -585,6 +619,25 @@ function AppContent() {
           <div className="pixel-cloud cloud-1"></div>
           <div className="pixel-cloud cloud-2"></div>
           <div className="pixel-cloud cloud-3"></div>
+
+          {/* Quest Ambient Particles - Floating XP Orbs */}
+          <div className="quest-ambient-particles">
+            <div className="xp-orb orb-1"></div>
+            <div className="xp-orb orb-2"></div>
+            <div className="xp-orb orb-3"></div>
+            <div className="xp-orb orb-4"></div>
+            <div className="xp-orb orb-5"></div>
+          </div>
+
+          {/* Quest Sparkles */}
+          <div className="quest-sparkles">
+            <div className="sparkle sparkle-1"></div>
+            <div className="sparkle sparkle-2"></div>
+            <div className="sparkle sparkle-3"></div>
+            <div className="sparkle sparkle-4"></div>
+            <div className="sparkle sparkle-5"></div>
+            <div className="sparkle sparkle-6"></div>
+          </div>
         </div>
         
         {/* Horizon Landscape */}
@@ -605,10 +658,12 @@ function AppContent() {
         </div>
       </div>
 
-      <Navbar isConnected={isConnected} />
+      <a href="#main-content" className="skip-link">Skip to main content</a>
+      <Navbar isConnected={isConnected} onOpenQuestSidebar={() => setIsQuestSidebarOpen(true)} />
       <CopilotDrawer />
+      <QuestTrackerSidebar isOpen={isQuestSidebarOpen} onClose={() => setIsQuestSidebarOpen(false)} />
 
-      <main className="app-main animate-fade-up stagger-1" style={{ paddingTop: '80px', position: 'relative', zIndex: 1 }}>
+      <main id="main-content" className="app-main animate-fade-up stagger-1" style={{ paddingTop: '80px', position: 'relative', zIndex: 1 }}>
         <Routes>
           <Route path="/" element={<ProtectedRoute><HomePage /></ProtectedRoute>} />
           <Route path="/report" element={<ProtectedRoute><ReportPage /></ProtectedRoute>} />
@@ -622,6 +677,9 @@ function AppContent() {
           <Route path="*" element={<ProtectedRoute><NotFoundPage /></ProtectedRoute>} />
         </Routes>
       </main>
+
+      {/* Global XP/Level Up Animation System */}
+      <XPAnimation />
     </div>
   );
 }
@@ -629,11 +687,13 @@ function AppContent() {
 function App() {
   return (
     <ToastProvider>
-      <AuthProvider>
-        <BrowserRouter>
-          <AppContent />
-        </BrowserRouter>
-      </AuthProvider>
+      <QuestToastProvider>
+        <AuthProvider>
+          <BrowserRouter>
+            <AppContent />
+          </BrowserRouter>
+        </AuthProvider>
+      </QuestToastProvider>
     </ToastProvider>
   );
 }

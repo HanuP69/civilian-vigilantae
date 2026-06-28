@@ -102,11 +102,14 @@ function LeaderboardPage() {
     show: { opacity: 1, y: 0, transition: { type: "spring", stiffness: 300, damping: 24 } }
   };
 
-  const getRankTitle = (rank) => {
-    if (rank <= 3) return "City Champion 🏆";
-    if (rank <= 10) return "Community Hero ⚡";
-    if (rank <= 20) return "Guardian 🛡️";
-    if (rank <= 50) return "Investigator 🔍";
+  const getRankTitle = (index, total) => {
+    if (total <= 0) return "Scout 🧭";
+    const percentile = ((total - index) / total) * 100;
+    
+    if (index === 0) return "City Champion 🏆";
+    if (percentile >= 95) return "Sentinel 🛡️";
+    if (percentile >= 80) return "Guardian ⚔️";
+    if (percentile >= 50) return "Investigator 🔍";
     return "Scout 🧭";
   };
 
@@ -200,7 +203,7 @@ function LeaderboardPage() {
                       display: 'inline-block'
                     }}
                   >
-                    {getRankTitle(rank)}
+                    {getRankTitle(i, users.length)}
                   </span>
                 </div>
                 

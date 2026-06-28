@@ -18,31 +18,48 @@ const BETA = 0.35;
 /** Category weight */
 const GAMMA = 0.25;
 
-/** Maximum spatial normalizing distance (meters). */
+// Maximum spatial normalizing distance (meters).
 const MAX_DISTANCE_M = 500;
-/** Maximum temporal window (milliseconds) — 72 hours. */
-const MAX_TIME_MS = 72 * 60 * 60 * 1000;
 
-// ─── Category similarity ────────────────────────────────────────────
+// ─── Adaptive Category Temporal Windows ─────────────────────────────
 /**
- * Bi-directional map of related categories.
- * Related categories receive a similarity of 0.5 (between identical = 1.0
- * and unrelated = 0.0).
+ * Returns the maximum temporal window (milliseconds) based on category frequency.
+ * Potholes and waste cluster faster, streetlight issues cluster slower.
  *
- * @type {Map<string, Set<string>>}
+ * @param {string} category
+ * @returns {number} window in milliseconds
  */
-const RELATED_CATEGORIES = new Map([
-  ['pothole', new Set(['road_damage'])],
-  ['road_damage', new Set(['pothole'])],
-  ['water_leak', new Set(['drainage'])],
-  ['drainage', new Set(['water_leak'])],
-]);
+export function getMaxTimeWindowForCategory(category) {
+  const cat = (category || '').toLowerCase();
+  if (['pothole', 'waste'].includes(cat)) {
+    return 24 * 60 * 60 * 1000; // 24 hours (potholes cluster faster)
+  }
+  if (['water_leak', 'road_damage', 'drainage'].includes(cat)) {
+    return 48 * 60 * 60 * 1000; // 48 hours
+  }
+  return 72 * 60 * 60 * 1000; // 72 hours (streetlight/other cluster slower)
+}
+
+// ─── Semantic Category Similarity Matrix ────────────────────────────
+/**
+ * Continuous semantic similarity lookup table between categories.
+ * Remaps unrelated categories (0.0), partially related (0.4 - 0.7), and highly related (0.8).
+ */
+const SIMILARITY_MATRIX = {
+  pothole: { road_damage: 0.8, other: 0.1 },
+  road_damage: { pothole: 0.8, other: 0.1 },
+  water_leak: { drainage: 0.6, other: 0.1 },
+  drainage: { water_leak: 0.6, waste: 0.4, other: 0.1 },
+  waste: { drainage: 0.4, other: 0.1 },
+  electricity: { streetlight: 0.7, other: 0.1 },
+  streetlight: { electricity: 0.7, other: 0.1 }
+};
 
 /**
  * Return category similarity between two category strings.
  *
  * - 1.0  — identical categories
- * - 0.5  — related categories (see {@link RELATED_CATEGORIES})
+ * - 0.4-0.8 — related categories (semantic mapping)
  * - 0.0  — unrelated
  *
  * @param {string} cat1
@@ -51,8 +68,11 @@ const RELATED_CATEGORIES = new Map([
  */
 function categorySimilarity(cat1, cat2) {
   if (cat1 === cat2) return 1.0;
-  const related = RELATED_CATEGORIES.get(cat1);
-  if (related && related.has(cat2)) return 0.5;
+  const c1 = (cat1 || '').toLowerCase();
+  const c2 = (cat2 || '').toLowerCase();
+  if (SIMILARITY_MATRIX[c1]?.[c2] !== undefined) {
+    return SIMILARITY_MATRIX[c1][c2];
+  }
   return 0.0;
 }
 
@@ -82,10 +102,14 @@ export function compositeDistance(p1, p2) {
   // Spatial component — haversine normalized over 500 m
   const dSpatial = haversineNormalized(p1.lat, p1.lng, p2.lat, p2.lng, MAX_DISTANCE_M);
 
-  // Temporal component — absolute time difference normalized over 72 h
+  // Temporal component — absolute time difference normalized over adaptive window
   const t1 = p1.timestamp instanceof Date ? p1.timestamp.getTime() : new Date(p1.timestamp).getTime();
   const t2 = p2.timestamp instanceof Date ? p2.timestamp.getTime() : new Date(p2.timestamp).getTime();
-  const dTemporal = Math.min(Math.abs(t1 - t2) / MAX_TIME_MS, 1);
+  const maxTimeMs = Math.min(
+    getMaxTimeWindowForCategory(p1.category),
+    getMaxTimeWindowForCategory(p2.category)
+  );
+  const dTemporal = Math.min(Math.abs(t1 - t2) / maxTimeMs, 1);
 
   // Category component — 1 - similarity
   const dCategory = 1 - categorySimilarity(p1.category, p2.category);
@@ -206,4 +230,22 @@ export function dbscan(points, epsilon = 0.35, minPts = 2) {
     clusters: [...clusterMap.values()],
     noise,
   };
+}
+
+/**
+ * Calculates Jaccard text similarity based on word tokens.
+ *
+ * @param {string} text1
+ * @param {string} text2
+ * @returns {number} similarity in [0, 1]
+ */
+export function calculateTextSimilarity(text1, text2) {
+  const words1 = (text1 || '').toLowerCase().match(/\w+/g) || [];
+  const words2 = (text2 || '').toLowerCase().match(/\w+/g) || [];
+  if (words1.length === 0 || words2.length === 0) return 0.0;
+  const set1 = new Set(words1);
+  const set2 = new Set(words2);
+  const intersection = new Set([...set1].filter(w => set2.has(w)));
+  const union = new Set([...set1, ...set2]);
+  return intersection.size / union.size;
 }

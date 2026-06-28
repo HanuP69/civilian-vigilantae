@@ -338,19 +338,15 @@ function AgentTrace({ trace = [] }) {
                     </div>
                   )}
                   {step.input && Object.keys(step.input).length > 0 && (
-                    <div>
-                      <span className="font-semibold block mb-1" style={{ color: 'var(--accent)' }}>&gt; PAYLOAD_IN</span>
-                      <pre className="rpg-scrollbar" style={{ overflowX: 'auto', background: 'var(--bg-primary)', color: 'var(--ink-muted)', maxHeight: 200, overflowY: 'auto', fontSize: '0.8rem', padding: '10px', border: '1px solid var(--border)', borderRadius: '2px' }}>
-                        {JSON.stringify(step.input, null, 2)}
-                      </pre>
+                    <div style={{ background: 'var(--bg-secondary)', padding: 'var(--space-3)', border: '1px solid var(--border-subtle)', borderRadius: 0 }}>
+                      <span className="font-semibold block mb-2" style={{ color: 'var(--accent)', fontSize: '0.8rem', letterSpacing: '0.1em' }}>&gt; INPUT DETAILS</span>
+                      {renderHumanReadablePayload(step.input)}
                     </div>
                   )}
                   {outputWithoutText && Object.keys(outputWithoutText).length > 0 && (
-                    <div>
-                      <span className="font-semibold block mb-1" style={{ color: 'var(--accent)' }}>&gt; PAYLOAD_OUT</span>
-                      <pre className="rpg-scrollbar" style={{ overflowX: 'auto', background: 'var(--bg-primary)', color: 'var(--ink-muted)', maxHeight: 200, overflowY: 'auto', fontSize: '0.8rem', padding: '10px', border: '1px solid var(--border)', borderRadius: '2px' }}>
-                        {JSON.stringify(outputWithoutText, null, 2)}
-                      </pre>
+                    <div style={{ background: 'var(--bg-secondary)', padding: 'var(--space-3)', border: '1px solid var(--border-subtle)', borderRadius: 0 }}>
+                      <span className="font-semibold block mb-2" style={{ color: 'var(--accent)', fontSize: '0.8rem', letterSpacing: '0.1em' }}>&gt; OUTPUT DETAILS</span>
+                      {renderHumanReadablePayload(outputWithoutText)}
                     </div>
                   )}
                   {step.error && (
@@ -367,6 +363,44 @@ function AgentTrace({ trace = [] }) {
           </AnimatePresence>
         </motion.div>
       </AnimatePresence>
+    </div>
+  );
+}
+
+function renderHumanReadablePayload(obj) {
+  if (!obj || typeof obj !== 'object') return null;
+  const entries = Object.entries(obj);
+  if (entries.length === 0) return null;
+  
+  return (
+    <div className="flex flex-col gap-1.5" style={{ fontSize: '0.8rem' }}>
+      {entries.map(([key, val]) => {
+        let displayVal = '';
+        if (val === null || val === undefined) {
+          displayVal = '—';
+        } else if (typeof val === 'object') {
+          // If it's a nested array or object, make it cleaner or stringify
+          if (Array.isArray(val)) {
+            displayVal = val.map(item => typeof item === 'object' ? item.id || JSON.stringify(item) : String(item)).join(', ');
+          } else {
+            displayVal = val.id || val.name || JSON.stringify(val);
+          }
+        } else {
+          displayVal = String(val);
+        }
+
+        // Format keys into clean labels
+        const formattedKey = key
+          .replace(/_/g, ' ')
+          .replace(/\b\w/g, c => c.toUpperCase());
+
+        return (
+          <div key={key} className="flex gap-2 justify-between items-start" style={{ borderBottom: '1px solid var(--border-subtle)', paddingBottom: '4px' }}>
+            <span className="font-mono text-muted text-xs" style={{ textTransform: 'uppercase', flexShrink: 0 }}>{formattedKey}:</span>
+            <span className="font-sans text-secondary font-medium" style={{ textAlign: 'right', wordBreak: 'break-word', color: 'var(--ink-secondary)' }}>{displayVal}</span>
+          </div>
+        );
+      })}
     </div>
   );
 }

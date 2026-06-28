@@ -1,5 +1,32 @@
+import { EventEmitter } from 'events';
+
 const clients = new Map();
 let clientIdCounter = 0;
+
+// ─── Scale-out Pub/Sub Broker Pattern (T1-4 scale-out support) ──────
+class SSEBroker extends EventEmitter {
+  constructor() {
+    super();
+    // Under cluster scale-out, this hooks into Redis pubsub:
+    // redisClient.subscribe('sse-broadcast', (msg) => this.emit('message', JSON.parse(msg)));
+  }
+
+  publish(event, data, targetUserId = null) {
+    this.emit('message', { event, data, targetUserId });
+  }
+}
+
+export const broker = new SSEBroker();
+
+// Listen to broker events to push to local connections
+broker.on('message', ({ event, data, targetUserId }) => {
+  const payload = `event: ${event}\ndata: ${JSON.stringify(data)}\n\n`;
+  for (const [id, client] of clients) {
+    if (!targetUserId || client.userId === targetUserId) {
+      safeWrite(client.res, payload, id);
+    }
+  }
+});
 
 export function addClient(userId, res) {
   const id = ++clientIdCounter;
@@ -9,10 +36,14 @@ export function addClient(userId, res) {
   });
   res.write(`event: connected\ndata: ${JSON.stringify({ clientId: id })}\n\n`);
 
-  // Heartbeat every 25s to keep connection alive through proxies
+  // Adaptive Heartbeat (I1-4): increase to 50s on mobile to reduce battery drain
+  const userAgent = res.req?.headers?.['user-agent'] || '';
+  const isMobile = /mobile|android|iphone|ipad|phone/i.test(userAgent);
+  const heartbeatInterval = isMobile ? 50000 : 25000;
+
   const heartbeat = setInterval(() => {
     try { res.write(': heartbeat\n\n'); } catch (_) { clearInterval(heartbeat); }
-  }, 25000);
+  }, heartbeatInterval);
 
   clients.set(id, { userId, res });
   res.on('close', () => {
@@ -37,19 +68,11 @@ function safeWrite(clientRes, payload, id) {
 }
 
 export function broadcast(event, data) {
-  const payload = `event: ${event}\ndata: ${JSON.stringify(data)}\n\n`;
-  for (const [id, client] of clients) {
-    safeWrite(client.res, payload, id);
-  }
+  broker.publish(event, data);
 }
 
 export function sendToUser(userId, event, data) {
-  const payload = `event: ${event}\ndata: ${JSON.stringify(data)}\n\n`;
-  for (const [id, client] of clients) {
-    if (client.userId === userId) {
-      safeWrite(client.res, payload, id);
-    }
-  }
+  broker.publish(event, data, userId);
 }
 
 export function getClientCount() { return clients.size; }

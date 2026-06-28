@@ -126,10 +126,42 @@ export async function updateAssetHealth(assetId) {
       }
     });
 
-    const newHealth = Math.max(0, 100 - severityDeduction);
+    const assetData = assetDoc.data();
+    const seedDate = assetData.created_at ? (assetData.created_at.toDate?.() ?? new Date(assetData.created_at)) : new Date(Date.now() - 30 * 24 * 3600 * 1000);
+    const ageDays = (Date.now() - seedDate.getTime()) / (24 * 3600 * 1000);
+    const decayRate = 0.05; // 0.05% health decay per day
+    const ageDecay = ageDays * decayRate;
+
+    // Simulate sensor integration (telemetry)
+    const type = assetData.type;
+    let sensorPenalty = 0;
+    const telemetry = assetData.telemetry || {};
+
+    if (type === 'road') {
+      telemetry.vibration_index = telemetry.vibration_index ?? (1.2 + Math.random() * 2.5);
+      if (telemetry.vibration_index > 3) sensorPenalty += (telemetry.vibration_index - 3) * 15;
+    } else if (type === 'pipe') {
+      telemetry.flow_rate_efficiency = telemetry.flow_rate_efficiency ?? (80 + Math.random() * 20);
+      if (telemetry.flow_rate_efficiency < 90) sensorPenalty += (90 - telemetry.flow_rate_efficiency) * 2.5;
+    } else if (type === 'streetlight') {
+      telemetry.lux_level = telemetry.lux_level ?? (25 + Math.random() * 30);
+      if (telemetry.lux_level < 40) sensorPenalty += (40 - telemetry.lux_level) * 1.5;
+    } else if (type === 'waste_bin') {
+      telemetry.fill_level = telemetry.fill_level ?? (Math.random() * 95);
+      if (telemetry.fill_level > 80) sensorPenalty += (telemetry.fill_level - 80) * 2.0;
+    } else if (type === 'drainage') {
+      telemetry.blockage_index = telemetry.blockage_index ?? (Math.random() * 50);
+      if (telemetry.blockage_index > 30) sensorPenalty += (telemetry.blockage_index - 30) * 1.8;
+    }
+
+    const calculatedHealth = Math.max(0, 100 - severityDeduction - ageDecay - sensorPenalty);
+    const newHealth = Math.round(calculatedHealth * 100) / 100;
+
     await assetRef.update({
       health: newHealth,
-      open_issues_count: openIssuesCount
+      open_issues_count: openIssuesCount,
+      telemetry,
+      updated_at: new Date().toISOString()
     });
 
     return { assetId, health: newHealth, openIssuesCount };

@@ -1,5 +1,6 @@
 import { getLLMClient } from '../llm/index.js';
 import config from '../config/env.js';
+import { retryWithBackoff } from '../utils/retryHelper.js';
 
 export async function classifyWithLLM(base64Data, mimeType, text = '') {
   const mediaKind = mimeType.startsWith('video') ? 'video' : mimeType.startsWith('audio') ? 'audio' : 'image';
@@ -19,13 +20,22 @@ Respond in JSON format:
   try {
     const client = getLLMClient();
     const media = base64Data ? { mimeType, data: base64Data } : null;
-    const response = await client.chatWithMedia(prompt, media);
+    const response = await retryWithBackoff(() => client.chatWithMedia(prompt, media));
     const responseText = response.text || '';
-    const jsonMatch = responseText.match(/\{[\s\S]*\}/);
-    if (!jsonMatch) {
-      return { category: 'other', severity: 'medium', confidence: 0.5, reasoning: 'Could not parse response', source: 'llm' };
+    let parsed;
+    try {
+      let cleanText = responseText.replace(/```json/gi, '').replace(/```/g, '').trim();
+      const startIdx = cleanText.indexOf('{');
+      const endIdx = cleanText.lastIndexOf('}');
+      if (startIdx === -1 || endIdx === -1 || startIdx > endIdx) {
+        throw new Error('No JSON object boundaries found');
+      }
+      cleanText = cleanText.substring(startIdx, endIdx + 1);
+      parsed = JSON.parse(cleanText);
+    } catch (parseErr) {
+      console.warn('[Classifier] JSON parsing failed:', parseErr.message);
+      return { category: 'other', severity: 'medium', confidence: 0.5, reasoning: `JSON Parse error: ${parseErr.message}`, source: 'llm' };
     }
-    const parsed = JSON.parse(jsonMatch[0]);
     return { ...parsed, source: 'llm' };
   } catch (err) {
     console.error('[Classifier] Classification failed:', err.message);
@@ -153,16 +163,34 @@ export function mapVisionLabelsToCategory(labels) {
 }
 
 export async function classifyMedia(base64Data, mimeType, text) {
+  let llm;
+  let vision;
+  
   const [llmResult, visionResult] = await Promise.allSettled([
     classifyWithLLM(base64Data, mimeType, text),
     mimeType.startsWith('image') ? classifyWithCloudVision(base64Data) : Promise.resolve(null),
   ]);
 
-  const llm = llmResult.status === 'fulfilled' ? llmResult.value : { category: 'other', severity: 'medium', confidence: 0.5, source: 'llm' };
-  const vision = visionResult.status === 'fulfilled' ? visionResult.value : null;
+  llm = llmResult.status === 'fulfilled' ? llmResult.value : null;
+  vision = visionResult.status === 'fulfilled' ? visionResult.value : null;
+
+  // Fallback if LLM classification with vision failed:
+  // If we had media but the classification returned an error or failed, try a text-only classification fallback!
+  if (!llm || llm.source === 'error') {
+    console.warn('[Classifier] Media classification failed/errored. Retrying with text-only fallback...');
+    try {
+      llm = await classifyWithLLM(null, 'text/plain', text);
+    } catch (fallbackErr) {
+      console.error('[Classifier] Text-only fallback classification failed:', fallbackErr.message);
+      llm = { category: 'other', severity: 'medium', confidence: 0.5, reasoning: 'Fallback classification failed', source: 'error' };
+    }
+  }
 
   const consensus = computeBayesianConsensus(llm, vision);
   const agreement = consensus.consensusCategory === llm.category;
+
+  // Confidence threshold: check if classification is uncertain (confidence < 0.65)
+  const isUncertain = consensus.consensusConfidence < 0.65;
 
   return {
     classificationResult: {
@@ -173,7 +201,8 @@ export async function classifyMedia(base64Data, mimeType, text) {
       evidence: llm.evidence || 'No visual evidence detected',
       source: llm.source,
       entropy: consensus.entropy,
-      original_llm: llm
+      original_llm: llm,
+      uncertain_classification: isUncertain,
     },
     cloudVisionResult: vision,
     classificationAgreement: agreement,

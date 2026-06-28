@@ -25,22 +25,28 @@ export function useAgentStream(reportId, initialSteps = []) {
 
     if (initialSteps.length > 0 && initialSteps !== prevInitialRef.current) {
       prevInitialRef.current = initialSteps;
-      if (!sawLiveRef.current) {
-        setSteps(prev => {
-          const next = mergeAgentTrace(prev, initialSteps);
-          const hasComplete = next.some(step => step && COMPLETE_STEPS.includes(step.step) && step.status === 'success');
-          if (hasComplete && !completeRef.current) {
-            completeRef.current = true;
-            setIsComplete(true);
-          }
-          return next;
-        });
-      }
+      setSteps(prev => {
+        const next = mergeAgentTrace(prev, initialSteps);
+        const hasComplete = next.some(step => step && COMPLETE_STEPS.includes(step.step) && step.status === 'success');
+        if (hasComplete && !completeRef.current) {
+          completeRef.current = true;
+          setIsComplete(true);
+        }
+        return next;
+      });
     }
   }, [reportId, initialSteps]);
 
   useEffect(() => {
     if (!reportId) return;
+
+    // Reset state & refs on reportId change to prevent contamination from previous reports
+    setSteps([]);
+    setIsComplete(false);
+    completeRef.current = false;
+    startedAtRef.current = null;
+    sawLiveRef.current = false;
+    prevInitialRef.current = [];
 
     // Close previous connection before opening new one
     if (esRef.current) {
@@ -48,7 +54,8 @@ export function useAgentStream(reportId, initialSteps = []) {
       esRef.current = null;
     }
 
-    const es = new EventSource('/api/events');
+    const token = localStorage.getItem('userId') || 'anonymous';
+    const es = new EventSource(`/api/events?token=${encodeURIComponent(token)}`);
     esRef.current = es;
 
     const onStep = (event) => {

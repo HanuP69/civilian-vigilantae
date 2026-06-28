@@ -10,7 +10,25 @@ import { storage } from '../config/firebase.js';
 import { storeMediaFile } from '../services/mediaUploadService.js';
 
 const router = Router();
-const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 100 * 1024 * 1024 } });
+const ALLOWED_MIMETYPES = [
+  'image/jpeg', 'image/png', 'image/webp',
+  'video/mp4', 'video/webm',
+  'audio/mpeg', 'audio/wav', 'audio/mp3', 'audio/ogg', 'audio/x-wav'
+];
+
+const ALLOWED_EXTENSIONS = ['jpg', 'jpeg', 'png', 'webp', 'mp4', 'webm', 'mp3', 'wav', 'ogg'];
+
+const upload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 25 * 1024 * 1024 },
+  fileFilter: (req, file, cb) => {
+    const ext = (file.originalname.split('.').pop() || '').toLowerCase();
+    if (!ALLOWED_EXTENSIONS.includes(ext) || !ALLOWED_MIMETYPES.includes(file.mimetype)) {
+      return cb(new Error('Only JPG/PNG/WEBP images, MP4/WEBM videos, and MP3/WAV/OGG audios are allowed.'), false);
+    }
+    cb(null, true);
+  }
+});
 
 const reportLimiter = rateLimit({ windowMs: 15 * 60 * 1000, max: 20, message: { error: 'Too many reports from this IP, please try again later' } });
 
@@ -90,6 +108,26 @@ router.post('/', requireAuth, reportLimiter, upload.single('media'), async (req,
     });
   } catch (err) {
     console.error('[Report] Error:', err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+router.get('/geocode/proxy', async (req, res) => {
+  try {
+    const { lat, lng } = req.query;
+    if (!lat || !lng) {
+      return res.status(400).json({ error: 'Missing lat or lng parameter' });
+    }
+    const mapsKey = process.env.GOOGLE_MAPS_API_KEY || process.env.VITE_GOOGLE_MAPS_API_KEY;
+    if (!mapsKey) {
+      return res.status(500).json({ error: 'Maps API key not configured on server' });
+    }
+    const url = `https://maps.googleapis.com/maps/api/geocode/json?latlng=${lat},${lng}&key=${mapsKey}`;
+    const response = await fetch(url);
+    const data = await response.json();
+    res.json(data);
+  } catch (err) {
+    console.error('[Geocode Proxy] Error:', err);
     res.status(500).json({ error: err.message });
   }
 });

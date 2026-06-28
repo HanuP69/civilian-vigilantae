@@ -67,6 +67,16 @@ function HomePage() {
     }
     return null;
   }, [searchParams]);
+
+  useEffect(() => {
+    setFilters({
+      status: '',
+      category: searchParams.get('category') || '',
+      ward: searchParams.get('ward') || ''
+    });
+    setLayer(searchParams.get('isHotspot') === 'true' ? 'recurrence' : 'reports');
+  }, [searchParams]);
+
   const mapProvider = import.meta.env.VITE_MAP_PROVIDER || 'maps';
   const { events } = useSSE();
   const { toast } = useToast();
@@ -249,100 +259,148 @@ function HomePage() {
 
   return (
     <div className="home-container" style={{ paddingBottom: 'var(--space-10)' }}>
-      {/* Hero — editorial strip, not a landing page */}
-      <section aria-label="Introduction" className="home-hero-section" style={{
-        display: 'flex',
-        justifyContent: 'space-between',
-        alignItems: 'flex-end',
-        flexWrap: 'wrap',
-        gap: 'var(--space-4)',
-        marginBottom: 'var(--space-8)',
-        paddingBottom: 'var(--space-6)',
-        borderBottom: '1px solid var(--border-subtle)',
-      }}>
-        <div>
-          <div style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: 'var(--space-3)',
-            marginBottom: 'var(--space-4)',
-          }}>
-            <span className="font-pixel" style={{
-              fontSize: '0.5rem',
-              color: 'var(--accent)',
-              textTransform: 'uppercase',
-              letterSpacing: '0.12em',
-              padding: '4px 8px',
-              border: '1px solid var(--accent-muted)',
-              borderRadius: 0,
-            }}>
-              LIVE · LUCKNOW COMMUNITY WATCH
-            </span>
-            <span style={{
-              width: 6, height: 6, borderRadius: '50%',
-              background: 'var(--success)',
-              boxShadow: '0 0 0 3px oklch(0.65 0.16 155 / 0.2)',
-              animation: 'pulse-dot 2s ease-in-out infinite',
-              display: 'inline-block',
-            }} />
+
+      {/* ── Storytelling Hero Banner ── */}
+      <section className="story-banner animate-fade-up" aria-label="Sentinel Civic Overview">
+        <div className="story-banner-grid">
+          {/* Left: narrative */}
+          <div>
+            <div className="story-banner-eyebrow">
+              <span className="story-banner-tag" aria-label="Live community watch">
+                LIVE · LUCKNOW WATCH
+              </span>
+              <span className="story-banner-live" aria-live="polite" aria-atomic="true">
+                <span className="live-dot" aria-hidden="true" />
+                <span>{tickets.length > 0 ? `${tickets.length} active issues` : 'Monitoring city'}</span>
+              </span>
+            </div>
+
+            <h1 className="story-banner-title animate-reveal">
+              Problems reported.<br />
+              AI-prioritized.<br />
+              <em>Citizens empowered.</em>
+            </h1>
+
+            <p className="story-banner-sub">
+              Sentinel Civic turns civic complaints into intelligent, trackable actions —
+              with agentic AI that classifies, deduplicates, and dispatches every report
+              to the right ward in seconds.
+            </p>
+
+            {/* AI Pipeline story strip */}
+            <div className="pipeline-strip" role="list" aria-label="AI processing pipeline">
+              {[
+                { icon: '📸', label: 'REPORT' },
+                { icon: '🤖', label: 'CLASSIFY' },
+                { icon: '🗺️', label: 'GEO-ROUTE' },
+                { icon: '⚡', label: 'PRIORITIZE' },
+                { icon: '🎫', label: 'TICKET' },
+                { icon: '📢', label: 'NOTIFY' },
+              ].map((step, i, arr) => (
+                <div key={step.label} style={{ display: 'flex', alignItems: 'center' }}>
+                  <div className="pipeline-node" role="listitem" aria-label={step.label}>
+                    <div className="pipeline-node-icon" aria-hidden="true">{step.icon}</div>
+                    <div className="pipeline-node-label">{step.label}</div>
+                  </div>
+                  {i < arr.length - 1 && (
+                    <div className="pipeline-connector done" aria-hidden="true" />
+                  )}
+                </div>
+              ))}
+            </div>
           </div>
-          <h1 className="animate-reveal hero-heading" style={{ fontStyle: 'normal', letterSpacing: '-0.03em', fontFamily: 'var(--font-serif)' }}>
-            Lucknow Community Issues Watch,<br />
-            <span style={{ color: 'var(--accent)', fontStyle: 'italic' }}>monitored & resolved by active citizens.</span>
-          </h1>
-        </div>
-        <div className="animate-fade-up stagger-2" style={{ textAlign: 'right' }}>
-          <Link to="/report" className="btn btn-primary btn-lg pixel-border" style={{
-            padding: 'var(--space-3) var(--space-5)',
-            borderRadius: 0,
-            gap: 'var(--space-2)',
-            fontFamily: 'var(--font-pixel)',
-            fontSize: '0.65rem',
-          }}>
-            📢 REPORT NEW ISSUE
-          </Link>
-          <p className="font-pixel text-muted" style={{ fontSize: '0.625rem', marginTop: 'var(--space-2)' }}>
-            {tickets.length > 0 ? `${tickets.length} ACTIVE ISSUES` : 'BE THE FIRST TO HELP'}
-          </p>
+
+          {/* Right: CTA + quick stats */}
+          <div className="flex flex-col gap-5" style={{ minWidth: 200 }}>
+            <Link
+              to="/report"
+              className="btn btn-primary btn-lg"
+              style={{ borderRadius: 0, fontFamily: 'var(--font-pixel)', fontSize: '0.6rem', justifyContent: 'center', padding: '16px 20px' }}
+              aria-label="Report a new community issue"
+            >
+              📢 REPORT ISSUE
+            </Link>
+            <Link
+              to="/missions"
+              className="btn btn-secondary"
+              style={{ borderRadius: 0, fontFamily: 'var(--font-mono)', fontSize: '0.75rem', justifyContent: 'center' }}
+              aria-label="Browse verification missions"
+            >
+              🎯 VERIFY & EARN XP
+            </Link>
+            <div className="story-banner-stats" aria-label="Community statistics">
+              <div className="story-stat">
+                <span className="story-stat-num accent" aria-label={`${tickets.length} active issues`}>{tickets.length}</span>
+                <span className="story-stat-label">Active Issues</span>
+              </div>
+              <div className="story-stat">
+                <span className="story-stat-num teal" aria-label={`${communityHealthIndex}% community health`}>{communityHealthIndex}%</span>
+                <span className="story-stat-label">Health Index</span>
+              </div>
+            </div>
+          </div>
         </div>
       </section>
 
       {/* Section 1: Community Health KPI Header */}
-      <div className="kpi-grid animate-fade-up stagger-2">
-        <div className="summary-card pixel-border" style={{ borderRadius: 0, background: 'var(--bg-secondary)', padding: '16px' }}>
-          <div className="font-pixel text-muted" style={{ fontSize: '0.625rem', marginBottom: '8px' }}>COMMUNITY HEALTH</div>
-          <div className="font-serif" style={{ fontSize: '1.75rem', fontWeight: 'bold', color: communityHealthIndex > 80 ? 'var(--success)' : communityHealthIndex > 50 ? 'var(--warning)' : 'var(--error)' }}>
+      <div className="kpi-grid animate-fade-up stagger-2" role="region" aria-label="Community health statistics">
+        <div
+          className="summary-card"
+          data-tooltip="Average ward health across all active tickets"
+          role="status"
+          aria-label={`Community health: ${communityHealthIndex}%`}
+        >
+          <div className="font-pixel text-muted" style={{ fontSize: '0.55rem', marginBottom: 'var(--space-2)', letterSpacing: '0.08em' }}>COMMUNITY HEALTH</div>
+          <div className="font-serif" style={{ fontSize: '2rem', fontWeight: 700, letterSpacing: '-0.03em', color: communityHealthIndex > 80 ? 'var(--success)' : communityHealthIndex > 50 ? 'var(--warning)' : 'var(--error)' }}>
             {communityHealthIndex}%
           </div>
-          <p style={{ fontSize: '0.75rem', color: 'var(--ink-muted)', marginTop: '4px' }}>
-            {communityHealthIndex > 80 ? '🟢 Stable condition' : communityHealthIndex > 50 ? '🟡 Active warnings' : '🔴 Critical backlog'}
+          <p style={{ fontSize: '0.75rem', color: 'var(--ink-muted)', marginTop: 'var(--space-1)' }}>
+            {communityHealthIndex > 80 ? '🟢 Stable' : communityHealthIndex > 50 ? '🟡 Warnings active' : '🔴 Critical backlog'}
           </p>
         </div>
-        <div className="summary-card pixel-border" style={{ borderRadius: 0, background: 'var(--bg-secondary)', padding: '16px' }}>
-          <div className="font-pixel text-muted" style={{ fontSize: '0.625rem', marginBottom: '8px' }}>ACTIVE ISSUES</div>
-          <div className="font-serif" style={{ fontSize: '1.75rem', fontWeight: 'bold', color: activeCount > 0 ? 'var(--warning)' : 'var(--success)' }}>
+
+        <div
+          className="summary-card"
+          data-tooltip="Issues currently open, reported or in-progress"
+          role="status"
+          aria-label={`${activeCount} active issues, ${urgentTickets} high priority`}
+        >
+          <div className="font-pixel text-muted" style={{ fontSize: '0.55rem', marginBottom: 'var(--space-2)', letterSpacing: '0.08em' }}>ACTIVE ISSUES</div>
+          <div className="font-serif" style={{ fontSize: '2rem', fontWeight: 700, letterSpacing: '-0.03em', color: activeCount > 0 ? 'var(--warning)' : 'var(--success)' }}>
             {activeCount}
           </div>
-          <p style={{ fontSize: '0.75rem', color: 'var(--ink-muted)', marginTop: '4px' }}>
-            {activeCount === 0 ? 'All clear!' : `${urgentTickets} high-priority`}
+          <p style={{ fontSize: '0.75rem', color: 'var(--ink-muted)', marginTop: 'var(--space-1)' }}>
+            {activeCount === 0 ? '✓ All clear' : <span><span style={{ color: 'var(--error)' }}>{urgentTickets}</span> high-priority</span>}
           </p>
         </div>
-        <div className="summary-card pixel-border" style={{ borderRadius: 0, background: 'var(--bg-secondary)', padding: '16px' }}>
-          <div className="font-pixel text-muted" style={{ fontSize: '0.625rem', marginBottom: '8px' }}>VERIFIED ISSUES</div>
-          <div className="font-serif" style={{ fontSize: '1.75rem', fontWeight: 'bold', color: 'var(--success)' }}>
+
+        <div
+          className="summary-card"
+          data-tooltip="Community-verified issues with 3+ citizen confirmations"
+          role="status"
+          aria-label={`${verifiedCount} verified issues`}
+        >
+          <div className="font-pixel text-muted" style={{ fontSize: '0.55rem', marginBottom: 'var(--space-2)', letterSpacing: '0.08em' }}>VERIFIED ISSUES</div>
+          <div className="font-serif" style={{ fontSize: '2rem', fontWeight: 700, letterSpacing: '-0.03em', color: 'var(--teal)' }}>
             {verifiedCount}
           </div>
-          <p style={{ fontSize: '0.75rem', color: 'var(--ink-muted)', marginTop: '4px' }}>
-            Consensus confirmed
+          <p style={{ fontSize: '0.75rem', color: 'var(--ink-muted)', marginTop: 'var(--space-1)' }}>
+            ✓ Consensus confirmed
           </p>
         </div>
-        <div className="summary-card pixel-border" style={{ borderRadius: 0, background: 'var(--bg-secondary)', padding: '16px' }}>
-          <div className="font-pixel text-muted" style={{ fontSize: '0.625rem', marginBottom: '8px' }}>COMMUNITY HOTSPOTS</div>
-          <div className="font-serif" style={{ fontSize: '1.75rem', fontWeight: 'bold', color: hotspotCount > 0 ? 'var(--error)' : 'var(--success)' }}>
+
+        <div
+          className="summary-card"
+          data-tooltip="Locations with recurring civic problems detected by AI"
+          role="status"
+          aria-label={`${hotspotCount} community hotspots with recurrence risk`}
+        >
+          <div className="font-pixel text-muted" style={{ fontSize: '0.55rem', marginBottom: 'var(--space-2)', letterSpacing: '0.08em' }}>HOTSPOTS</div>
+          <div className="font-serif" style={{ fontSize: '2rem', fontWeight: 700, letterSpacing: '-0.03em', color: hotspotCount > 0 ? 'var(--error)' : 'var(--success)' }}>
             {hotspotCount}
           </div>
-          <p style={{ fontSize: '0.75rem', color: 'var(--ink-muted)', marginTop: '4px' }}>
-            Recurrence risk detected
+          <p style={{ fontSize: '0.75rem', color: 'var(--ink-muted)', marginTop: 'var(--space-1)' }}>
+            {hotspotCount > 0 ? '⚠ Recurrence risk' : '✓ No hotspots'}
           </p>
         </div>
       </div>

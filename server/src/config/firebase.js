@@ -111,6 +111,11 @@ export function createMockFirestore() {
     delete: async () => {
       ensureCollection(collectionName).delete(docId);
     },
+
+    // Support nested subcollections
+    collection: (subName) => {
+      return collectionRef(`${collectionName}/${docId}/${subName}`);
+    }
   });
 
   /**
@@ -155,6 +160,17 @@ export function createMockFirestore() {
         },
 
         get: async () => {
+          // Check for multiple distinct range fields (T1-7 compound range validation)
+          const rangeFields = new Set();
+          filters.forEach(flt => {
+            if (['<', '<=', '>', '>=', '!=', 'not-in'].includes(flt.op)) {
+              rangeFields.add(flt.field);
+            }
+          });
+          if (rangeFields.size > 1) {
+            throw new Error(`Firestore Query Error: Compound range queries on multiple fields are not supported in Firestore. Attempted range filters on: ${[...rangeFields].join(', ')}`);
+          }
+
           const col = ensureCollection(name);
           const docs = [];
           for (const [id, data] of col.entries()) {
@@ -172,24 +188,42 @@ export function createMockFirestore() {
   });
 
   const runTransaction = async (updateFunction) => {
-    const transaction = {
-      get: async (refOrQuery) => {
-        return refOrQuery.get();
-      },
-      set: (ref, data) => {
-        ref.set(data);
-        return transaction;
-      },
-      update: (ref, data) => {
-        ref.update(data);
-        return transaction;
-      },
-      delete: (ref) => {
-        ref.delete();
-        return transaction;
+    // Snapshot current database state for rollback (G1-2 database rollback)
+    const dbSnapshot = {};
+    for (const [colName, colMap] of store.entries()) {
+      dbSnapshot[colName] = new Map();
+      for (const [docId, docData] of colMap.entries()) {
+        dbSnapshot[colName].set(docId, JSON.parse(JSON.stringify(docData)));
       }
-    };
-    return updateFunction(transaction);
+    }
+
+    try {
+      const transaction = {
+        get: async (refOrQuery) => {
+          return await refOrQuery.get();
+        },
+        set: async (ref, data) => {
+          await ref.set(data);
+          return transaction;
+        },
+        update: async (ref, data) => {
+          await ref.update(data);
+          return transaction;
+        },
+        delete: async (ref) => {
+          await ref.delete();
+          return transaction;
+        }
+      };
+      return await updateFunction(transaction);
+    } catch (err) {
+      console.warn('[Mock Firestore] Transaction failed, rolling back snapshot state. Error:', err.message);
+      store.clear();
+      for (const colName in dbSnapshot) {
+        store.set(colName, dbSnapshot[colName]);
+      }
+      throw err;
+    }
   };
 
   return { 

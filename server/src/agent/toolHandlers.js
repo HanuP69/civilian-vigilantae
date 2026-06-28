@@ -7,6 +7,7 @@ import { haversine } from '../math/haversine.js';
 import { v4 as uuidv4 } from 'uuid';
 import { broadcast } from '../services/sseService.js';
 import { classifyWithLLM } from '../services/classificationService.js';
+import { retryWithBackoff } from '../utils/retryHelper.js';
 
 export const DEPARTMENTS = {
   pothole: 'Roads & Infrastructure', water_leak: 'Water Supply', streetlight: 'Electrical & Lighting',
@@ -112,40 +113,59 @@ export const toolHandlers = {
     return { address: `${ward}, Lucknow, Uttar Pradesh`, ward, lat, lng };
   },
 
-  async find_cluster({ lat, lng, category, timestamp }) {
+  async find_cluster({ lat, lng, category, timestamp, text }) {
     const ticketsSnap = await db.collection('tickets').get();
     const recentTickets = [];
     const ticketMetaById = {};
     const parsedTimestamp = timestamp ? new Date(timestamp) : new Date();
     const now = Number.isNaN(parsedTimestamp.getTime()) ? new Date() : parsedTimestamp;
-    const windowMs = 72 * 60 * 60 * 1000;
+    const { getMaxTimeWindowForCategory, calculateTextSimilarity } = await import('../math/dbscan.js');
 
     ticketsSnap.forEach(doc => {
       const t = { ...doc.data(), id: doc.id };
-      if (t.status === 'resolved') return;
+      if (t.status === 'resolved' || t.merged_into) return;
       const created = t.created_at?.toDate?.() ?? new Date(t.created_at);
-      if (now - created < windowMs) {
+      const maxWindow = getMaxTimeWindowForCategory(t.category);
+      if (now - created < maxWindow) {
         recentTickets.push({ id: t.id, lat: t.lat, lng: t.lng, timestamp: created, category: t.category });
-        ticketMetaById[t.id] = { priority_score: t.priority_score || 0, created_at: created };
+        ticketMetaById[t.id] = t;
       }
     });
 
     const newPoint = { id: '__new__', lat, lng, timestamp: now, category };
     const points = [...recentTickets, newPoint];
-    if (points.length < 2) return { found: false };
+    if (points.length < 2) return { found: false, neighbors: [] };
 
     const { clusters } = dbscan(points);
     for (const cluster of clusters) {
       if (cluster.includes('__new__')) {
-        const neighbors = cluster.filter(id => id !== '__new__');
+        const rawNeighbors = cluster.filter(id => id !== '__new__');
+        const { haversine } = await import('../math/haversine.js');
+        const neighbors = [];
+        for (const id of rawNeighbors) {
+          const t = ticketMetaById[id];
+          if (!t) continue;
+          
+          // 1. Proximity Check: must be within 100 meters
+          const dist = haversine(lat, lng, t.lat, t.lng);
+          if (dist > 100) continue;
+          
+          // 2. Text Similarity Check: Jaccard similarity must be >= 0.25 if text is present
+          const textSim = calculateTextSimilarity(text, t.description || t.title);
+          if (text && (t.description || t.title) && textSim < 0.25) {
+            continue;
+          }
+          
+          neighbors.push({ id, lat: t.lat, lng: t.lng, distance: dist });
+        }
+        
         if (neighbors.length > 0) {
-          // Pick highest-priority existing ticket as merge target
-          const bestId = neighbors.reduce((best, id) => {
+          const bestId = neighbors.reduce((best, n) => {
             const bScore = ticketMetaById[best]?.priority_score ?? 0;
-            const cScore = ticketMetaById[id]?.priority_score ?? 0;
-            return cScore > bScore ? id : best;
-          }, neighbors[0]);
-          return { found: true, ticket_id: bestId, cluster_size: cluster.length, category, neighbors };
+            const cScore = ticketMetaById[n.id]?.priority_score ?? 0;
+            return cScore > bScore ? n.id : best;
+          }, neighbors[0].id);
+          return { found: true, ticket_id: bestId, cluster_size: neighbors.length + 1, category, neighbors };
         }
       }
     }
@@ -251,8 +271,12 @@ export const toolHandlers = {
     const t = doc.data();
     const votes = t.votes || {};
     const userId = ctx?.userId || 'anonymous';
-    if (userId !== 'anonymous' && votes[userId]) {
-      return { error: 'Already voted' };
+    if (userId !== 'anonymous') {
+      const verificationRef = db.collection('tickets').doc(ticket_id).collection('verifications').doc(userId);
+      const verificationDoc = await verificationRef.get();
+      if (verificationDoc.exists || votes[userId]) {
+        return { error: 'Already voted' };
+      }
     }
 
     // 1. Geofencing Validation (must be within 50 meters of the ticket location)
@@ -281,10 +305,10 @@ Respond with a JSON object:
 }`;
 
       try {
-        const visionRes = await client.chatWithMedia(prompt, {
+        const visionRes = await retryWithBackoff(() => client.chatWithMedia(prompt, {
           mimeType: 'image/jpeg',
           data: cleanBase64
-        });
+        }));
 
         let parsed = visionRes;
         if (typeof visionRes === 'string') {
@@ -365,10 +389,10 @@ Respond with a JSON object:
     }
     if (reporterTrust === undefined) reporterTrust = 0.5;
 
+    const { calculateVerificationScore, statusFromVerificationScore, calculateNearbyEvidence } = await import('../math/verification.js');
     const aiConfidence = t.ai_confidence ?? t.classificationResult?.confidence ?? 0.7;
-    const nearbyEvidence = t.nearby_evidence ?? (t.cluster_detail?.found ? Math.min((t.cluster_detail.cluster_size || 1) / 5, 1.0) : 0.0);
+    const nearbyEvidence = calculateNearbyEvidence(t.lat, t.lng, t.cluster_detail?.neighbors || []);
 
-    const { calculateVerificationScore, statusFromVerificationScore } = await import('../math/verification.js');
     const newVScore = calculateVerificationScore({
       aiConfidence,
       reporterTrust,
@@ -431,6 +455,17 @@ Respond with a JSON object:
     };
 
     await db.collection('tickets').doc(ticket_id).update(update);
+
+    if (userId !== 'anonymous') {
+      await db.collection('tickets').doc(ticket_id).collection('verifications').doc(userId).set({
+        user_id: userId,
+        vote_type,
+        lat: lat || null,
+        lng: lng || null,
+        photo_verified: !!photo,
+        created_at: new Date().toISOString()
+      });
+    }
 
     if (t.asset_id) {
       const { updateAssetHealth } = await import('../services/assetService.js');

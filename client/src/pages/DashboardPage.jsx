@@ -1135,8 +1135,8 @@ function DashboardPage() {
                         <td>{dept.resolved}</td>
                         <td>
                           <div className="flex items-center gap-2">
-                            <span className="font-semibold font-mono" style={{ color: dept.rate > 80 ? 'var(--success)' : dept.rate > 50 ? 'var(--warning)' : 'var(--error)' }}>
-                              {dept.rate}%
+                            <span className="font-semibold font-mono" style={{ color: dept.resolution_rate > 80 ? 'var(--success)' : dept.resolution_rate > 50 ? 'var(--warning)' : 'var(--error)' }}>
+                              {dept.resolution_rate}%
                             </span>
                           </div>
                         </td>

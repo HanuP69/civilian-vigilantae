@@ -10,8 +10,32 @@ import { createTraceLogger } from './traceLogger.js';
 import { toolHandlers } from './toolHandlers.js';
 import { enrichReasoning } from './enricher.js';
 
+class AgentMessageBus {
+  constructor() {
+    this.messages = [];
+  }
+  
+  sendMessage(from, to, type, payload) {
+    const msg = {
+      from,
+      to,
+      type,
+      payload,
+      timestamp: new Date().toISOString()
+    };
+    this.messages.push(msg);
+    console.log(`[Agent Bus] [${from} -> ${to}] ${type}:`, JSON.stringify(payload));
+    return msg;
+  }
+
+  getMessages() {
+    return this.messages;
+  }
+}
+
 export async function processReport(reportData, onStep) {
   const trace = createTraceLogger(reportData.id || 'new', onStep);
+  const messageBus = new AgentMessageBus();
   const ctx = {
     userId: reportData.reporter_id || 'anonymous',
     userName: reportData.reporter_name || 'Anonymous',
@@ -25,6 +49,7 @@ export async function processReport(reportData, onStep) {
     classificationAgreement: reportData.classificationAgreement ?? true,
     trace,
     reportData,
+    messageBus,
   };
 
   // 1. Ingestion Flow (Intake + Validation + Classification + Geo)
@@ -58,15 +83,16 @@ export async function processReport(reportData, onStep) {
     const recentTickets = [];
     const ticketMetaById = {};
     const now = new Date();
-    const windowMs = 72 * 60 * 60 * 1000;
+    const { getMaxTimeWindowForCategory, calculateTextSimilarity } = await import('../math/dbscan.js');
 
     ticketsSnap.forEach(doc => {
       const t = { ...doc.data(), id: doc.id };
       if (t.status === 'resolved' || t.merged_into) return;
       const created = t.created_at?.toDate?.() ?? new Date(t.created_at);
-      if (now - created < windowMs) {
+      const maxWindow = getMaxTimeWindowForCategory(t.category);
+      if (now - created < maxWindow) {
         recentTickets.push({ id: t.id, lat: t.lat, lng: t.lng, timestamp: created, category: t.category });
-        ticketMetaById[t.id] = { priority_score: t.priority_score || 0, created_at: created };
+        ticketMetaById[t.id] = t;
       }
     });
 
@@ -81,13 +107,32 @@ export async function processReport(reportData, onStep) {
       const { clusters } = dbscan(points);
       for (const cluster of clusters) {
         if (cluster.includes('__new__')) {
-          neighbors = cluster.filter(id => id !== '__new__');
+          const rawNeighbors = cluster.filter(id => id !== '__new__');
+          const { haversine } = await import('../math/haversine.js');
+          
+          for (const id of rawNeighbors) {
+            const t = ticketMetaById[id];
+            if (!t) continue;
+            
+            // 1. Proximity Check: must be within 100 meters
+            const dist = haversine(ctx.latitude, ctx.longitude, t.lat, t.lng);
+            if (dist > 100) continue;
+            
+            // 2. Text Similarity Check: Jaccard similarity must be >= 0.25 if text is present
+            const textSim = calculateTextSimilarity(ctx.reportData.text, t.description || t.title);
+            if (ctx.reportData.text && (t.description || t.title) && textSim < 0.25) {
+              continue;
+            }
+            
+            neighbors.push({ id, lat: t.lat, lng: t.lng, distance: dist });
+          }
+          
           if (neighbors.length > 0) {
-            bestId = neighbors.reduce((best, id) => {
+            bestId = neighbors.reduce((best, n) => {
               const bScore = ticketMetaById[best]?.priority_score ?? 0;
-              const cScore = ticketMetaById[id]?.priority_score ?? 0;
-              return cScore > bScore ? id : best;
-            }, neighbors[0]);
+              const cScore = ticketMetaById[n.id]?.priority_score ?? 0;
+              return cScore > bScore ? n.id : best;
+            }, neighbors[0].id);
             found = true;
             break;
           }
@@ -158,8 +203,9 @@ export async function processReport(reportData, onStep) {
         ? (weightedUp / (weightedUp + weightedDown))
         : null;
 
+      const { calculateVerificationScore, statusFromVerificationScore, calculateNearbyEvidence } = await import('../math/verification.js');
       const aiConfidence = t.ai_confidence ?? t.classificationResult?.confidence ?? 0.7;
-      const nearbyEvidence = t.nearby_evidence ?? (t.cluster_detail?.found ? Math.min((t.cluster_detail.cluster_size || 1) / 5, 1.0) : 0.0);
+      const nearbyEvidence = calculateNearbyEvidence(t.lat, t.lng, ctx.clusterResult.neighbors || []);
 
       const newVScore = calculateVerificationScore({
         aiConfidence,
@@ -388,6 +434,7 @@ export async function processReport(reportData, onStep) {
   // Store full trace and dynamic calculations in Firestore
   await db.collection('tickets').doc(ticketId).update({
     agent_trace: trace.getSteps(),
+    agent_messages: ctx.messageBus.getMessages(),
     verification_score: ctx.verificationResult.verification_score,
     verification_explanation: ctx.verificationResult.explanation,
     priority_explanation: ctx.priorityResult.explanation || 'Priority resolved.',
@@ -441,6 +488,24 @@ export async function processSchedulerTick(onStep) {
     }
 
     processedCount++;
+  }
+
+  // Clean up expired demo accounts (G1-5)
+  try {
+    const usersSnap = await db.collection('users').get();
+    const nowMs = Date.now();
+    for (const doc of usersSnap.docs) {
+      const u = doc.data();
+      if (u.email && u.email.startsWith('google.hero.')) {
+        const joined = u.joined_at ? new Date(u.joined_at).getTime() : nowMs;
+        if (nowMs - joined > 24 * 3600 * 1000) {
+          console.log(`[Scheduler] Cleaning up expired demo user account: ${u.email}`);
+          await db.collection('users').doc(doc.id).delete();
+        }
+      }
+    }
+  } catch (err) {
+    console.warn('[Scheduler] Demo users cleanup failed:', err.message);
   }
 
   return { processed: processedCount, trace: trace.getSteps() };

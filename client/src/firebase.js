@@ -2,7 +2,7 @@ import { initializeApp } from 'firebase/app';
 import { getAuth, GoogleAuthProvider } from 'firebase/auth';
 
 const firebaseConfig = {
-  apiKey: import.meta.env.VITE_FIREBASE_API_KEY || import.meta.env.VITE_GOOGLE_MAPS_API_KEY || "AIzaSyAxiwmOUo2kqFqDAloLHCn4hnPLMZZhBps",
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY || "mock-firebase-key",
   authDomain: "vibeshiphack.firebaseapp.com",
   projectId: "vibeshiphack",
   storageBucket: "vibeshiphack.appspot.com"
