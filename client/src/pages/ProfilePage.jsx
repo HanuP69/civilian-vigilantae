@@ -2,11 +2,9 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/AuthContext';
 import { useToast } from '../hooks/useToast.jsx';
-import { useQuestToast } from '../hooks/useQuestToast';
-import { useXPAnimation } from '../hooks/useXPAnimation';
+import { useQuestToast } from '../components/QuestToast';
 import { apiClaimQuest, apiBuyShopItem, apiEquipAvatar } from '../services/api';
 import { CustomAvatar, parseCustomAvatar } from '../components/CustomAvatar';
-import { XPAnimation } from '../components/XPAnimation';
 
 const SHOP_ITEMS = [
   { id: 'title_paladin', name: 'Lucknow Paladin Title', cost: 50, type: 'title', value: 'Lucknow Paladin', desc: 'A legendary title representing honor' },
@@ -148,7 +146,6 @@ function ShopItemIcon({ id }) {
 function ProfilePage() {
   const { user, logout, refreshProfile, isAuthenticated, loading } = useAuth();
   const { showToast } = useQuestToast();
-  const { xpAnimations, levelUpAnimations } = useXPAnimation();
   const getCommunityRank = (lvl) => {
     if (lvl >= 15) return "City Champion 🏆";
     if (lvl >= 10) return "Community Hero ⚡";
@@ -263,7 +260,6 @@ function ProfilePage() {
 
   return (
     <>
-      <XPAnimation animations={xpAnimations} levelUpAnimations={levelUpAnimations} />
       <div style={{ maxWidth: 1200, margin: '0 auto', paddingBottom: 'var(--space-10)' }}>
       
       {/* 2-Column Responsive Dashboard Container */}

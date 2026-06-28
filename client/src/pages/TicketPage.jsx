@@ -429,7 +429,7 @@ function TicketPage() {
                       <div><strong>Group Size:</strong> {ticket.cluster_detail.cluster_size} tickets</div>
                       {ticket.cluster_detail.neighbors && ticket.cluster_detail.neighbors.length > 0 && (
                         <div style={{ wordBreak: 'break-all', marginTop: '4px' }}>
-                          <strong>Co-neighbors:</strong> {ticket.cluster_detail.neighbors.join(', ')}
+                          <strong>Co-neighbors:</strong> {ticket.cluster_detail.neighbors.map(n => n.id || n).join(', ')}
                         </div>
                       )}
                     </div>

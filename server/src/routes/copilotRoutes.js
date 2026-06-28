@@ -117,8 +117,8 @@ router.post('/chat', requireAuth, async (req, res) => {
     // Fetch Leaderboard data
     const leaderboard = await getLeaderboard(10);
     const leaderboardSummary = leaderboard.map((u, i) => {
-      const level = Math.floor((u.xp || 0) / 100) + 1;
-      return `${i + 1}. User: "${u.display_name || 'Anonymous'}" (Level: ${level}, XP: ${u.xp || 0}, Reputation Trust: ${u.reputationScore !== undefined ? u.reputationScore.toFixed(2) : '1.00'}, Reports: ${u.reports || 0}, Votes: ${u.verifications_made || 0})`;
+      const level = u.level || Math.floor(Math.sqrt((u.xp || 0) / 50)) + 1;
+      return `${i + 1}. User: "${u.display_name || 'Anonymous'}" (Level: ${level}, XP: ${u.xp || 0}, Reputation Trust: ${u.trust_score !== undefined ? u.trust_score.toFixed(2) : '0.50'}, Reports: ${u.reports || 0}, Votes: ${u.verifications_made || 0})`;
     }).join('\n');
 
     // 4. Check for Budget/Knapsack Queries
@@ -186,7 +186,6 @@ ${leaderboardSummary || 'No citizen data registered in the ledger.'}
 
 [REAL-TIME CONTEXT: METRICS]
 Active Ward Health stats: ${JSON.stringify(stats?.byWard || {})}
-Assigned Department distribution: ${JSON.stringify(stats?.byDepartment || {})}
 Department Ledger: ${JSON.stringify(stats?.deptLeaderboard || [])}
 ${knapsackOutput ? `\n${knapsackOutput}\nUse this Knapsack Solver result to tell the Administrator exactly how to spend their budget to maximize utility!` : ''}
 ---`;

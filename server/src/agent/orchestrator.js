@@ -1,6 +1,4 @@
 import { ReportIntakeAgent } from './agents/ReportIntakeAgent.js';
-import { ClusteringAgent } from './agents/ClusteringAgent.js';
-import { VerificationAgent } from './agents/VerificationAgent.js';
 import { PriorityAgent } from './agents/PriorityAgent.js';
 import { SLAAgent } from './agents/SLAAgent.js';
 import { PlannerAgent } from './agents/PlannerAgent.js';
@@ -142,7 +140,6 @@ export async function processReport(reportData, onStep) {
 
     ctx.clusterResult = { found, ticket_id: bestId, cluster_size: neighbors.length + 1, category: ctx.classificationResult.category, neighbors };
 
-    const { enrichReasoning } = await import('./enricher.js');
     const clusterReasoning = await enrichReasoning('find_cluster', ctx.clusterResult) || 
       (found ? `Duplicate alert: matches existing incident cluster #${bestId}.` : 'No duplicate hotspots identified in proximity.');
     completeCluster(ctx.clusterResult, clusterReasoning);
@@ -437,10 +434,10 @@ export async function processReport(reportData, onStep) {
     agent_messages: ctx.messageBus.getMessages(),
     verification_score: ctx.verificationResult.verification_score,
     verification_explanation: ctx.verificationResult.explanation,
-    priority_explanation: ctx.priorityResult.explanation || 'Priority resolved.',
+    priority_explanation: ctx.priorityResult.explanation || `Priority score: ${ctx.priorityResult.priority_score}.`,
     priority_detail: ctx.priorityResult.priority_detail || null,
     sla_risk_score: Math.round((ctx.slaResult.probability || 0) * 100),
-    sla_risk_explanation: ctx.slaResult.explanation || 'SLA probability resolved.',
+    sla_risk_explanation: ctx.slaResult.sla_risk_explanation || `SLA breach risk is ${Math.round((ctx.slaResult.probability || 0) * 100)}%.`,
     sla_params: ctx.slaResult.localized_params || null,
     dispatch_plan: ctx.planResult,
     cluster_explanation: ctx.clusterResult.found ? 'Clusters detected and resolved.' : 'No duplicate hotspots identified.',

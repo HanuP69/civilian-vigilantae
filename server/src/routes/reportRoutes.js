@@ -102,7 +102,7 @@ router.post('/', requireAuth, reportLimiter, upload.single('media'), async (req,
 
     res.json({
       success: true,
-      ticket_id: reportData.id,
+      ticket_id: report_id || reportData.id,
       merged: false,
       status: 'queued',
     });

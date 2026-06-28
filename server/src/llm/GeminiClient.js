@@ -187,7 +187,7 @@ export class GeminiClient extends LLMClient {
 
         return parsed;
       } catch (err) {
-        const isRetryable = err.status >= 500;
+        const isRetryable = err.status != null && err.status >= 500;
 
         if (isRetryable && attempt < MAX_RETRIES - 1) {
           const delay = BASE_DELAY_MS * Math.pow(2, attempt);

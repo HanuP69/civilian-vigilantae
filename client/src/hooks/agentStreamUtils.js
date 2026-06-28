@@ -1,12 +1,8 @@
 export function mergeAgentTrace(existingSteps = [], incomingSteps = []) {
   const merged = [...existingSteps];
-  const seen = new Set();
 
   incomingSteps.forEach((step) => {
-    const key = `${step.step}:${step.status}`;
-    if (seen.has(key)) return;
-    seen.add(key);
-
+    if (!step) return;
     const existingIndex = merged.findIndex((item) => item?.step === step.step);
     if (existingIndex >= 0) {
       merged[existingIndex] = { ...merged[existingIndex], ...step, index: existingIndex };
