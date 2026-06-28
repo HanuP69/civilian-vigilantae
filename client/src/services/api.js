@@ -166,6 +166,58 @@ export async function apiClaimQuest(questId, options = {}) {
   return handleResponse(res);
 }
 
+/**
+ * Fetch the current user's quests.
+ * Quests live on the user document itself (no separate endpoint), so this
+ * pulls from /users/me and normalizes the shape QuestTrackerSidebar expects.
+ */
+export async function fetchUserQuests(options = {}) {
+  const token = localStorage.getItem('userId');
+  const res = await fetchWithTimeout(`${API}/users/me?uid=${token}`, {
+    ...options,
+    headers: { 'Authorization': `Bearer ${token}`, ...options.headers }
+  });
+  const user = await handleResponse(res);
+  const quests = (user.quests || []).map(q => ({
+    ...q,
+    progress: q.current ?? q.progress ?? 0,
+    target: q.target ?? q.required ?? 0,
+    xp_reward: q.xpReward ?? q.xp_reward ?? 0,
+    gold_reward: q.goldReward ?? q.gold_reward ?? 0,
+    status: q.claimed ? 'completed' : (q.completed ? 'ready_to_claim' : 'active')
+  }));
+  return { quests };
+}
+
+/**
+ * Claim a completed quest's reward.
+ * Backend returns the full updated user doc; this normalizes it into the
+ * { success, xp_gained, gold_gained, leveled_up, new_level } shape the UI needs.
+ */
+export async function claimQuestReward(questId, options = {}) {
+  const beforeXP = JSON.parse(localStorage.getItem('lastKnownXP') || '0');
+  const beforeLevel = JSON.parse(localStorage.getItem('lastKnownLevel') || '1');
+
+  const updatedUser = await apiClaimQuest(questId, options);
+
+  const claimedQuest = (updatedUser.quests || []).find(q => q.id === questId);
+  const xpGained = claimedQuest?.xpReward ?? claimedQuest?.xp_reward ?? 0;
+  const goldGained = claimedQuest?.goldReward ?? claimedQuest?.gold_reward ?? 0;
+  const leveledUp = (updatedUser.level || 1) > beforeLevel;
+
+  localStorage.setItem('lastKnownXP', JSON.stringify(updatedUser.xp || 0));
+  localStorage.setItem('lastKnownLevel', JSON.stringify(updatedUser.level || 1));
+
+  return {
+    success: true,
+    xp_gained: xpGained,
+    gold_gained: goldGained,
+    leveled_up: leveledUp,
+    new_level: updatedUser.level || 1,
+    user: updatedUser
+  };
+}
+
 export async function apiBuyShopItem(itemId, options = {}) {
   const token = localStorage.getItem('userId');
   const res = await fetchWithTimeout(`${API}/users/shop/buy`, {

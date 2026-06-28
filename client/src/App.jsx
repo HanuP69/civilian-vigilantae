@@ -16,7 +16,6 @@ import ProfilePage from './pages/ProfilePage';
 import MissionsPage from './pages/MissionsPage';
 import CopilotDrawer from './components/copilot/CopilotDrawer';
 import QuestTrackerSidebar from './components/QuestTrackerSidebar';
-import XPAnimation from './components/XPAnimation';
 import './index.css';
 
 function NotFoundPage() {
@@ -268,6 +267,7 @@ function Navbar({ isConnected, onOpenQuestSidebar }) {
     <>
       {/* Floating Navigation HUD Container */}
       <div 
+        className="hud-navbar"
         style={{ 
           position: 'fixed', 
           top: '20px', 
@@ -661,9 +661,13 @@ function AppContent() {
       <a href="#main-content" className="skip-link">Skip to main content</a>
       <Navbar isConnected={isConnected} onOpenQuestSidebar={() => setIsQuestSidebarOpen(true)} />
       <CopilotDrawer />
-      <QuestTrackerSidebar isOpen={isQuestSidebarOpen} onClose={() => setIsQuestSidebarOpen(false)} />
+      <AnimatePresence>
+        {isQuestSidebarOpen && (
+          <QuestTrackerSidebar isOpen={isQuestSidebarOpen} onClose={() => setIsQuestSidebarOpen(false)} />
+        )}
+      </AnimatePresence>
 
-      <main id="main-content" className="app-main animate-fade-up stagger-1" style={{ paddingTop: '80px', position: 'relative', zIndex: 1 }}>
+      <main id="main-content" className="app-main animate-fade-up stagger-1" style={{ position: 'relative', zIndex: 1 }}>
         <Routes>
           <Route path="/" element={<ProtectedRoute><HomePage /></ProtectedRoute>} />
           <Route path="/report" element={<ProtectedRoute><ReportPage /></ProtectedRoute>} />
@@ -677,9 +681,6 @@ function AppContent() {
           <Route path="*" element={<ProtectedRoute><NotFoundPage /></ProtectedRoute>} />
         </Routes>
       </main>
-
-      {/* Global XP/Level Up Animation System */}
-      <XPAnimation />
     </div>
   );
 }

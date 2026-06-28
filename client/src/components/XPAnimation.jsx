@@ -68,7 +68,6 @@ export function XPAnimation({
   };
 
   return (
-    <div className="XPAnimation">
     <div 
       ref={containerRef} 
       className={`xp-animation-container ${positionClasses[position]}`}

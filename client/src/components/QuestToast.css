@@ -15,7 +15,7 @@
 
 @media (max-width: 640px) {
   .quest-toast-container {
-    top: var(--space-4);
+    top: 76px;
     right: var(--space-4);
     left: var(--space-4);
     max-width: none;

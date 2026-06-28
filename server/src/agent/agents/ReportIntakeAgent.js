@@ -6,7 +6,6 @@ export const ReportIntakeAgent = {
     const { reportData, trace } = ctx;
     
     // 1. Intake
-    const completeIntake = trace.startStep('intake', { reportData });
     const intakeResult = {
       report_id: reportData.id || 'new',
       text: reportData.text,
@@ -17,6 +16,7 @@ export const ReportIntakeAgent = {
       address: reportData.address || null,
       media_urls: reportData.media_urls || [],
     };
+    const completeIntake = trace.startStep('intake', { reportData: intakeResult });
 
     // Validate coordinates (restrict to Lucknow bounding box)
     const latitude = parseFloat(reportData.lat);

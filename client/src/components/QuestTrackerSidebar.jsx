@@ -3,7 +3,8 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../hooks/AuthContext';
 import { fetchUserQuests, claimQuestReward } from '../services/api';
 import { useQuestToast } from './QuestToast';
-import { XPAnimation, useXPAnimation } from './XPAnimation';
+import { XPAnimation } from './XPAnimation';
+import { useXPAnimation } from '../hooks/useXPAnimation';
 
 const questIcons = {
   'verify_report': '🔍',
@@ -33,7 +34,7 @@ function QuestTrackerSidebar({ isOpen, onClose, activeQuests = [], completedQues
   const sidebarRef = useRef(null);
   
   // New XP Animation system
-  const { triggerXPGain, triggerLevelUp, xpAnimations, levelUpAnimations } = useXPAnimation();
+  const { currentAnimation, addXPAnimation, onAnimationComplete } = useXPAnimation();
   // New Quest Toast system
   const { showToast } = useQuestToast();
 
@@ -61,8 +62,8 @@ function QuestTrackerSidebar({ isOpen, onClose, activeQuests = [], completedQues
     try {
       const result = await claimQuestReward(quest.id);
       if (result.success) {
-        // Trigger XP animation
-        triggerXPGain(result.xp_gained, { x: window.innerWidth / 2, y: window.innerHeight / 2 });
+        // Trigger XP animation (and level-up celebration in the same animation if applicable)
+        addXPAnimation(result.xp_gained, result.leveled_up, result.new_level, result.new_level - (result.leveled_up ? 1 : 0));
         
         // Show Quest Toast for reward
         showToast({
@@ -77,11 +78,8 @@ function QuestTrackerSidebar({ isOpen, onClose, activeQuests = [], completedQues
         // Update quest status
         setQuests(prev => prev.map(q => q.id === quest.id ? { ...q, status: 'completed', claimed: true } : q));
         
-        // Trigger level up check
+        // Show level up toast
         if (result.leveled_up) {
-          triggerLevelUp(result.new_level, { x: window.innerWidth / 2, y: window.innerHeight / 2 });
-          
-          // Show level up toast
           showToast({
             type: 'levelup',
             title: 'LEVEL UP!',
@@ -110,13 +108,12 @@ function QuestTrackerSidebar({ isOpen, onClose, activeQuests = [], completedQues
   const activeQuestList = quests.filter(q => q.status === 'active' || q.status === 'ready_to_claim');
   const completedQuestList = quests.filter(q => q.status === 'completed' && !q.claimed);
 
-  if (!isOpen) return null;
 
   return (
     <>
       {/* Overlay for mobile */}
       <motion.div
-        className="fixed inset-0 z-40 bg-black/50 backdrop-blur-sm"
+        className="quest-sidebar-overlay"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
@@ -127,7 +124,7 @@ function QuestTrackerSidebar({ isOpen, onClose, activeQuests = [], completedQues
       {/* Sidebar */}
       <motion.aside
         ref={sidebarRef}
-        className="fixed right-0 top-0 h-full z-50 w-full max-w-sm md:max-w-md lg:max-w-lg"
+        className="quest-sidebar-aside"
         initial={{ x: '100%' }}
         animate={{ x: 0 }}
         exit={{ x: '100%' }}
@@ -135,7 +132,7 @@ function QuestTrackerSidebar({ isOpen, onClose, activeQuests = [], completedQues
         role="dialog"
         aria-label="Quest Tracker"
       >
-        <div className="h-full flex flex-col rpg-panel" style={{ 
+        <div className="quest-sidebar-container rpg-panel" style={{ 
           borderRadius: 0, 
           borderLeft: '2px solid var(--border-subtle)',
           background: 'linear-gradient(180deg, oklch(0.12 0.02 260 / 0.98) 0%, oklch(0.08 0.02 260 / 0.99) 100%)',
@@ -211,7 +208,7 @@ function QuestTrackerSidebar({ isOpen, onClose, activeQuests = [], completedQues
           </div>
 
           {/* Quest List */}
-          <div className="flex-1 overflow-y-auto p-3 space-y-3" style={{ scrollbarWidth: 'thin' }}>
+          <div className="quest-sidebar-scroll space-y-3" style={{ scrollbarWidth: 'thin' }}>
             <AnimatePresence mode="popLayout">
               {loading ? (
                 <motion.div 
@@ -225,7 +222,8 @@ function QuestTrackerSidebar({ isOpen, onClose, activeQuests = [], completedQues
                 </motion.div>
               ) : activeQuestList.length === 0 && completedQuestList.length === 0 ? (
                 <motion.div
-                  key="key="empty" className="text-center py-8">
+                  key="empty"
+                  className="text-center py-8">
                   <p className="font-pixel text-muted" style={{ fontSize: '9px', letterSpacing: '1px' }}>NO ACTIVE QUESTS</p>
                   <p className="font-pixel text-muted mt-1" style={{ fontSize: '8px' }}>VISIT THE MISSION BOARD TO BEGIN YOUR ADVENTURE</p>
                 </motion.div>
@@ -306,9 +304,47 @@ function QuestTrackerSidebar({ isOpen, onClose, activeQuests = [], completedQues
       </motion.aside>
 
       {/* XP Animation Layer */}
-      <XPAnimation animations={xpAnimations} levelUpAnimations={levelUpAnimations} />
+      {currentAnimation && (
+        <XPAnimation
+          xpGained={currentAnimation.xpGained}
+          levelUp={currentAnimation.levelUp}
+          newLevel={currentAnimation.newLevel}
+          oldLevel={currentAnimation.oldLevel}
+          onComplete={onAnimationComplete}
+        />
+      )}
 
       <style jsx global>{`
+        .quest-sidebar-overlay {
+          position: fixed;
+          top: 0;
+          left: 0;
+          right: 0;
+          bottom: 0;
+          z-index: 1000;
+          background: rgba(0, 0, 0, 0.6);
+          backdrop-filter: blur(4px);
+        }
+        .quest-sidebar-aside {
+          position: fixed;
+          top: 0;
+          right: 0;
+          bottom: 0;
+          height: 100vh;
+          width: 100%;
+          max-width: 420px;
+          z-index: 1001;
+        }
+        .quest-sidebar-container {
+          height: 100%;
+          display: flex;
+          flex-direction: column;
+        }
+        .quest-sidebar-scroll {
+          flex: 1;
+          overflow-y: auto;
+          padding: var(--space-4);
+        }
         @keyframes spin {
           from { transform: rotate(0deg); }
           to { transform: rotate(360deg); }

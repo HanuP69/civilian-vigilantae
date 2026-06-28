@@ -229,6 +229,3 @@ export function AlertDialog({
     </Dialog>
   );
 }
-
-// Need to import React for useRef and useEffect
-import React from 'react';

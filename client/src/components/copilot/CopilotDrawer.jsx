@@ -142,7 +142,7 @@ function CopilotDrawer() {
         onClick={() => setIsOpen(true)}
         whileHover={{ scale: 1.1 }}
         whileTap={{ scale: 0.9 }}
-        className="font-pixel"
+        className="font-pixel copilot-trigger"
         style={{
           position: 'fixed',
           bottom: '24px',
