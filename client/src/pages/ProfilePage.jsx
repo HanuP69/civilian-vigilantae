@@ -3,8 +3,9 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/AuthContext';
 import { useToast } from '../hooks/useToast.jsx';
 import { useQuestToast } from '../components/QuestToast';
-import { apiClaimQuest, apiBuyShopItem, apiEquipAvatar } from '../services/api';
+import { apiClaimQuest, apiEquipAvatar } from '../services/api';
 import { CustomAvatar, parseCustomAvatar } from '../components/CustomAvatar';
+import { PageShell } from '../components/ui/PixelKit';
 
 const SHOP_ITEMS = [
   { id: 'title_paladin', name: 'Lucknow Paladin Title', cost: 50, type: 'title', value: 'Lucknow Paladin', desc: 'A legendary title representing honor' },
@@ -156,9 +157,6 @@ function ProfilePage() {
   const { toast } = useToast();
   const navigate = useNavigate();
   const [claiming, setClaiming] = useState(null);
-  const [buying, setBuying] = useState(null);
-  const [activeTab, setActiveTab] = useState('quests');
-  const [shopCategory, setShopCategory] = useState('all');
   const [questFilter, setQuestFilter] = useState('active');
   const [showCustomizer, setShowCustomizer] = useState(false);
   const [customSkin, setCustomSkin] = useState(0);
@@ -208,23 +206,7 @@ function ProfilePage() {
     }
   };
 
-  const handleBuyItem = async (itemId, cost) => {
-    if ((user.gold || 0) < cost) {
-      toast('Insufficient gold balance!', 'error');
-      return;
-    }
 
-    setBuying(itemId);
-    try {
-      await apiBuyShopItem(itemId);
-      toast('Purchase successful! Unlocked and equipped!', 'success');
-      await refreshProfile();
-    } catch (err) {
-      toast(err.message || 'Purchase failed', 'error');
-    } finally {
-      setBuying(null);
-    }
-  };
 
   const handleEquipAvatar = async (avatarValue) => {
     try {
@@ -259,8 +241,10 @@ function ProfilePage() {
     : null;
 
   return (
-    <>
-      <div style={{ maxWidth: 1200, margin: '0 auto', paddingBottom: 'var(--space-10)' }}>
+    <PageShell 
+      title="🛡️ Hero Profile & Command Console" 
+      subtitle="Customize your citizen avatar, track active quest log, and claim quest rewards"
+    >
       
       {/* 2-Column Responsive Dashboard Container */}
       <div 
@@ -276,7 +260,8 @@ function ProfilePage() {
         <div style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: 'var(--space-6)' }} className="profile-left-col flex flex-col gap-6">
           
           {/* Hero Profile Details Card */}
-          <div className="card rpg-panel" style={{ borderRadius: 0, padding: 'var(--space-5)' }}>
+          <div className="card rpg-panel rpg-panel-sandstone" style={{ borderRadius: 0, padding: 'var(--space-5)' }}>
+            <div className="card pixel-border" style={{ padding: 'var(--space-4)', display: 'flex', flexDirection: 'column', gap: 'var(--space-4)', margin: 0 }}>
             
             {/* Avatar & Level Frame */}
             <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 'var(--space-4)' }}>
@@ -428,31 +413,31 @@ function ProfilePage() {
             </div>
 
             {/* Gold Widget */}
-            <div className="pixel-border" style={{ marginTop: 'var(--space-5)', background: 'oklch(0.2 0.01 260)', padding: '10px 14px', textAlign: 'center', borderRadius: 0 }}>
-              <span className="font-pixel" style={{ fontSize: '0.9rem', color: 'var(--rank-gold)', display: 'block' }}>🪙 {user.gold || 0}</span>
-              <span className="font-pixel" style={{ fontSize: '0.45rem', color: 'var(--ink-muted)', marginTop: '4px', display: 'block' }}>GOLD BALANCE</span>
+            <div className="pixel-border gold-balance-box">
+              <span className="font-pixel gold-value">🪙 {user.gold || 0}</span>
+              <span className="font-pixel gold-label">GOLD BALANCE</span>
             </div>
-
           </div>
+        </div>
 
           {/* Your Community Impact Card */}
-          <div className="card rpg-panel" style={{ borderRadius: 0, padding: 'var(--space-4)' }}>
-            <h3 className="font-pixel" style={{ margin: '0 0 var(--space-4) 0', fontSize: '0.65rem', borderBottom: '2px solid var(--border)', paddingBottom: 'var(--space-2)' }}>🛡️ Your Community Impact</h3>
+          <div className="card rpg-panel rpg-panel-sandstone" style={{ borderRadius: 0, padding: 'var(--space-4)' }}>
+            <h3 className="font-pixel" style={{ margin: '0 0 var(--space-4) 0', fontSize: '0.65rem', paddingBottom: 'var(--space-2)' }}>🛡️ Your Community Impact</h3>
             
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
-              <div className="flex justify-between items-center" style={{ borderBottom: '1px solid var(--border)', paddingBottom: 'var(--space-2)' }}>
+            <div className="card pixel-border" style={{ padding: 'var(--space-4)', display: 'flex', flexDirection: 'column', gap: 'var(--space-3)', margin: 0 }}>
+              <div className="flex justify-between items-center" style={{ paddingBottom: 'var(--space-2)' }}>
                 <span className="font-pixel text-muted" style={{ fontSize: '0.5rem' }}>COMMUNITY RANK</span>
                 <span className="font-pixel" style={{ fontSize: '0.6rem', color: 'var(--accent)' }}>{getCommunityRank(level)}</span>
               </div>
-              <div className="flex justify-between items-center" style={{ borderBottom: '1px solid var(--border)', paddingBottom: 'var(--space-2)' }}>
+              <div className="flex justify-between items-center" style={{ paddingBottom: 'var(--space-2)' }}>
                 <span className="font-pixel text-muted" style={{ fontSize: '0.5rem' }}>ISSUES REPORTED</span>
                 <span className="font-pixel" style={{ fontSize: '0.65rem', color: 'var(--ink-primary)' }}>{user.reports_submitted || 0}</span>
               </div>
-              <div className="flex justify-between items-center" style={{ borderBottom: '1px solid var(--border)', paddingBottom: 'var(--space-2)' }}>
+              <div className="flex justify-between items-center" style={{ paddingBottom: 'var(--space-2)' }}>
                 <span className="font-pixel text-muted" style={{ fontSize: '0.5rem' }}>ISSUES VERIFIED</span>
                 <span className="font-pixel" style={{ fontSize: '0.65rem', color: 'var(--ink-primary)' }}>{user.verifications_made || 0}</span>
               </div>
-              <div className="flex justify-between items-center" style={{ borderBottom: '1px solid var(--border)', paddingBottom: 'var(--space-2)' }}>
+              <div className="flex justify-between items-center" style={{ paddingBottom: 'var(--space-2)' }}>
                 <span className="font-pixel text-muted" style={{ fontSize: '0.5rem' }}>NEIGHBORS HELPED</span>
                 <span className="font-pixel" style={{ fontSize: '0.65rem', color: 'var(--success)' }}>~{((user.reports_submitted || 0) * 12 + (user.verifications_made || 0) * 4) || 0}</span>
               </div>
@@ -488,286 +473,142 @@ function ProfilePage() {
         </div>
 
         {/* RIGHT COLUMN: ACTION CONSOLE VIEW (FLEX-1) */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-6)' }} className="profile-right-col flex flex-col gap-6">
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-6)', flex: 1, minWidth: '320px' }} className="profile-right-col flex flex-col gap-6">
           
-          {/* Main Action Tabs */}
-          <div style={{ display: 'flex', gap: '6px' }}>
-            <button
-              onClick={() => setActiveTab('quests')}
-              className="font-pixel"
-              style={{
-                padding: '10px 16px',
-                fontSize: '0.65rem',
-                border: '2px solid #000',
-                borderRadius: 0,
-                background: activeTab === 'quests' ? 'var(--accent)' : 'var(--bg-secondary)',
-                color: activeTab === 'quests' ? '#000' : 'var(--ink-secondary)',
-                boxShadow: activeTab === 'quests' ? 'none' : '2px 2px 0 rgba(0,0,0,0.5)',
-                cursor: 'pointer',
-                fontWeight: 800
-              }}
-            >
-              📜 MISSION JOURNAL
-            </button>
+          {/* SECTION 1: MISSION JOURNAL */}
+          <div className="card rpg-panel rpg-panel-sandstone" style={{ borderRadius: 0, padding: 'var(--space-5)' }}>
+            <h3 className="font-pixel" style={{ margin: '0 0 var(--space-4) 0', fontSize: '0.75rem', paddingBottom: 'var(--space-2)' }}>📜 MISSION JOURNAL</h3>
             
-            <button
-              onClick={() => setActiveTab('shop')}
-              className="font-pixel"
-              style={{
-                padding: '10px 16px',
-                fontSize: '0.65rem',
-                border: '2px solid #000',
-                borderRadius: 0,
-                background: activeTab === 'shop' ? 'var(--accent)' : 'var(--bg-secondary)',
-                color: activeTab === 'shop' ? '#000' : 'var(--ink-secondary)',
-                boxShadow: activeTab === 'shop' ? 'none' : '2px 2px 0 rgba(0,0,0,0.5)',
-                cursor: 'pointer',
-                fontWeight: 800
-              }}
-            >
-              🛒 REWARD SHOP
-            </button>
-          </div>
+            <div className="flex flex-col gap-5">
+              {/* Mission Filters */}
+              <div style={{ display: 'flex', gap: '4px', paddingBottom: 'var(--space-3)' }}>
+                {['active', 'completed'].map((f) => (
+                  <button
+                    key={f}
+                    onClick={() => setQuestFilter(f)}
+                    className="font-pixel"
+                    style={{
+                      padding: '6px 10px',
+                      fontSize: '10px',
+                      border: '1px solid var(--border)',
+                      borderRadius: 0,
+                      background: questFilter === f ? 'var(--accent)' : 'var(--bg-surface)',
+                      color: questFilter === f ? '#000' : 'var(--ink-secondary)',
+                      cursor: 'pointer'
+                    }}
+                  >
+                    {f.toUpperCase()}
+                  </button>
+                ))}
+              </div>
 
-          {/* TAB CONTENT PANEL */}
-          <div className="card rpg-panel" style={{ borderRadius: 0, padding: 'var(--space-5)', minHeight: 400 }}>
-            
-            {/* Mission Journal Tab Content */}
-            {activeTab === 'quests' && (
-              <div className="flex flex-col gap-5">
-                {/* Mission Filters */}
-                <div style={{ display: 'flex', gap: '4px', borderBottom: '2px solid var(--border)', paddingBottom: 'var(--space-3)' }}>
-                  {['active', 'completed'].map((f) => (
-                    <button
-                      key={f}
-                      onClick={() => setQuestFilter(f)}
-                      className="font-pixel"
+              <div className="flex flex-col gap-4 rpg-scrollbar" style={{ maxHeight: '350px', overflowY: 'auto', paddingRight: '8px' }}>
+                {(user.quests || [])
+                  .filter(quest => questFilter === 'active' ? !quest.claimed : quest.claimed)
+                  .map((quest) => {
+                  const progress = Math.min((quest.current || 0) / quest.target, 1);
+                  const isClaimable = quest.completed && !quest.claimed;
+                  
+                  return (
+                    <div 
+                      key={quest.id} 
+                      className="card pixel-border"
                       style={{
-                        padding: '6px 10px',
-                        fontSize: '10px',
-                        border: '1px solid var(--border)',
                         borderRadius: 0,
-                        background: questFilter === f ? 'var(--accent)' : 'var(--bg-surface)',
-                        color: questFilter === f ? '#000' : 'var(--ink-secondary)',
-                        cursor: 'pointer'
+                        background: quest.claimed 
+                          ? 'rgba(32, 34, 42, 0.4)' 
+                          : isClaimable 
+                            ? 'linear-gradient(135deg, var(--bg-secondary) 0%, rgba(201, 163, 90, 0.04) 100%)' 
+                            : 'var(--bg-surface)',
+                        borderColor: isClaimable ? 'var(--accent)' : 'var(--border)',
+                        boxShadow: isClaimable ? '3px 3px 0 oklch(0 0 0 / 0.5)' : 'none',
+                        opacity: quest.claimed ? 0.7 : 1,
+                        display: 'flex',
+                        flexDirection: 'column',
+                        gap: 'var(--space-3)',
+                        padding: 'var(--space-4)'
                       }}
                     >
-                      {f.toUpperCase()}
-                    </button>
-                  ))}
-                </div>
-
-                <div className="flex flex-col gap-4 rpg-scrollbar" style={{ maxHeight: '450px', overflowY: 'auto', paddingRight: '8px' }}>
-                  {(user.quests || [])
-                    .filter(quest => questFilter === 'active' ? !quest.claimed : quest.claimed)
-                    .map((quest) => {
-                    const progress = Math.min((quest.current || 0) / quest.target, 1);
-                    const isClaimable = quest.completed && !quest.claimed;
-                    
-                    return (
-                      <div 
-                        key={quest.id} 
-                        className="card pixel-border"
-                        style={{
-                          borderRadius: 0,
-                          background: quest.claimed 
-                            ? 'rgba(32, 34, 42, 0.4)' 
-                            : isClaimable 
-                              ? 'linear-gradient(135deg, var(--bg-secondary) 0%, rgba(201, 163, 90, 0.04) 100%)' 
-                              : 'var(--bg-surface)',
-                          borderColor: isClaimable ? 'var(--accent)' : 'var(--border)',
-                          boxShadow: isClaimable ? '3px 3px 0 oklch(0 0 0 / 0.5)' : 'none',
-                          opacity: quest.claimed ? 0.7 : 1,
-                          display: 'flex',
-                          flexDirection: 'column',
-                          gap: 'var(--space-3)',
-                          padding: 'var(--space-4)'
-                        }}
-                      >
-                        <div className="flex justify-between items-start">
-                          <div className="flex flex-col gap-1" style={{ flex: 1, paddingRight: '8px' }}>
-                            <span className="font-pixel" style={{ fontSize: '11px', color: isClaimable ? 'var(--accent)' : 'var(--ink-primary)' }}>
-                              {quest.name}
-                            </span>
-                            <span className="text-xs text-muted">
-                              {quest.description}
-                            </span>
-                          </div>
-
-                          <div className="flex flex-col items-end font-pixel text-right" style={{ color: 'var(--accent)', fontSize: '9px', gap: '2px' }}>
-                            <span>+{quest.xpReward} XP</span>
-                            <span>+{quest.goldReward} GLD</span>
-                          </div>
-                        </div>
-
-                        {/* Progress info */}
-                        <div className="flex flex-col gap-1.5">
-                          <div className="flex justify-between font-pixel text-muted" style={{ fontSize: '0.45rem' }}>
-                            <span>{quest.claimed ? 'CLAIMED' : quest.completed ? 'COMPLETED' : 'IN PROGRESS'}</span>
-                            <span>{quest.current || 0} / {quest.target}</span>
-                          </div>
-                          
-                          {!quest.claimed && (
-                            <div style={{ height: '8px', background: 'var(--bg-secondary)', border: '1px solid var(--border)', padding: '1px' }}>
-                              <div 
-                                style={{ 
-                                  width: `${progress * 100}%`, 
-                                  height: '100%',
-                                  background: quest.completed ? 'var(--success)' : 'var(--accent)' 
-                                }} 
-                              />
-                            </div>
-                          )}
-                        </div>
-
-                        {/* Action button */}
-                        {isClaimable && (
-                          <button
-                            onClick={() => handleClaimReward(quest.id)}
-                            disabled={claiming === quest.id}
-                            className="font-pixel"
-                            style={{
-                              padding: '8px 12px',
-                              fontSize: '0.55rem',
-                              background: 'var(--success)',
-                              color: '#000',
-                              border: '2px solid #000',
-                              boxShadow: '2px 2px 0 rgba(0,0,0,0.5)',
-                              width: '100%',
-                              cursor: 'pointer',
-                              fontWeight: 800,
-                              marginTop: '2px'
-                            }}
-                          >
-                            {claiming === quest.id ? 'CLAIMING...' : 'CLAIM REWARD!'}
-                          </button>
-                        )}
-
-                        {quest.claimed && (
-                           <span className="font-pixel text-success" style={{ fontSize: '10px', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                            ✓ MISSION REWARD COLLECTED
+                      <div className="flex justify-between items-start">
+                        <div className="flex flex-col gap-1" style={{ flex: 1, paddingRight: '8px' }}>
+                          <span className="font-pixel" style={{ fontSize: '11px', color: isClaimable ? 'var(--accent)' : 'var(--ink-primary)' }}>
+                            {quest.name}
                           </span>
+                          <span className="text-xs text-muted">
+                            {quest.description}
+                          </span>
+                        </div>
+
+                        <div className="flex flex-col items-end font-pixel text-right" style={{ color: 'var(--accent)', fontSize: '9px', gap: '2px' }}>
+                          <span>+{quest.xpReward} XP</span>
+                          <span>+{quest.goldReward} GLD</span>
+                        </div>
+                      </div>
+
+                      {/* Progress info */}
+                      <div className="flex flex-col gap-1.5">
+                        <div className="flex justify-between font-pixel text-muted" style={{ fontSize: '0.45rem' }}>
+                          <span>{quest.claimed ? 'CLAIMED' : quest.completed ? 'COMPLETED' : 'IN PROGRESS'}</span>
+                          <span>{quest.current || 0} / {quest.target}</span>
+                        </div>
+                        
+                        {!quest.claimed && (
+                          <div style={{ height: '8px', background: 'var(--bg-secondary)', border: '1px solid var(--border)', padding: '1px' }}>
+                            <div 
+                              style={{ 
+                                width: `${progress * 100}%`, 
+                                height: '100%',
+                                background: quest.completed ? 'var(--success)' : 'var(--accent)' 
+                              }} 
+                            />
+                          </div>
                         )}
                       </div>
-                    );
-                  })}
 
-                  {(user.quests || []).length === 0 && (
-                    <div className="text-center text-muted font-pixel" style={{ padding: 'var(--space-6)', fontSize: '10px' }}>
-                      NO ACTIVE MISSION LOGS FOUND
-                    </div>
-                  )}
-                </div>
-              </div>
-            )}
-
-            {/* Merchant Shop Tab Content */}
-            {activeTab === 'shop' && (
-              <div className="flex flex-col gap-5">
-                
-                {/* Shop Sub-category Filter Buttons */}
-                <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap', borderBottom: '2px solid var(--border)', paddingBottom: 'var(--space-3)' }}>
-                  {['all', 'title', 'avatar', 'badge'].map((cat) => (
-                    <button
-                      key={cat}
-                      onClick={() => setShopCategory(cat)}
-                      className="font-pixel"
-                      style={{
-                        padding: '6px 10px',
-                        fontSize: '10px',
-                        border: '1px solid var(--border)',
-                        borderRadius: 0,
-                        background: shopCategory === cat ? 'var(--accent)' : 'var(--bg-surface)',
-                        color: shopCategory === cat ? '#000' : 'var(--ink-secondary)',
-                        cursor: 'pointer'
-                      }}
-                    >
-                      {cat.toUpperCase()}
-                    </button>
-                  ))}
-                </div>
-
-                {/* Items Grid */}
-                <div className="flex flex-col gap-3 rpg-scrollbar" style={{ maxHeight: '450px', overflowY: 'auto', paddingRight: '8px' }}>
-                  {SHOP_ITEMS
-                    .filter(item => shopCategory === 'all' || item.type === shopCategory)
-                    .map((item) => {
-                      const owned = isItemOwned(item);
-                      const canAfford = (user.gold || 0) >= item.cost;
-                      
-                      return (
-                        <div 
-                          key={item.id} 
-                          className="card pixel-border"
+                      {/* Action button */}
+                      {isClaimable && (
+                        <button
+                          onClick={() => handleClaimReward(quest.id)}
+                          disabled={claiming === quest.id}
+                          className="font-pixel"
                           style={{
-                            borderRadius: 0,
-                            padding: 'var(--space-3) var(--space-4)',
-                            display: 'flex',
-                            flexDirection: 'row',
-                            alignItems: 'center',
-                            justifyContent: 'space-between',
-                            background: 'var(--bg-surface)',
-                            borderColor: owned ? 'var(--border-hover)' : 'var(--border)',
-                            gap: 'var(--space-4)'
+                            padding: '8px 12px',
+                            fontSize: '0.55rem',
+                            background: 'var(--success)',
+                            color: '#000',
+                            border: '2px solid #000',
+                            boxShadow: '2px 2px 0 rgba(0,0,0,0.5)',
+                            width: '100%',
+                            cursor: 'pointer',
+                            fontWeight: 800,
+                            marginTop: '2px'
                           }}
                         >
-                          <div className="flex items-center gap-3" style={{ flex: 1, minWidth: 0 }}>
-                            <ShopItemIcon id={item.id} />
-                            
-                            <div className="flex flex-col gap-0.5" style={{ minWidth: 0, flex: 1 }}>
-                              <span className="font-pixel truncate" style={{ fontSize: '0.55rem', color: owned ? 'var(--accent)' : 'var(--ink-primary)' }}>
-                                {item.name}
-                              </span>
-                              <span className="text-xs text-muted truncate">{item.desc}</span>
-                            </div>
-                          </div>
+                          {claiming === quest.id ? 'CLAIMING...' : 'CLAIM REWARD!'}
+                        </button>
+                      )}
 
-                          <div>
-                            {owned ? (
-                              <span 
-                                className="font-pixel" 
-                                style={{ 
-                                  fontSize: '0.45rem',
-                                  background: 'oklch(0.2 0.01 260)', 
-                                  padding: '4px 8px', 
-                                  border: '1px solid var(--border)',
-                                  color: 'var(--ink-muted)'
-                                }}
-                              >
-                                EQUIPPED
-                              </span>
-                            ) : (
-                              <button
-                                onClick={() => handleBuyItem(item.id, item.cost)}
-                                disabled={buying === item.id || !canAfford}
-                                className="font-pixel"
-                                style={{
-                                  padding: '8px 12px',
-                                  fontSize: '10px',
-                                  border: '2px solid #000',
-                                  boxShadow: canAfford ? '2px 2px 0 rgba(0,0,0,0.5)' : 'none',
-                                  background: canAfford ? 'var(--accent)' : 'oklch(0.22 0.01 260)',
-                                  color: canAfford ? '#000' : 'var(--ink-muted)',
-                                  cursor: canAfford ? 'pointer' : 'not-allowed',
-                                  fontWeight: 800
-                                }}
-                              >
-                                {buying === item.id ? '...' : `BUY 🪙${item.cost}`}
-                              </button>
-                            )}
-                          </div>
-                        </div>
-                      );
-                    })}
-                </div>
+                      {quest.claimed && (
+                         <span className="font-pixel text-success" style={{ fontSize: '10px', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                          ✓ MISSION REWARD COLLECTED
+                        </span>
+                      )}
+                    </div>
+                  );
+                })}
 
+                {(user.quests || []).length === 0 && (
+                  <div className="text-center text-muted font-pixel" style={{ padding: 'var(--space-6)', fontSize: '10px' }}>
+                    NO ACTIVE MISSION LOGS FOUND
+                  </div>
+                )}
               </div>
-            )}
+            </div>
 
           </div>
 
-        </div>
 
+        </div>
       </div>
 
 
@@ -1041,8 +882,7 @@ function ProfilePage() {
           </div>
         </div>
       )}
-    </div>
-    </>
+    </PageShell>
   );
 }
 

@@ -7,6 +7,7 @@ import { CATEGORY_LABELS, CATEGORY_COLORS } from '../utils/constants';
 import { formatHours, capitalize } from '../utils/formatters';
 import { useToast } from '../hooks/useToast.jsx';
 import { motion } from 'framer-motion';
+import { PageShell } from '../components/ui/PixelKit';
 
 const getSeverityColor = (index) => {
   if (index > 8) return 'var(--error)';
@@ -698,11 +699,10 @@ function DashboardPage() {
   ];
 
   return (
-    <motion.div className="flex flex-col gap-6" variants={container} initial="hidden" animate="show">
-      <div className="flex items-center justify-between">
-        <h2 className="font-pixel" style={{ fontSize: '0.9rem', color: 'var(--ink-primary)' }}>⚔️ Department Operations Ledger</h2>
-        <span className="font-pixel text-muted" style={{ fontSize: '0.45rem' }}>{tickets.length} ISSUES TRACKED · LIVE</span>
-      </div>
+    <PageShell 
+      title="⚔️ Department Operations Ledger" 
+      subtitle={`${tickets.length} ISSUES TRACKED · LIVE`}
+    >
 
       {/* Modern RPG Sub-Tabs */}
       <div style={{ display: 'flex', gap: '6px', borderBottom: '2px solid var(--border)', paddingBottom: 'var(--space-3)' }}>
@@ -1380,7 +1380,7 @@ function DashboardPage() {
           )}
         </>
       )}
-    </motion.div>
+    </PageShell>
   );
 }
 

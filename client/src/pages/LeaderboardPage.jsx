@@ -3,6 +3,7 @@ import { fetchLeaderboard } from '../services/api';
 import { useToast } from '../hooks/useToast.jsx';
 import { motion } from 'framer-motion';
 import { CustomAvatar, parseCustomAvatar } from '../components/CustomAvatar';
+import { PageShell } from '../components/ui/PixelKit';
 
 const BADGE_DISPLAY = {
   'Neighborhood Watch': { emoji: '🛡️', name: 'Neighborhood Watch' },
@@ -114,11 +115,10 @@ function LeaderboardPage() {
   };
 
   return (
-    <div style={{ maxWidth: 1200, margin: '0 auto' }} className="flex flex-col gap-6">
-      <div className="flex items-center justify-between">
-        <h2 className="font-serif">Hero League Rankings</h2>
-        <span className="font-mono text-xs" style={{ color: 'var(--accent)', letterSpacing: '0.05em', fontWeight: 600 }}>Citizen contribution rankings</span>
-      </div>
+    <PageShell 
+      title="🏆 Hero League Rankings" 
+      subtitle="Citizen contribution and verification rankings"
+    >
 
       <motion.div
         className="flex flex-col gap-4"
@@ -262,7 +262,7 @@ function LeaderboardPage() {
           </div>
         )}
       </motion.div>
-    </div>
+    </PageShell>
   );
 }
 

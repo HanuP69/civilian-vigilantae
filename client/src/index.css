@@ -1,9 +1,10 @@
 @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
+@import './styles/no-cards.css';
 
 :root {
-  --font-sans: 'Press Start 2P', cursive;
+  --font-sans: 'Outfit', system-ui, -apple-system, sans-serif;
   --font-serif: 'Press Start 2P', cursive;
-  --font-mono: 'Press Start 2P', cursive;
+  --font-mono: 'JetBrains Mono', monospace;
   --font-pixel: 'Press Start 2P', cursive;
 
   --bg-primary: #08090c;
@@ -94,11 +95,14 @@ html {
 
 body {
   font-family: var(--font-sans);
-  background: var(--bg-primary);
+  background: #1a1420; /* Deeper base for WorldBackdrop */
   color: var(--ink-primary);
   line-height: 1.6;
   min-height: 100dvh;
   position: relative;
+  /* Better contrast for readability */
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
 }
 
 /* Skip to main content - accessibility */
@@ -142,10 +146,10 @@ body::before {
   width: 100vw;
   height: 100vh;
   pointer-events: none;
-  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
-  opacity: 0.04;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.7' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+  opacity: 0.025;
   mix-blend-mode: overlay;
-  z-index: var(--z-tooltip);
+  z-index: 1;
 }
 
 h1, h2, h3, h4, h5, h6 {
@@ -845,6 +849,11 @@ input::placeholder { color: var(--ink-muted); }
   margin: 0 auto;
   padding: var(--space-8);
   padding-top: 116px; /* clears the fixed HUD navbar (20px offset + ~76px button/label + breathing room) */
+}
+
+/* Clear double-padding when using PageShell/hud-page inside app-main shell */
+.app-main .hud-page {
+  padding-top: 0;
 }
 
 .stats-row {

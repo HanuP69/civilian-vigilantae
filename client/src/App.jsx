@@ -13,10 +13,15 @@ import LeaderboardPage from './pages/LeaderboardPage';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
 import ProfilePage from './pages/ProfilePage';
+import ShopPage from './pages/ShopPage';
 import MissionsPage from './pages/MissionsPage';
 import CopilotDrawer from './components/copilot/CopilotDrawer';
 import QuestTrackerSidebar from './components/QuestTrackerSidebar';
+import WorldBackdrop from './components/world/WorldBackdrop';
+import { useWorldState } from './hooks/useWorldState';
+import { ScrollIcon, KeyIcon } from './components/ui/PixelIcons';
 import './index.css';
+import './styles/hud.css';
 
 function NotFoundPage() {
   return (
@@ -183,6 +188,15 @@ const AuthIcon = ({ isOut }) => (
   </svg>
 );
 
+const ShopIcon = () => (
+  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="square">
+    <path d="M4 8h16l-1 10H5L4 8z" fill="var(--accent)" stroke="currentColor" strokeWidth="1.5" />
+    <path d="M9 8V5a3 3 0 0 1 6 0v3" />
+    <circle cx="9" cy="13" r="1.5" fill="currentColor" />
+    <circle cx="15" cy="13" r="1.5" fill="currentColor" />
+  </svg>
+);
+
 function RpgTriggerIcon({ isOpen }) {
   if (isOpen) {
     return (
@@ -194,13 +208,26 @@ function RpgTriggerIcon({ isOpen }) {
   }
   
   return (
-    <svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ filter: 'drop-shadow(0 0 8px var(--accent))' }}>
-      {/* Outer Gear Ring */}
-      <circle cx="16" cy="16" r="11" stroke="var(--accent)" strokeWidth="2" strokeDasharray="3 3" />
-      {/* Inner Scope Radar Crosshairs */}
-      <circle cx="16" cy="16" r="7" stroke="var(--accent)" strokeWidth="1.5" />
-      <circle cx="16" cy="16" r="3" fill="var(--accent)" />
-      <path d="M16 2v4M16 26v4M2 16h4M26 16h4" stroke="var(--accent)" strokeWidth="1.5" />
+    <svg width="38" height="38" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" strokeWidth="1.8" strokeLinecap="square" strokeLinejoin="miter" style={{ filter: 'drop-shadow(0 0 8px var(--accent))' }}>
+      {/* Central axis hole */}
+      <circle cx="12" cy="12" r="3" stroke="var(--accent)" strokeWidth="1.8" />
+      
+      {/* Outer main wheel rim */}
+      <circle cx="12" cy="12" r="7" stroke="var(--accent)" strokeWidth="1.5" />
+      
+      {/* Spokes */}
+      <line x1="12" y1="5" x2="12" y2="19" stroke="var(--accent)" strokeWidth="1.5" />
+      <line x1="5" y1="12" x2="19" y2="12" stroke="var(--accent)" strokeWidth="1.5" />
+      
+      {/* Gear teeth/cogs */}
+      <path d="M11 2h2v3h-2z" fill="var(--accent)" />
+      <path d="M11 19h2v3h-2z" fill="var(--accent)" />
+      <path d="M2 11h3v2H2z" fill="var(--accent)" />
+      <path d="M19 11h3v2h-3z" fill="var(--accent)" />
+      <path d="M5 5l2 2" stroke="var(--accent)" strokeWidth="3" strokeLinecap="square" />
+      <path d="M17 17l2 2" stroke="var(--accent)" strokeWidth="3" strokeLinecap="square" />
+      <path d="M17 5l2-2" stroke="var(--accent)" strokeWidth="3" strokeLinecap="square" />
+      <path d="M5 17l2-2" stroke="var(--accent)" strokeWidth="3" strokeLinecap="square" />
     </svg>
   );
 }
@@ -227,6 +254,7 @@ function Navbar({ isConnected, onOpenQuestSidebar }) {
   const slots = [
     { name: 'Map', path: '/', icon: <MapIcon />, label: 'COMMUNITY MAP', desc: 'Browse active community issues' },
     { name: 'Missions', path: '/missions', icon: <CompassIcon />, label: 'MISSIONS', desc: 'Verify issues & earn rewards' },
+    { name: 'Shop', path: '/shop', icon: <ShopIcon />, label: 'REWARD SHOP', desc: 'Spend gold on cosmetics & titles' },
     { name: 'Ledger', path: '/dashboard', icon: <StatsIcon />, label: 'CITY DASHBOARD', desc: 'SLA & issue statistics' },
     { name: 'Leaders', path: '/leaderboard', icon: <TrophyIcon />, label: 'HERO LEAGUE', desc: 'Citizen contribution rankings' },
     { 
@@ -279,49 +307,49 @@ function Navbar({ isConnected, onOpenQuestSidebar }) {
           zIndex: 1001,
           pointerEvents: 'none',
           display: 'flex',
-          justifyContent: 'flex-end',
-          alignItems: 'center',
-          gap: '12px'
+          justifyContent: 'space-between',
+          alignItems: 'center'
         }}
       >
 
-        {/* Quest Tracker Button */}
-        {isAuthenticated && onOpenQuestSidebar && (
-          <motion.button
-            onClick={onOpenQuestSidebar}
-            whileHover={{ scale: 1.1 }}
-            whileTap={{ scale: 0.9 }}
-            className="rpg-panel flex items-center justify-center font-pixel"
-            style={{
-              padding: '12px 16px',
-              borderRadius: 0,
-              cursor: 'pointer',
-              boxShadow: '4px 4px 0 rgba(0,0,0,0.6)',
-              fontSize: '0.625rem',
-              outline: 'none',
-              border: '2px solid var(--border)',
-              color: 'var(--accent)',
-              background: 'var(--bg-surface)',
-              pointerEvents: 'auto',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '6px',
-              transition: 'all 0.2s ease'
-            }}
-            aria-label="Open Quest Tracker"
-          >
-            📜 QUESTS
-          </motion.button>
-        )}
+        {/* Left Side: Quest Tracker Button */}
+        <div style={{ pointerEvents: 'auto' }}>
+          {isAuthenticated && onOpenQuestSidebar && (
+            <motion.button
+              onClick={onOpenQuestSidebar}
+              whileHover={{ scale: 1.1 }}
+              whileTap={{ scale: 0.9 }}
+              className="rpg-panel flex items-center justify-center font-pixel"
+              style={{
+                padding: '12px 16px',
+                borderRadius: 0,
+                cursor: 'pointer',
+                boxShadow: '4px 4px 0 rgba(0,0,0,0.6)',
+                fontSize: '0.625rem',
+                outline: 'none',
+                border: '2px solid var(--border)',
+                color: 'var(--accent)',
+                background: 'var(--bg-surface)',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px',
+                transition: 'all 0.2s ease'
+              }}
+              aria-label="Open Quest Tracker"
+            >
+              <ScrollIcon width={14} height={14} />
+              QUESTS
+            </motion.button>
+          )}
+        </div>
 
-        {/* Floating Backpack Trigger Button (Top-Right) or Sign In button */}
-        {isAuthenticated ? (
+        {/* Right Side: Floating Backpack Trigger Button (Top-Right) or Sign In button */}
+        <div style={{ pointerEvents: 'auto', display: 'flex', alignItems: 'center', gap: '12px' }}>
+          {isAuthenticated ? (
           <motion.div
             onClick={toggleOpen}
-            whileHover={{ scale: 1.1 }}
-            whileTap={{ scale: 0.9 }}
-            animate={!isOpen ? { y: [0, -6, 0] } : {}}
-            transition={{ repeat: Infinity, duration: 2.5, ease: "easeInOut" }}
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
             style={{
               cursor: 'pointer',
               pointerEvents: 'auto',
@@ -335,41 +363,17 @@ function Navbar({ isConnected, onOpenQuestSidebar }) {
           >
             <div style={{
               position: 'relative',
-              width: '56px',
-              height: '56px',
+              width: '72px',
+              height: '72px',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              background: isOpen ? 'var(--bg-surface)' : 'radial-gradient(circle, rgba(99,102,241,0.25) 0%, rgba(0,0,0,0) 70%)',
+              background: isOpen ? 'var(--bg-surface)' : 'radial-gradient(circle, rgba(252,211,77,0.2) 0%, rgba(0,0,0,0) 70%)',
               borderRadius: isOpen ? '0' : '50%',
               border: isOpen ? '2px solid var(--border)' : 'none',
               boxShadow: isOpen ? '4px 4px 0 rgba(0,0,0,0.6)' : 'none'
             }}>
               <RpgTriggerIcon isOpen={isOpen} />
-              
-              {/* Notification Badge to intrigue user */}
-              {!isOpen && (
-                <motion.div
-                  initial={{ scale: 0.8 }}
-                  animate={{ scale: [0.8, 1.2, 0.8] }}
-                  transition={{ repeat: Infinity, duration: 1.5 }}
-                  className="font-pixel"
-                  style={{
-                    position: 'absolute',
-                    top: '2px',
-                    right: '0px',
-                    background: 'var(--error)',
-                    color: '#fff',
-                    fontSize: '0.45rem',
-                    padding: '3px 4px',
-                    border: '1px solid #fff',
-                    boxShadow: '0 0 8px var(--error)',
-                    zIndex: 10
-                  }}
-                >
-                  !
-                </motion.div>
-              )}
             </div>
             
             {!isOpen && (
@@ -403,9 +407,11 @@ function Navbar({ isConnected, onOpenQuestSidebar }) {
               gap: '6px'
             }}
           >
-            🔑 SIGN IN
+            <KeyIcon width={14} height={14} />
+            SIGN IN
           </Link>
         )}
+        </div>
       </div>
 
       {/* Radial Wheel Overlay Modal */}
@@ -582,81 +588,13 @@ function Navbar({ isConnected, onOpenQuestSidebar }) {
 
 function AppContent() {
   const { isConnected } = useSSE();
+  const { isAuthenticated } = useAuth();
   const [isQuestSidebarOpen, setIsQuestSidebarOpen] = useState(false);
-
-  const hour = new Date().getHours();
-  let timeClass = 'time-night';
-  if (hour >= 6 && hour < 17) {
-    timeClass = 'time-day';
-  } else if (hour >= 17 && hour < 19) {
-    timeClass = 'time-sunset';
-  }
+  const mood = useWorldState({ isAuthenticated });
 
   return (
     <div className="app-layout">
-      {/* RPG Pixel Backdrop */}
-      <div className="rpg-backdrop">
-        <div className={`rpg-sky ${timeClass}`}>
-          {/* Twinkling Stars */}
-          <div className="pixel-star star-1"></div>
-          <div className="pixel-star star-2"></div>
-          <div className="pixel-star star-3"></div>
-          <div className="pixel-star star-4"></div>
-
-          {/* Sun / Moon based on time */}
-          {timeClass === 'time-night' ? (
-            <div className="pixel-moon"></div>
-          ) : (
-            <div className="pixel-sun"></div>
-          )}
-
-          {/* Floating Hot Air Balloon during day/sunset */}
-          {timeClass !== 'time-night' && (
-            <div className="pixel-balloon"></div>
-          )}
-
-          {/* Floating Clouds */}
-          <div className="pixel-cloud cloud-1"></div>
-          <div className="pixel-cloud cloud-2"></div>
-          <div className="pixel-cloud cloud-3"></div>
-
-          {/* Quest Ambient Particles - Floating XP Orbs */}
-          <div className="quest-ambient-particles">
-            <div className="xp-orb orb-1"></div>
-            <div className="xp-orb orb-2"></div>
-            <div className="xp-orb orb-3"></div>
-            <div className="xp-orb orb-4"></div>
-            <div className="xp-orb orb-5"></div>
-          </div>
-
-          {/* Quest Sparkles */}
-          <div className="quest-sparkles">
-            <div className="sparkle sparkle-1"></div>
-            <div className="sparkle sparkle-2"></div>
-            <div className="sparkle sparkle-3"></div>
-            <div className="sparkle sparkle-4"></div>
-            <div className="sparkle sparkle-5"></div>
-            <div className="sparkle sparkle-6"></div>
-          </div>
-        </div>
-        
-        {/* Horizon Landscape */}
-        <div className="rpg-horizon"></div>
-
-        {/* Windmill with rotating sails */}
-        <div className="rpg-windmill"></div>
-        <div className="rpg-windmill-sails"></div>
-
-        <div className="rpg-farmhouse"></div>
-        <div className="rpg-fence"></div>
-        
-        {/* Ground Pasture with Cattle */}
-        <div className="rpg-ground">
-          <div className="rpg-sheep"></div>
-          <div className="rpg-cow"></div>
-          <div className="rpg-cow-2"></div>
-        </div>
-      </div>
+      <WorldBackdrop mood={mood} />
 
       <a href="#main-content" className="skip-link">Skip to main content</a>
       <Navbar isConnected={isConnected} onOpenQuestSidebar={() => setIsQuestSidebarOpen(true)} />
@@ -678,6 +616,7 @@ function AppContent() {
           <Route path="/login" element={<PublicRoute><LoginPage /></PublicRoute>} />
           <Route path="/register" element={<PublicRoute><RegisterPage /></PublicRoute>} />
           <Route path="/profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
+          <Route path="/shop" element={<ProtectedRoute><ShopPage /></ProtectedRoute>} />
           <Route path="*" element={<ProtectedRoute><NotFoundPage /></ProtectedRoute>} />
         </Routes>
       </main>

@@ -1,0 +1,351 @@
+/* ============================================================
+   HomePage v2 — Quest Board Aesthetic
+   Cleaner, more focused, less "AI slop with emojis"
+   ============================================================ */
+
+.hud-live-dot {
+  width: 7px;
+  height: 7px;
+  background: var(--hud-leaf);
+  display: inline-block;
+  box-shadow: 0 0 8px var(--hud-leaf);
+  animation: hud-pulse 2s ease-in-out infinite;
+}
+@keyframes hud-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+
+/* --- Hero banner - simplified --- */
+.story-banner-v2 { 
+  margin-bottom: var(--space-7); 
+}
+.story-banner-v2-inner { 
+  overflow: hidden;
+  /* Parchment texture */
+  background-image: 
+    linear-gradient(180deg, var(--hud-panel-light) 0%, var(--hud-panel) 50%, var(--hud-panel-dark) 100%),
+    repeating-linear-gradient(0deg, transparent 0px, rgba(0,0,0,0.02) 1px, transparent 3px);
+}
+.story-banner-v2-grid {
+  display: grid;
+  grid-template-columns: 1.5fr 1fr;
+  gap: var(--space-8);
+  align-items: center;
+}
+.story-banner-v2-title {
+  font-family: var(--font-pixel);
+  font-size: clamp(1.2rem, 3vw, 2.2rem);
+  line-height: 1.6;
+  color: var(--hud-ink);
+  text-shadow: 2px 2px 0 rgba(0,0,0,0.4);
+  margin-bottom: var(--space-5);
+  letter-spacing: 0.5px;
+}
+.story-banner-v2-title em {
+  color: var(--hud-gold);
+  font-style: normal;
+  text-shadow: 
+    2px 2px 0 rgba(0,0,0,0.4),
+    0 0 12px rgba(244, 196, 48, 0.5);
+}
+.story-banner-v2-sub {
+  font-size: 0.9rem;
+  color: var(--hud-ink-dim);
+  max-width: 58ch;
+  margin-bottom: var(--space-6);
+  line-height: 1.8;
+}
+
+/* Pipeline - cleaner, more icon-focused */
+.pipeline-strip-v2 {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--space-1);
+  margin-bottom: var(--space-4);
+}
+.pipeline-node-v2-wrap { 
+  display: flex; 
+  align-items: center; 
+}
+.pipeline-node-v2 {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  background: rgba(0,0,0,0.15);
+  border: 2px solid var(--hud-border);
+  transition: all 0.2s ease;
+}
+.pipeline-node-v2:hover {
+  background: rgba(244, 196, 48, 0.08);
+  border-color: var(--hud-gold);
+  transform: translateY(-2px);
+}
+.pipeline-node-v2-icon {
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--hud-panel-dark);
+  border: 2px solid var(--hud-border);
+  color: var(--hud-gold);
+}
+.pipeline-node-v2-label {
+  font-family: var(--font-pixel);
+  font-size: 0.5rem;
+  letter-spacing: 0.8px;
+  color: var(--hud-ink-dim);
+  white-space: nowrap;
+}
+.pipeline-connector-v2 {
+  width: 20px;
+  height: 2px;
+  background: var(--hud-border-light);
+  margin: 0 4px;
+}
+
+.story-banner-v2-side {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+.story-banner-v2-stats {
+  display: flex;
+  gap: var(--space-6);
+  margin-top: var(--space-3);
+  padding-top: var(--space-4);
+  border-top: 3px solid var(--hud-border);
+}
+.story-stat-v2 { 
+  display: flex; 
+  flex-direction: column;
+  gap: 4px;
+}
+.story-stat-v2-num {
+  font-family: var(--font-pixel);
+  font-size: 1.6rem;
+  line-height: 1.2;
+  text-shadow: 2px 2px 0 rgba(0,0,0,0.4);
+}
+.story-stat-v2-label {
+  font-size: 0.65rem;
+  color: var(--hud-ink-faint);
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+}
+
+/* --- KPI grid - SIMPLIFIED, remove cluttered emoji vibes --- */
+.kpi-grid-v2 {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: var(--space-5);
+  margin-bottom: var(--space-7);
+}
+.kpi-card-v2-label {
+  font-family: var(--font-pixel);
+  font-size: 0.55rem;
+  letter-spacing: 0.1em;
+  color: var(--hud-ink-faint);
+  margin-bottom: var(--space-2);
+  text-transform: uppercase;
+}
+.kpi-card-v2-num {
+  font-family: var(--font-pixel);
+  font-size: 2rem;
+  margin-bottom: var(--space-3);
+  text-shadow: 
+    2px 2px 0 rgba(0,0,0,0.5),
+    0 0 16px currentColor;
+  line-height: 1;
+}
+.kpi-card-v2-sub {
+  font-size: 0.75rem;
+  color: var(--hud-ink-dim);
+  margin-top: var(--space-2);
+}
+
+/* --- Map --- */
+.map-wrapper-v2 { 
+  overflow: hidden;
+  border: 4px solid var(--hud-border);
+}
+.layer-toggle-v2 {
+  position: absolute;
+  top: 16px;
+  left: 16px;
+  z-index: 20;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  max-width: calc(100% - 32px);
+}
+.layer-chip-v2 {
+  font-family: var(--font-pixel);
+  font-size: 0.55rem;
+  padding: 8px 12px;
+  background: rgba(42, 31, 46, 0.95);
+  color: var(--hud-ink-dim);
+  border: 3px solid var(--hud-border);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 2px 2px 0 rgba(0,0,0,0.6);
+}
+.layer-chip-v2:hover {
+  background: rgba(61, 47, 63, 0.95);
+  transform: translate(-1px, -1px);
+  box-shadow: 3px 3px 0 rgba(0,0,0,0.6);
+}
+.layer-chip-v2.active {
+  background: var(--hud-gold);
+  color: #2a1d05;
+  border-color: var(--hud-border);
+  box-shadow: 
+    2px 2px 0 rgba(0,0,0,0.6),
+    0 0 12px rgba(244, 196, 48, 0.6);
+}
+.layer-legend-v2 {
+  position: absolute;
+  bottom: 16px;
+  left: 16px;
+  z-index: 20;
+  background: rgba(42, 31, 46, 0.95);
+  border: 3px solid var(--hud-border);
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  box-shadow: 2px 2px 0 rgba(0,0,0,0.6);
+}
+.legend-item-v2 {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--font-pixel);
+  font-size: 0.55rem;
+  color: var(--hud-ink-dim);
+}
+.legend-swatch-v2 { 
+  width: 10px; 
+  height: 10px; 
+  flex-shrink: 0;
+  border: 1px solid rgba(0,0,0,0.3);
+}
+
+/* --- Bottom grid - cleaner spacing --- */
+.home-bottom-grid-v2 {
+  display: grid;
+  grid-template-columns: 1.2fr 1fr;
+  gap: var(--space-6);
+}
+.home-feed-col-v2 {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+.hud-panel-header-v2 {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--space-3);
+}
+.home-filter-row-v2 {
+  display: flex;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+  align-items: center;
+}
+.home-filter-row-v2 .hud-select { 
+  width: auto; 
+  flex: 1 1 160px; 
+  padding: 8px 10px; 
+  font-size: 0.625rem;
+}
+.home-issue-count-v2 { 
+  margin-left: auto; 
+  white-space: nowrap; 
+  font-size: 0.625rem;
+  color: var(--hud-gold);
+}
+
+/* Quest card titles - better readability */
+.ticket-card-title-v2 {
+  font-family: var(--font-sans);
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--hud-ink);
+  line-height: 1.4;
+  text-shadow: 1px 1px 0 rgba(0,0,0,0.3);
+}
+.ticket-card-time-v2 { 
+  margin-left: var(--space-3); 
+  white-space: nowrap; 
+  flex-shrink: 0; 
+  font-size: 0.6rem;
+  color: var(--hud-ink-faint);
+}
+.ticket-card-ward-v2 { 
+  margin-left: auto; 
+  font-size: 0.6rem;
+  color: var(--hud-gold);
+}
+
+/* Agent insights - remove emoji slop, make it cleaner */
+.insight-row-v2 {
+  border: 3px solid var(--hud-border);
+  background: linear-gradient(135deg, var(--hud-panel-dark) 0%, rgba(0,0,0,0.2) 100%);
+  padding: 12px 14px;
+  box-shadow: inset 1px 1px 3px rgba(0,0,0,0.3);
+}
+.insight-row-v2-label { 
+  font-size: 0.55rem; 
+  letter-spacing: 0.8px;
+  display: block;
+  margin-bottom: 6px;
+}
+.insight-row-v2-text { 
+  font-size: 0.85rem; 
+  margin-top: 0; 
+  color: var(--hud-ink-dim);
+  line-height: 1.6;
+}
+.consensus-log-row-v2 {
+  font-size: 0.7rem;
+  font-family: var(--font-mono);
+  color: var(--hud-ink-dim);
+  border-left: 3px solid var(--hud-gold);
+  padding-left: 10px;
+  margin-bottom: 6px;
+  line-height: 1.6;
+  background: rgba(0,0,0,0.1);
+  padding: 6px 10px;
+}
+
+@media (max-width: 980px) {
+  .story-banner-v2-grid { 
+    grid-template-columns: 1fr;
+    gap: var(--space-6);
+  }
+  .kpi-grid-v2 { 
+    grid-template-columns: repeat(2, 1fr); 
+  }
+  .home-bottom-grid-v2 { 
+    grid-template-columns: 1fr; 
+  }
+}
+
+@media (max-width: 640px) {
+  .kpi-grid-v2 { 
+    grid-template-columns: 1fr;
+  }
+  .pipeline-node-v2 {
+    padding: 8px 10px;
+  }
+  .pipeline-node-v2-icon {
+    width: 28px;
+    height: 28px;
+  }
+}

@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { fetchMissions } from '../services/api';
+import { PageShell, Panel, QuestCard } from '../components/ui/PixelKit';
 
 const containerAnim = {
   hidden: { opacity: 0 },
@@ -47,19 +48,14 @@ function MissionsPage() {
   }
 
   return (
-    <motion.div 
-      className="flex flex-col gap-6" 
-      style={{ maxWidth: 1200, margin: '0 auto', paddingBottom: 'var(--space-10)' }}
-      variants={containerAnim}
-      initial="hidden"
-      animate="show"
+    <PageShell 
+      title="🧭 Active Community Missions" 
+      subtitle="COMMUNITY VERIFICATION · COLLECTIVE CONSENSUS"
     >
-      <div className="flex items-center justify-between" style={{ borderBottom: '1px solid var(--border-subtle)', paddingBottom: 'var(--space-4)' }}>
-        <div>
-          <h2 className="font-pixel" style={{ fontSize: '15px', color: 'var(--accent)' }}>🧭 Active Community Missions</h2>
-          <span className="font-pixel text-muted" style={{ fontSize: '10px', marginTop: '4px', display: 'block' }}>COMMUNITY VERIFICATION · COLLECTIVE CONSENSUS</span>
-        </div>
-        <span className="font-pixel text-muted" style={{ fontSize: '10px' }}>{missions.filter(m => m.status === 'active').length} MISSIONS ACTIVE</span>
+      <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 'var(--space-2)', marginTop: '-8px' }}>
+        <span className="font-pixel text-muted" style={{ fontSize: '9px' }}>
+          {missions.filter(m => m.status === 'active').length} MISSIONS ACTIVE
+        </span>
       </div>
 
       {missions.length === 0 ? (
@@ -201,7 +197,7 @@ function MissionsPage() {
           })}
         </div>
       )}
-    </motion.div>
+    </PageShell>
   );
 }
 

@@ -10,6 +10,7 @@ import { INFRASTRUCTURE_GRAPH } from '../utils/infrastructureGraph';
 import { MapContainer, TileLayer, Marker } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
+import { PageShell } from '../components/ui/PixelKit';
 
 const createTicketIcon = (category) => {
   const getMarkerColor = (cat) => {
@@ -200,7 +201,7 @@ function TicketPage() {
 
   return (
     <>
-      <div className="ticket-page-container animate-fade-up" style={{ maxWidth: 1200, margin: '0 auto', paddingBottom: 'var(--space-10)' }}>
+      <PageShell>
       <header style={{ marginBottom: 'var(--space-8)', borderBottom: '1px solid var(--accent-muted)', paddingBottom: 'var(--space-6)' }}>
         <div className="flex items-center gap-3" style={{ marginBottom: 'var(--space-4)', flexWrap: 'wrap' }}>
           <span className={`${statusClass} font-pixel`} style={{ borderRadius: 0, fontSize: '10px', padding: '2px 4px' }}>{capitalize(ticket.status)}</span>
@@ -658,7 +659,7 @@ function TicketPage() {
         </div>
       </div>
 
-      </div>
+      </PageShell>
 
       {isVerifyModalOpen && (
         <div style={{

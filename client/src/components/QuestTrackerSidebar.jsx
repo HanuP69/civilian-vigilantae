@@ -111,66 +111,94 @@ function QuestTrackerSidebar({ isOpen, onClose, activeQuests = [], completedQues
 
   return (
     <>
-      {/* Overlay for mobile */}
+      {/* Blurred Backdrop */}
       <motion.div
-        className="quest-sidebar-overlay"
+        key="quest-backdrop"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
         onClick={onClose}
-        aria-hidden="true"
+        style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          zIndex: 1001,
+          background: 'rgba(16, 11, 8, 0.45)',
+          backdropFilter: 'blur(5px)',
+          WebkitBackdropFilter: 'blur(5px)'
+        }}
       />
 
-      {/* Sidebar */}
+      {/* Sidebar Drawer Panel (Left-Aligned) */}
       <motion.aside
+        key="quest-drawer"
         ref={sidebarRef}
-        className="quest-sidebar-aside"
-        initial={{ x: '100%' }}
+        initial={{ x: '-100%' }}
         animate={{ x: 0 }}
-        exit={{ x: '100%' }}
-        transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+        exit={{ x: '-100%' }}
+        transition={{ type: 'spring', damping: 25, stiffness: 220 }}
         role="dialog"
         aria-label="Quest Tracker"
+        className="rpg-panel-sandstone"
+        style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          bottom: 0,
+          width: '100%',
+          maxWidth: '420px',
+          zIndex: 1002,
+          background: 'url(/sandstone.png) repeat',
+          borderRight: '4px solid #513a23',
+          outline: '2px solid #d8a96d',
+          outlineOffset: '-6px',
+          display: 'flex',
+          flexDirection: 'column',
+          boxShadow: '10px 0 30px rgba(0,0,0,0.85)',
+          borderRadius: 0,
+          padding: '6px'
+        }}
       >
-        <div className="quest-sidebar-container rpg-panel" style={{ 
-          borderRadius: 0, 
-          borderLeft: '2px solid var(--border-subtle)',
-          background: 'linear-gradient(180deg, oklch(0.12 0.02 260 / 0.98) 0%, oklch(0.08 0.02 260 / 0.99) 100%)',
-          boxShadow: '-8px 0 32px rgba(0,0,0,0.5), inset 1px 0 0 rgba(255,255,255,0.05)'
-        }}>
+        <div className="quest-sidebar-container" style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
           
           {/* Header */}
-          <div className="flex items-center justify-between p-4 border-b border-[var(--border-subtle)]" style={{ borderRadius: 0 }}>
+          <div 
+            style={{ 
+              padding: '16px 20px', 
+              borderBottom: '3px solid #513a23', 
+              background: '#1c130c',
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              margin: '2px'
+            }}
+          >
             <div className="flex items-center gap-3">
               <div className="relative">
                 <div className="w-10 h-10 flex items-center justify-center font-pixel text-xl" style={{ 
-                  background: 'linear-gradient(135deg, #f59e0b 0%, #fbbf24 100%)',
+                  background: '#100b08',
                   borderRadius: 0,
-                  border: '2px solid #f59e0b',
-                  boxShadow: '0 0 16px rgba(245, 158, 11, 0.4), inset 0 0 8px rgba(255,255,255,0.2)'
+                  border: '2px solid #d8a96d',
+                  boxShadow: '1px 1px 0 rgba(0,0,0,0.5)'
                 }}>
                   📜
                 </div>
-                {/* Animated sparkles */}
-                <div className="absolute -top-1 -right-1 w-6 h-6" style={{ pointerEvents: 'none' }}>
-                  <svg viewBox="0 0 24 24" className="w-full h-full text-amber-400" style={{ animation: 'spin 8s linear infinite' }}>
-                    <path d="M12 2l1 3h3l-2 2 1 3-3-1-3 1 1-3-2-2h3z" fill="currentColor" opacity="0.6"/>
-                  </svg>
-                </div>
               </div>
               <div>
-                <h2 className="font-pixel" style={{ fontSize: '13px', color: '#fbbf24', letterSpacing: '1px', textShadow: '0 0 8px rgba(251, 191, 36, 0.5)' }}>
+                <h2 className="font-pixel" style={{ fontSize: '11px', color: '#fcd34d', letterSpacing: '1px', textShadow: '1px 1px 0 #000', margin: 0 }}>
                   QUEST JOURNAL
                 </h2>
-                <p className="font-pixel text-muted" style={{ fontSize: '8px', marginTop: '-2px', letterSpacing: '0.5px' }}>
+                <p className="font-pixel" style={{ fontSize: '7px', marginTop: '2px', letterSpacing: '0.5px', color: '#ecdcb9', textShadow: '1px 1px 0 #000', margin: 0 }}>
                   {activeQuestList.length} ACTIVE • {completedQuestList.length} READY TO CLAIM
                 </p>
               </div>
             </div>
             <button
               onClick={onClose}
-              className="p-2 rounded-none font-pixel text-muted hover:text-white transition-colors"
-              style={{ fontSize: '10px', border: '1px solid transparent', background: 'transparent' }}
+              className="font-pixel"
+              style={{ fontSize: '10px', color: '#ecdcb9', background: 'transparent', border: 'none', cursor: 'pointer', textShadow: '1px 1px 0 #000' }}
               aria-label="Close Quest Journal"
             >
               ✕ CLOSE
@@ -178,32 +206,28 @@ function QuestTrackerSidebar({ isOpen, onClose, activeQuests = [], completedQues
           </div>
 
           {/* XP Bar at top */}
-          <div className="px-4 py-3 border-b border-[var(--border-subtle)]">
-            <div className="flex items-center justify-between mb-2">
-              <span className="font-pixel text-xs text-muted" style={{ letterSpacing: '0.5px' }}>
-                ADVENTURER RANK
-              </span>
-              <span className="font-pixel text-xs text-amber-300" style={{ letterSpacing: '0.5px' }}>
-                LV. {user?.level || 1} • {user?.xp || 0} / {((user?.level || 1) * 100)} XP
-              </span>
-            </div>
-            <div className="relative h-2 bg-gray-900 border border-gray-700 overflow-hidden" style={{ borderRadius: 0 }}>
-              <motion.div
-                className="h-full"
-                style={{ 
-                  background: 'linear-gradient(90deg, #f59e0b 0%, #fbbf24 50%, #fde047 100%)',
-                  borderRadius: 0,
-                  boxShadow: '0 0 8px rgba(245, 158, 11, 0.6), inset 0 0 8px rgba(255,255,255,0.3)'
-                }}
-                initial={{ width: 0 }}
-                animate={{ width: `${Math.min(((user?.xp || 0) / ((user?.level || 1) * 100)) * 100, 100)}%` }}
-                transition={{ type: 'spring', stiffness: 100, damping: 15 }}
-              />
-              {/* XP bar shine */}
-              <div className="absolute inset-0" style={{ 
-                background: 'linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.3) 50%, transparent 100%)',
-                animation: 'shimmer 2s infinite'
-              }} />
+          <div className="px-4 py-3 border-b border-[#513a23]" style={{ background: 'rgba(0,0,0,0.1)' }}>
+            <div className="card pixel-border" style={{ background: '#fcf8ee', border: '2px solid #85613c', padding: '10px 12px', margin: 0, boxPattern: 'none' }}>
+              <div className="flex items-center justify-between mb-2">
+                <span className="font-pixel" style={{ fontSize: '9px', color: '#6b5139', letterSpacing: '0.5px', fontWeight: 600 }}>
+                  ADVENTURER RANK
+                </span>
+                <span className="font-pixel" style={{ fontSize: '9px', color: '#b45309', letterSpacing: '0.5px', fontWeight: 700 }}>
+                  LV. {user?.level || 1} • {user?.xp || 0} / {((user?.level || 1) * 100)} XP
+                </span>
+              </div>
+              <div className="relative h-2 bg-amber-100 border border-[#85613c] overflow-hidden" style={{ borderRadius: 0 }}>
+                <motion.div
+                  className="h-full"
+                  style={{ 
+                    background: 'linear-gradient(90deg, #b45309 0%, #d8a96d 100%)',
+                    borderRadius: 0
+                  }}
+                  initial={{ width: 0 }}
+                  animate={{ width: `${Math.min(((user?.xp || 0) / ((user?.level || 1) * 100)) * 100, 100)}%` }}
+                  transition={{ type: 'spring', stiffness: 100, damping: 15 }}
+                />
+              </div>
             </div>
           </div>
 
@@ -284,19 +308,19 @@ function QuestTrackerSidebar({ isOpen, onClose, activeQuests = [], completedQues
           </div>
 
           {/* Footer with stats */}
-          <div className="p-3 border-t border-[var(--border-subtle)] bg-black/20">
+          <div className="p-3 border-t border-[#513a23] bg-[#1c130c]" style={{ margin: '2px' }}>
             <div className="grid grid-cols-3 gap-2 text-center">
-              <div className="p-2 bg-black/30" style={{ borderRadius: 0, border: '1px solid var(--border-subtle)' }}>
-                <div className="font-pixel text-amber-400" style={{ fontSize: '14px' }}>{quests.filter(q => q.status === 'completed').length}</div>
-                <div className="font-pixel text-muted" style={{ fontSize: '7px' }}>COMPLETED</div>
+              <div className="p-2" style={{ background: '#fcf8ee', borderRadius: 0, border: '2px solid #85613c' }}>
+                <div className="font-pixel" style={{ fontSize: '12px', color: '#b45309', fontWeight: 700 }}>{quests.filter(q => q.status === 'completed').length}</div>
+                <div className="font-pixel" style={{ fontSize: '7px', color: '#6b5139', fontWeight: 600 }}>COMPLETED</div>
               </div>
-              <div className="p-2 bg-black/30" style={{ borderRadius: 0, border: '1px solid var(--border-subtle)' }}>
-                <div className="font-pixel text-green-400" style={{ fontSize: '14px' }}>{quests.reduce((sum, q) => sum + (q.xp_reward || 0), 0)}</div>
-                <div className="font-pixel text-muted" style={{ fontSize: '7px' }}>TOTAL XP</div>
+              <div className="p-2" style={{ background: '#fcf8ee', borderRadius: 0, border: '2px solid #85613c' }}>
+                <div className="font-pixel" style={{ fontSize: '12px', color: '#b45309', fontWeight: 700 }}>{quests.reduce((sum, q) => sum + (q.xp_reward || 0), 0)}</div>
+                <div className="font-pixel" style={{ fontSize: '7px', color: '#6b5139', fontWeight: 600 }}>TOTAL XP</div>
               </div>
-              <div className="p-2 bg-black/30" style={{ borderRadius: 0, border: '1px solid var(--border-subtle)' }}>
-                <div className="font-pixel text-amber-400" style={{ fontSize: '14px' }}>{quests.reduce((sum, q) => sum + (q.gold_reward || 0), 0)}</div>
-                <div className="font-pixel text-muted" style={{ fontSize: '7px' }}>TOTAL GOLD</div>
+              <div className="p-2" style={{ background: '#fcf8ee', borderRadius: 0, border: '2px solid #85613c' }}>
+                <div className="font-pixel" style={{ fontSize: '12px', color: '#b45309', fontWeight: 700 }}>{quests.reduce((sum, q) => sum + (q.gold_reward || 0), 0)}</div>
+                <div className="font-pixel" style={{ fontSize: '7px', color: '#6b5139', fontWeight: 600 }}>TOTAL GOLD</div>
               </div>
             </div>
           </div>
@@ -379,17 +403,17 @@ function QuestCard({ quest, isActive, onClaim, claiming, getQuestIcon, getRarity
 
   return (
     <motion.div
-      className="rpg-panel relative overflow-hidden"
+      className="card pixel-border relative overflow-hidden"
       style={{ 
         borderRadius: 0, 
-        border: `2px solid ${style.border}`,
-        background: `linear-gradient(135deg, oklch(0.15 0.02 260 / 0.9) 0%, oklch(0.1 0.02 260 / 0.95) 100%)`,
-        boxShadow: `0 0 16px ${style.glow}, inset 0 0 16px rgba(0,0,0,0.3)`,
+        border: isReady ? '2px solid #b45309' : '2px solid #85613c',
+        background: isReady ? '#fffbeb' : '#fcf8ee',
+        boxShadow: '2px 2px 0 rgba(0,0,0,0.15)',
         animation: isReady ? 'quest-pulse 2s ease-in-out infinite' : 'none'
       }}
-      initial={{ opacity: 0, x: 20 }}
+      initial={{ opacity: 0, x: -20 }}
       animate={{ opacity: 1, x: 0 }}
-      exit={{ opacity: 0, x: -20 }}
+      exit={{ opacity: 0, x: 20 }}
       transition={{ type: 'spring', damping: 20, stiffness: 200 }}
     >
       {/* Rarity indicator bar */}
@@ -401,17 +425,17 @@ function QuestCard({ quest, isActive, onClaim, claiming, getQuestIcon, getRarity
           <div className="relative flex-shrink-0">
             <div className="w-12 h-12 flex items-center justify-center font-pixel text-xl" style={{ 
               fontSize: '18px',
-              background: 'rgba(0,0,0,0.6)',
-              border: `2px solid ${style.border}`,
+              background: '#fffbeb',
+              border: `2px solid #85613c`,
               borderRadius: 0,
-              boxShadow: `0 0 12px ${style.glow}`
+              boxShadow: '1px 1px 0 rgba(0,0,0,0.1)'
             }}>
               {icon}
             </div>
             {isReady && (
               <motion.div
                 className="absolute -top-1 -right-1 w-5 h-5 flex items-center justify-center font-pixel"
-                style={{ fontSize: '10px', background: '#f59e0b', border: '2px solid #fbbf24', borderRadius: 0 }}
+                style={{ fontSize: '10px', background: '#b45309', border: '2px solid #513a23', color: '#fff', borderRadius: 0 }}
                 animate={{ scale: [1, 1.2, 1], rotate: [0, 5, -5, 0] }}
                 transition={{ duration: 1, repeat: Infinity }}
               >
@@ -423,41 +447,41 @@ function QuestCard({ quest, isActive, onClaim, claiming, getQuestIcon, getRarity
           {/* Quest Info */}
           <div className="flex-1 min-w-0">
             <div className="flex items-start justify-between gap-2">
-              <h4 className="font-pixel truncate" style={{ fontSize: '11px', color: style.text, letterSpacing: '0.5px' }}>
+              <h4 className="font-pixel truncate" style={{ fontSize: '11px', color: '#291d12', letterSpacing: '0.5px', fontWeight: 700 }}>
                 {quest.name}
               </h4>
               <span className="font-pixel text-xs px-1.5 py-0.5" style={{ 
                 fontSize: '7px', 
-                background: `rgba(${parseInt(style.border.slice(1,3),16)}, ${parseInt(style.border.slice(3,5),16)}, ${parseInt(style.border.slice(5,7),16)}, 0.2)`,
+                background: style.border,
                 border: `1px solid ${style.border}`,
-                color: style.text,
+                color: '#fff',
                 letterSpacing: '0.5px',
-                borderRadius: 0
+                borderRadius: 0,
+                textShadow: 'none'
               }}>
                 {rarity.toUpperCase()}
               </span>
             </div>
-            <p className="text-xs text-muted mt-1 line-clamp-2" style={{ fontSize: '9px', lineHeight: 1.4 }}>
+            <p className="text-xs mt-1 line-clamp-2" style={{ fontSize: '9px', lineHeight: 1.4, color: '#4a3522', fontWeight: 500 }}>
               {quest.description}
             </p>
 
             {/* Progress Bar */}
             <div className="mt-2">
               <div className="flex justify-between text-[8px] font-mono mb-1">
-                <span className="text-muted">PROGRESS</span>
-                <span style={{ color: isReady ? '#4ade80' : style.text }}>
+                <span style={{ color: '#6b5139', fontWeight: 600 }}>PROGRESS</span>
+                <span style={{ color: isReady ? '#15803d' : '#4a3522', fontWeight: 600 }}>
                   {quest.progress} / {quest.target}
                 </span>
               </div>
-              <div className="h-1.5 bg-gray-900 border border-gray-700 overflow-hidden relative" style={{ borderRadius: 0 }}>
+              <div className="h-1.5 bg-amber-100 border border-[#85613c] overflow-hidden relative" style={{ borderRadius: 0 }}>
                 <motion.div
                   className="h-full"
                   style={{ 
                     background: isReady 
-                      ? 'linear-gradient(90deg, #22c55e 0%, #4ade80 100%)' 
-                      : `linear-gradient(90deg, ${style.border} 0%, ${style.text} 100%)`,
-                    borderRadius: 0,
-                    boxShadow: isReady ? '0 0 8px rgba(34, 197, 94, 0.6)' : `0 0 8px ${style.glow}`
+                      ? 'linear-gradient(90deg, #16803d 0%, #22c55e 100%)' 
+                      : `linear-gradient(90deg, #85613c 0%, #b45309 100%)`,
+                    borderRadius: 0
                   }}
                   initial={{ width: 0 }}
                   animate={{ width: `${progress}%` }}
@@ -467,23 +491,23 @@ function QuestCard({ quest, isActive, onClaim, claiming, getQuestIcon, getRarity
             </div>
 
             {/* Rewards */}
-            <div className="flex items-center gap-3 mt-3 pt-2 border-t border-[var(--border-subtle)]">
-              <div className="flex items-center gap-1 px-2 py-1 bg-black/30" style={{ border: '1px solid var(--border-subtle)', borderRadius: 0 }}>
-                <span className="font-pixel text-amber-400" style={{ fontSize: '10px' }}>+{quest.xp_reward}</span>
-                <span className="font-pixel text-muted" style={{ fontSize: '7px' }}>XP</span>
+            <div className="flex items-center gap-3 mt-3 pt-2 border-t border-[#85613c]/30">
+              <div className="flex items-center gap-1 px-2 py-1 bg-[#fffbeb]" style={{ border: '1px solid #85613c', borderRadius: 0 }}>
+                <span className="font-pixel" style={{ fontSize: '10px', color: '#b45309', fontWeight: 600 }}>+{quest.xp_reward}</span>
+                <span className="font-pixel" style={{ fontSize: '7px', color: '#6b5139' }}>XP</span>
               </div>
-              <div className="flex items-center gap-1 px-2 py-1 bg-black/30" style={{ border: '1px solid var(--border-subtle)', borderRadius: 0 }}>
-                <span className="font-pixel text-yellow-300" style={{ fontSize: '10px' }}>+{quest.gold_reward}</span>
-                <span className="font-pixel text-muted" style={{ fontSize: '7px' }}>GOLD</span>
+              <div className="flex items-center gap-1 px-2 py-1 bg-[#fffbeb]" style={{ border: '1px solid #85613c', borderRadius: 0 }}>
+                <span className="font-pixel" style={{ fontSize: '10px', color: '#b45309', fontWeight: 600 }}>+{quest.gold_reward}</span>
+                <span className="font-pixel" style={{ fontSize: '7px', color: '#6b5139' }}>GOLD</span>
               </div>
               {isReady && (
                 <motion.span
                   className="font-pixel ml-auto"
-                  style={{ fontSize: '8px', color: '#4ade80', letterSpacing: '0.5px' }}
+                  style={{ fontSize: '8px', color: '#15803d', letterSpacing: '0.5px', fontWeight: 700 }}
                   animate={{ opacity: [1, 0.5, 1] }}
                   transition={{ duration: 1, repeat: Infinity }}
                 >
-                  ✦ READY TO CLAIM ✦
+                  ✦ READY ✦
                 </motion.span>
               )}
             </div>
@@ -499,16 +523,14 @@ function QuestCard({ quest, isActive, onClaim, claiming, getQuestIcon, getRarity
             style={{ 
               fontSize: '9px', 
               letterSpacing: '1px',
-              background: 'linear-gradient(90deg, #22c55e 0%, #4ade80 100%)',
-              color: '#000',
-              border: '2px solid #22c55e',
+              background: '#b45309',
+              color: '#fff',
+              border: '2px solid #513a23',
               borderRadius: 0,
-              boxShadow: '0 0 16px rgba(34, 197, 94, 0.4), inset 0 0 16px rgba(255,255,255,0.1)'
+              boxShadow: '1px 1px 0 rgba(0,0,0,0.2)'
             }}
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
-            animate={{ boxShadow: claiming ? 'none' : [ '0 0 16px rgba(34, 197, 94, 0.4)', '0 0 24px rgba(34, 197, 94, 0.7)', '0 0 16px rgba(34, 197, 94, 0.4)' ] }}
-            transition={{ duration: 1.5, repeat: Infinity }}
           >
             {claiming ? (
               <span className="flex items-center justify-center gap-2">

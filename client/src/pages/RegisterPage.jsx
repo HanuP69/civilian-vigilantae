@@ -97,20 +97,40 @@ function RegisterPage() {
   };
 
   return (
-    <div className="flex items-center justify-center" style={{ minHeight: 'calc(100vh - 200px)' }}>
-      <div className="card rpg-panel" style={{ width: '100%', maxWidth: '420px', padding: 'var(--space-6) var(--space-7)', position: 'relative', borderRadius: 0 }}>
+    <div className="auth-layout" role="main">
+      <div className="card rpg-panel rpg-panel-sandstone auth-tablet">
+        {/* Left: Storytelling panel */}
+        <div className="auth-story-side" aria-hidden="true">
+        <div style={{ marginBottom: 'var(--space-4)' }}>
+          <span className="story-banner-tag">SENTINEL CIVIC</span>
+        </div>
+        <h1 className="auth-story-headline">
+          Join the<br />
+          <em>Community Watch.</em><br />
+          Earn your place.
+        </h1>
+        <p className="auth-story-body">
+          Create an account to begin reporting hyperlocal issues, confirming community quests,
+          earning gold, and climbing the Lucknow Hero League leaderboard.
+        </p>
+      </div>
+
+      {/* Right: Auth form */}
+      <div className="card pixel-border auth-parchment-form">
         <InteractiveCommunity isPasswordFocused={isPasswordFocused} isSuccess={isSuccess} />
         
         <div style={{ textAlign: 'center', marginBottom: 'var(--space-6)' }}>
-          <span className="font-mono text-xs" style={{ color: 'var(--accent)', textTransform: 'uppercase', letterSpacing: '0.1em' }}>
+          <span className="font-mono text-xs text-accent" style={{ textTransform: 'uppercase', letterSpacing: '0.12em' }}>
             New Recruit Registration
           </span>
-          <h2 style={{ fontSize: '1.75rem', marginTop: 'var(--space-2)' }}>Join Sentinel Civic</h2>
+          <h2 style={{ fontSize: '1.6rem', marginTop: 'var(--space-2)', fontStyle: 'italic' }}>
+            Join Sentinel Civic
+          </h2>
         </div>
 
-        <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+        <form onSubmit={handleSubmit} className="flex flex-col gap-2">
           <div className="flex flex-col gap-1">
-            <label className="text-xs text-muted font-mono" style={{ textTransform: 'uppercase' }}>Hero Username</label>
+            <label className="text-xs text-muted font-mono" style={{ textTransform: 'uppercase', letterSpacing: '0.06em' }}>Hero Username</label>
             <input
               type="text"
               placeholder="e.g. Commander_Amit"
@@ -118,13 +138,8 @@ function RegisterPage() {
               onChange={(e) => setDisplayName(e.target.value)}
               disabled={submitting || isSuccess}
               style={{
-                background: 'var(--bg-surface)',
-                border: '1px solid var(--border)',
                 borderRadius: 0,
-                padding: '12px 14px',
-                color: 'var(--ink-primary)',
-                outline: 'none',
-                fontFamily: 'var(--font-sans)',
+                padding: '8px 12px',
                 fontSize: '0.9rem'
               }}
               required
@@ -132,7 +147,7 @@ function RegisterPage() {
           </div>
 
           <div className="flex flex-col gap-1">
-            <label className="text-xs text-muted font-mono" style={{ textTransform: 'uppercase' }}>Email address</label>
+            <label className="text-xs text-muted font-mono" style={{ textTransform: 'uppercase', letterSpacing: '0.06em' }}>Email address</label>
             <input
               type="email"
               placeholder="e.g. hero@lucknow.in"
@@ -140,13 +155,8 @@ function RegisterPage() {
               onChange={(e) => setEmail(e.target.value)}
               disabled={submitting || isSuccess}
               style={{
-                background: 'var(--bg-surface)',
-                border: '1px solid var(--border)',
                 borderRadius: 0,
-                padding: '12px 14px',
-                color: 'var(--ink-primary)',
-                outline: 'none',
-                fontFamily: 'var(--font-sans)',
+                padding: '8px 12px',
                 fontSize: '0.9rem'
               }}
               required
@@ -154,7 +164,7 @@ function RegisterPage() {
           </div>
 
           <div className="flex flex-col gap-1">
-            <label className="text-xs text-muted font-mono" style={{ textTransform: 'uppercase' }}>Password</label>
+            <label className="text-xs text-muted font-mono" style={{ textTransform: 'uppercase', letterSpacing: '0.06em' }}>Password</label>
             <input
               type="password"
               placeholder="••••••••"
@@ -164,13 +174,8 @@ function RegisterPage() {
               onBlur={() => setIsPasswordFocused(false)}
               disabled={submitting || isSuccess}
               style={{
-                background: 'var(--bg-surface)',
-                border: '1px solid var(--border)',
                 borderRadius: 0,
-                padding: '12px 14px',
-                color: 'var(--ink-primary)',
-                outline: 'none',
-                fontFamily: 'var(--font-sans)',
+                padding: '8px 12px',
                 fontSize: '0.9rem'
               }}
               required
@@ -178,7 +183,7 @@ function RegisterPage() {
           </div>
 
           <div className="flex flex-col gap-1">
-            <label className="text-xs text-muted font-mono" style={{ textTransform: 'uppercase' }}>Confirm Password</label>
+            <label className="text-xs text-muted font-mono" style={{ textTransform: 'uppercase', letterSpacing: '0.06em' }}>Confirm Password</label>
             <input
               type="password"
               placeholder="••••••••"
@@ -188,13 +193,8 @@ function RegisterPage() {
               onBlur={() => setIsPasswordFocused(false)}
               disabled={submitting || isSuccess}
               style={{
-                background: 'var(--bg-surface)',
-                border: '1px solid var(--border)',
                 borderRadius: 0,
-                padding: '12px 14px',
-                color: 'var(--ink-primary)',
-                outline: 'none',
-                fontFamily: 'var(--font-sans)',
+                padding: '8px 12px',
                 fontSize: '0.9rem'
               }}
               required
@@ -206,12 +206,12 @@ function RegisterPage() {
             className="btn btn-primary"
             disabled={submitting || isSuccess}
             style={{
-              padding: '12px 20px',
+              padding: '10px 20px',
               borderRadius: 0,
               width: '100%',
               justifyContent: 'center',
               fontWeight: 600,
-              marginTop: 'var(--space-2)'
+              marginTop: 'var(--space-1)'
             }}
           >
             {isSuccess ? 'Hero Registered!' : submitting ? 'Registering...' : 'Initialize Hero'}
@@ -257,6 +257,7 @@ function RegisterPage() {
         </div>
       </div>
     </div>
+  </div>
   );
 }
 

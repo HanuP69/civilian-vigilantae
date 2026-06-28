@@ -5,12 +5,13 @@ import { useToast } from '../hooks/useToast.jsx';
 import InteractiveCommunity from '../components/agent/InteractiveCommunity';
 import { auth, googleProvider } from '../firebase';
 import { signInWithPopup } from 'firebase/auth';
+import { PinIcon, RobotIcon, TrophyMiniIcon, TargetIcon } from '../components/ui/PixelIcons';
 
 const FEATURES = [
-  { icon: '🗺️', text: 'Live issue map with real-time SSE updates' },
-  { icon: '🤖', text: 'Agentic AI pipeline classifies & prioritizes reports' },
-  { icon: '🏆', text: 'Earn XP & climb the Hero League leaderboard' },
-  { icon: '📊', text: 'City-wide SLA dashboard & ward health analytics' },
+  { icon: <PinIcon width={20} height={20} />, text: 'Live issue map with real-time SSE updates' },
+  { icon: <RobotIcon width={20} height={20} />, text: 'Agentic AI pipeline classifies & prioritizes reports' },
+  { icon: <TrophyMiniIcon width={20} height={20} />, text: 'Earn XP & climb the Hero League leaderboard' },
+  { icon: <TargetIcon width={20} height={20} />, text: 'City-wide SLA dashboard & ward health analytics' },
 ];
 
 function LoginPage() {
@@ -80,8 +81,9 @@ function LoginPage() {
 
   return (
     <div className="auth-layout" role="main">
-      {/* Left: Storytelling panel */}
-      <div className="auth-story-panel" aria-hidden="true">
+      <div className="card rpg-panel rpg-panel-sandstone auth-tablet">
+        {/* Left: Storytelling panel */}
+        <div className="auth-story-side" aria-hidden="true">
         <div style={{ marginBottom: 'var(--space-4)' }}>
           <span className="story-banner-tag">SENTINEL CIVIC</span>
         </div>
@@ -106,7 +108,7 @@ function LoginPage() {
       </div>
 
       {/* Right: Auth form */}
-      <div className="auth-form-panel">
+      <div className="card pixel-border auth-parchment-form">
         <InteractiveCommunity isPasswordFocused={isPasswordFocused} isSuccess={isSuccess} />
 
         <div style={{ textAlign: 'center', marginBottom: 'var(--space-6)' }}>
@@ -118,7 +120,7 @@ function LoginPage() {
           </h2>
         </div>
 
-        <form onSubmit={handleSubmit} className="flex flex-col gap-4" noValidate>
+        <form onSubmit={handleSubmit} className="flex flex-col gap-3" noValidate>
           <div className="flex flex-col gap-1">
             <label htmlFor="login-email" className="text-xs text-muted font-mono" style={{ textTransform: 'uppercase', letterSpacing: '0.06em' }}>
               Email address
@@ -131,7 +133,7 @@ function LoginPage() {
               onChange={(e) => setEmail(e.target.value)}
               disabled={submitting || isSuccess}
               autoComplete="email"
-              style={{ borderRadius: 0, padding: '12px 14px' }}
+              style={{ borderRadius: 0, padding: '8px 12px' }}
               required
               aria-required="true"
             />
@@ -151,7 +153,7 @@ function LoginPage() {
               onBlur={() => setIsPasswordFocused(false)}
               disabled={submitting || isSuccess}
               autoComplete="current-password"
-              style={{ borderRadius: 0, padding: '12px 14px' }}
+              style={{ borderRadius: 0, padding: '8px 12px' }}
               required
               aria-required="true"
             />
@@ -161,7 +163,7 @@ function LoginPage() {
             type="submit"
             className="btn btn-primary"
             disabled={submitting || isSuccess}
-            style={{ padding: '13px 20px', borderRadius: 0, width: '100%', justifyContent: 'center', fontWeight: 700, marginTop: 'var(--space-2)', fontSize: '0.9rem' }}
+            style={{ padding: '10px 20px', borderRadius: 0, width: '100%', justifyContent: 'center', fontWeight: 700, marginTop: 'var(--space-1)', fontSize: '0.9rem' }}
             aria-label={isSuccess ? 'Access granted, redirecting' : submitting ? 'Authenticating, please wait' : 'Sign in to Sentinel Civic'}
           >
             {isSuccess ? '✓ Access Granted' : submitting ? 'Authenticating…' : 'Enter Console'}
@@ -199,6 +201,7 @@ function LoginPage() {
         </p>
       </div>
     </div>
+  </div>
   );
 }
 

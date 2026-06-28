@@ -1,0 +1,244 @@
+/* ============================================================
+   WorldBackdrop — fixed full-viewport pixel-art parallax scene.
+   All layers are pure CSS/SVG, pixelated rendering, no assets.
+   ============================================================ */
+
+.world-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  image-rendering: pixelated;
+  transition: background 1.2s ease;
+}
+
+/* --- Sun / moon disc --- */
+.wb-sun-wrap {
+  position: absolute;
+  top: 8%;
+  left: 50%;
+  width: 100%;
+  transform: translateX(-50%);
+  display: flex;
+  justify-content: center;
+  transition: top 1.2s ease;
+}
+.wb-sun {
+  width: 56px;
+  height: 56px;
+  border-radius: 0;
+  clip-path: polygon(
+    30% 0%, 70% 0%, 100% 30%, 100% 70%,
+    70% 100%, 30% 100%, 0% 70%, 0% 30%
+  );
+  box-shadow: 0 0 40px currentColor;
+  transition: background 1.2s ease, opacity 1.2s ease;
+  opacity: 0.9;
+}
+.mood-storm .wb-sun { opacity: 0.25; }
+.mood-dusk .wb-sun { opacity: 0.6; transform: translateY(60px); }
+
+/* --- Stars (dusk/night) --- */
+.wb-stars {
+  position: absolute;
+  inset: 0;
+  transition: opacity 1.2s ease;
+}
+.wb-star {
+  position: absolute;
+  width: 3px;
+  height: 3px;
+  background: #fff;
+  animation: wb-twinkle 3s ease-in-out infinite;
+}
+@keyframes wb-twinkle {
+  0%, 100% { opacity: 0.2; }
+  50% { opacity: 1; }
+}
+
+/* --- Clouds --- */
+.wb-cloud-layer {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 60%;
+  pointer-events: none;
+}
+.wb-cloud-far { opacity: 0.55; filter: blur(0.3px); }
+.wb-cloud-near { opacity: 0.95; }
+
+.wb-cloud {
+  position: absolute;
+  left: -80px;
+  animation: wb-drift linear infinite;
+}
+.wb-drift-slow { animation-duration: 90s; }
+.wb-drift-fast { animation-duration: 50s; }
+
+@keyframes wb-drift {
+  from { transform: translateX(0) scale(var(--s, 1)); }
+  to { transform: translateX(calc(100vw + 160px)) scale(var(--s, 1)); }
+}
+
+/* --- Hills (mid-ground, parallax via scroll var) --- */
+.wb-hills {
+  position: absolute;
+  left: 0;
+  bottom: 14%;
+  width: 100%;
+  height: 22%;
+  transform: translateY(calc(var(--wb-scroll, 0px) * 0.3));
+  transition: transform 0.1s linear;
+}
+
+/* --- Tree silhouettes --- */
+.wb-treeline {
+  position: absolute;
+  left: 0;
+  bottom: 13.5%;
+  width: 100%;
+  height: 16%;
+  transform: translateY(calc(var(--wb-scroll, 0px) * 0.55));
+  transition: transform 0.1s linear;
+}
+
+/* --- Ground strip --- */
+.wb-ground {
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  width: 100%;
+  height: 14%;
+  border-top: 6px solid;
+  transition: background 1.2s ease, border-color 1.2s ease;
+  /* Pixel grass texture */
+  background-image: 
+    repeating-linear-gradient(
+      90deg,
+      rgba(0, 0, 0, 0.06) 0px,
+      rgba(0, 0, 0, 0.06) 3px,
+      transparent 3px,
+      transparent 6px
+    ),
+    repeating-linear-gradient(
+      0deg,
+      rgba(0, 0, 0, 0.03) 0px,
+      rgba(0, 0, 0, 0.03) 2px,
+      transparent 2px,
+      transparent 4px
+    );
+}
+
+/* --- Rain (storm mood) --- */
+.wb-rain {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+.wb-raindrop {
+  position: absolute;
+  top: -10%;
+  width: 2px;
+  height: 14px;
+  background: rgba(190, 210, 230, 0.55);
+  animation: wb-rainfall linear infinite;
+}
+@keyframes wb-rainfall {
+  from { transform: translateY(0); }
+  to { transform: translateY(110vh); }
+}
+
+/* --- Vignette mood tint --- */
+.wb-vignette {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  transition: background 1.2s ease;
+}
+
+/* --- Subtle retro scanlines for the whole scene --- */
+.wb-scanlines {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background-image: repeating-linear-gradient(
+    180deg,
+    rgba(0, 0, 0, 0.05) 0px,
+    rgba(0, 0, 0, 0.05) 1px,
+    transparent 1px,
+    transparent 3px
+  );
+  opacity: 0.4;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .wb-cloud, .wb-star, .wb-raindrop, .wb-bird, .wb-bird-up, .wb-bird-down, .wb-leaf {
+    animation: none !important;
+  }
+}
+
+@media (max-width: 720px) {
+  .wb-sun { width: 36px; height: 36px; }
+  .wb-cloud-layer { height: 50%; }
+}
+
+/* --- Birds Layer --- */
+.wb-birds-layer {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 50%;
+  pointer-events: none;
+  overflow: hidden;
+}
+.wb-bird {
+  position: absolute;
+  left: -50px;
+  animation: wb-flight linear infinite;
+  image-rendering: pixelated;
+}
+@keyframes wb-flight {
+  0% { transform: translateX(-50px); }
+  100% { transform: translateX(calc(100vw + 100px)); }
+}
+
+/* Flapping wing frames */
+.wb-bird-up {
+  animation: wb-flap-up 0.3s steps(1) infinite;
+}
+.wb-bird-down {
+  animation: wb-flap-down 0.3s steps(1) infinite;
+}
+
+@keyframes wb-flap-up {
+  0%, 49.9% { opacity: 1; }
+  50%, 100% { opacity: 0; }
+}
+@keyframes wb-flap-down {
+  0%, 49.9% { opacity: 0; }
+  50%, 100% { opacity: 1; }
+}
+
+/* --- Leaves Layer --- */
+.wb-leaves-layer {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  overflow: hidden;
+}
+.wb-leaf {
+  position: absolute;
+  top: -10%;
+  animation: wb-leaf-fall linear infinite, wb-leaf-sway ease-in-out infinite alternate;
+}
+@keyframes wb-leaf-fall {
+  0% { top: -10%; }
+  100% { top: 110%; }
+}
+@keyframes wb-leaf-sway {
+  0% { transform: translateX(-20px) rotate(0deg); }
+  100% { transform: translateX(20px) rotate(180deg); }
+}

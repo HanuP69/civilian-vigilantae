@@ -6,6 +6,9 @@ import { useToast } from '../hooks/useToast.jsx';
 import { CATEGORY_LABELS, CATEGORY_COLORS, WARD_LIST, WARD_CENTERS } from '../utils/constants';
 import { timeAgo, capitalize } from '../utils/formatters';
 import ConfigurableMap from '../components/map/ConfigurableMap';
+import { Panel, Eyebrow, Button, StatBar, Tag, QuestCard, EmptyState, PageShell } from '../components/ui/PixelKit';
+import { ScrollIcon, BoltIcon, RobotIcon, TargetIcon, PinIcon, CrosshairIcon } from '../components/ui/PixelIcons';
+import './HomePage.v2.css';
 
 const getTimestampMs = (val) => {
   if (!val) return 0;
@@ -20,11 +23,11 @@ const getTimestampMs = (val) => {
 };
 
 const LAYERS = [
-  { key: 'reports', label: 'ACTIVE ISSUES' },
-  { key: 'verified', label: 'VERIFIED ISSUES' },
-  { key: 'clusters', label: 'ISSUE CLUSTERS' },
-  { key: 'sla', label: 'SLA BREACH RISK' },
-  { key: 'recurrence', label: 'COMMUNITY HOTSPOTS' },
+  { key: 'reports', label: 'ACTIVE QUESTS' },
+  { key: 'verified', label: 'CONFIRMED THREATS' },
+  { key: 'clusters', label: 'THREAT CLUSTERS' },
+  { key: 'sla', label: 'URGENT QUESTS' },
+  { key: 'recurrence', label: 'DANGER ZONES' },
 ];
 
 
@@ -212,8 +215,6 @@ function HomePage() {
     return counts;
   }, [tickets]);
 
-  const severityClass = (s) => `badge badge-outline badge-severity-${(s || 'low').toLowerCase()}`;
-  const statusClass = (s) => `badge badge-outline badge-status-${(s || 'reported').toLowerCase().replace(/ /g, '-')}`;
   const activeIssues = useMemo(() => tickets.filter(t => t.status !== 'resolved'), [tickets]);
   const resolvedCount = useMemo(() => tickets.filter(t => t.status === 'resolved').length, [tickets]);
   const activeCount = useMemo(() => activeIssues.length, [activeIssues]);
@@ -258,156 +259,111 @@ function HomePage() {
   };
 
   return (
-    <div className="home-container" style={{ paddingBottom: 'var(--space-10)' }}>
+    <PageShell wide>
 
-      {/* ── Storytelling Hero Banner ── */}
-      <section className="story-banner animate-fade-up" aria-label="Sentinel Civic Overview">
-        <div className="story-banner-grid">
-          {/* Left: narrative */}
-          <div>
-            <div className="story-banner-eyebrow">
-              <span className="story-banner-tag" aria-label="Live community watch">
-                LIVE · LUCKNOW WATCH
-              </span>
-              <span className="story-banner-live" aria-live="polite" aria-atomic="true">
-                <span className="live-dot" aria-hidden="true" />
-                <span>{tickets.length > 0 ? `${tickets.length} active issues` : 'Monitoring city'}</span>
-              </span>
-            </div>
+      {/* ── Hero Banner ── */}
+      <section className="story-banner-v2 animate-fade-up" aria-label="Sentinel Civic Overview">
+        <Panel lg notched className="story-banner-v2-inner rpg-panel-sandstone">
+          <div className="card pixel-border" style={{ background: '#fcf8ee', border: '2px solid #85613c', padding: 'var(--space-6)', width: '100%', color: '#291d12', margin: 0, boxPattern: 'none' }}>
+            <div className="story-banner-v2-grid">
+              <div>
+                <Eyebrow>
+                  <span style={{ color: '#6b5139', fontWeight: 600 }}>
+                    © TANISHK · LIVE · LUCKNOW GUILD — {tickets.length > 0 ? `${tickets.length} ACTIVE QUESTS` : 'MONITORING REALM'}
+                  </span>
+                </Eyebrow>
 
-            <h1 className="story-banner-title animate-reveal">
-              Problems reported.<br />
-              AI-prioritized.<br />
-              <em>Citizens empowered.</em>
-            </h1>
+                <h1 className="story-banner-v2-title" style={{ color: '#291d12', textShadow: 'none', margin: 'var(--space-3) 0 var(--space-4)' }}>
+                  Troubles reported.<br />
+                  Guild dispatched.<br />
+                  <em style={{ color: '#b45309', textShadow: 'none' }}>Lucknow protected.</em>
+                </h1>
 
-            <p className="story-banner-sub">
-              Sentinel Civic turns civic complaints into intelligent, trackable actions —
-              with agentic AI that classifies, deduplicates, and dispatches every report
-              to the right ward in seconds.
-            </p>
+                <p className="story-banner-v2-sub" style={{ color: '#4a3522', fontWeight: 500, lineHeight: 1.6, marginBottom: 0 }}>
+                  Welcome to the Lucknow Watch Guild Board! Here, citizens post reports of local troubles,
+                  the Town Council routes them to active wards, and brave heroes complete quests to earn gold and honor.
+                </p>
+              </div>
 
-            {/* AI Pipeline story strip */}
-            <div className="pipeline-strip" role="list" aria-label="AI processing pipeline">
-              {[
-                { icon: '📸', label: 'REPORT' },
-                { icon: '🤖', label: 'CLASSIFY' },
-                { icon: '🗺️', label: 'GEO-ROUTE' },
-                { icon: '⚡', label: 'PRIORITIZE' },
-                { icon: '🎫', label: 'TICKET' },
-                { icon: '📢', label: 'NOTIFY' },
-              ].map((step, i, arr) => (
-                <div key={step.label} style={{ display: 'flex', alignItems: 'center' }}>
-                  <div className="pipeline-node" role="listitem" aria-label={step.label}>
-                    <div className="pipeline-node-icon" aria-hidden="true">{step.icon}</div>
-                    <div className="pipeline-node-label">{step.label}</div>
+              <div className="story-banner-v2-side">
+                <Link to="/report" aria-label="Report a new community trouble">
+                  <Button variant="primary" size="lg" block style={{ background: '#b45309', borderColor: '#513a23', color: '#fff', padding: '12px var(--space-4)' }}>
+                    <PinIcon width={14} height={14} /> REPORT TROUBLE
+                  </Button>
+                </Link>
+                <Link to="/missions" aria-label="Browse active missions">
+                  <Button block style={{ background: '#ecdcb9', borderColor: '#85613c', color: '#513a23', padding: '12px var(--space-4)' }}>
+                    <TargetIcon width={14} height={14} /> ACTIVE MISSIONS
+                  </Button>
+                </Link>
+
+                <div className="story-banner-v2-stats" aria-label="Community statistics" style={{ borderColor: '#85613c', marginTop: 'var(--space-1)' }}>
+                  <div className="story-stat-v2">
+                    <span className="story-stat-v2-num" style={{ color: '#b45309', textShadow: 'none', fontSize: '1.4rem' }}>{tickets.length}</span>
+                    <span className="story-stat-v2-label" style={{ color: '#6b5139', fontSize: '0.6rem' }}>Active Quests</span>
                   </div>
-                  {i < arr.length - 1 && (
-                    <div className="pipeline-connector done" aria-hidden="true" />
-                  )}
+                  <div className="story-stat-v2">
+                    <span className="story-stat-v2-num" style={{ color: communityHealthIndex > 50 ? '#15803d' : '#b91c1c', textShadow: 'none', fontSize: '1.4rem' }}>{communityHealthIndex}%</span>
+                    <span className="story-stat-v2-label" style={{ color: '#6b5139', fontSize: '0.6rem' }}>Town Health</span>
+                  </div>
                 </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Right: CTA + quick stats */}
-          <div className="flex flex-col gap-5" style={{ minWidth: 200 }}>
-            <Link
-              to="/report"
-              className="btn btn-primary btn-lg"
-              style={{ borderRadius: 0, fontFamily: 'var(--font-pixel)', fontSize: '0.6rem', justifyContent: 'center', padding: '16px 20px' }}
-              aria-label="Report a new community issue"
-            >
-              📢 REPORT ISSUE
-            </Link>
-            <Link
-              to="/missions"
-              className="btn btn-secondary"
-              style={{ borderRadius: 0, fontFamily: 'var(--font-mono)', fontSize: '0.75rem', justifyContent: 'center' }}
-              aria-label="Browse verification missions"
-            >
-              🎯 VERIFY & EARN XP
-            </Link>
-            <div className="story-banner-stats" aria-label="Community statistics">
-              <div className="story-stat">
-                <span className="story-stat-num accent" aria-label={`${tickets.length} active issues`}>{tickets.length}</span>
-                <span className="story-stat-label">Active Issues</span>
-              </div>
-              <div className="story-stat">
-                <span className="story-stat-num teal" aria-label={`${communityHealthIndex}% community health`}>{communityHealthIndex}%</span>
-                <span className="story-stat-label">Health Index</span>
               </div>
             </div>
           </div>
-        </div>
+        </Panel>
       </section>
 
       {/* Section 1: Community Health KPI Header */}
-      <div className="kpi-grid animate-fade-up stagger-2" role="region" aria-label="Community health statistics">
-        <div
-          className="summary-card"
-          data-tooltip="Average ward health across all active tickets"
-          role="status"
-          aria-label={`Community health: ${communityHealthIndex}%`}
-        >
-          <div className="font-pixel text-muted" style={{ fontSize: '0.55rem', marginBottom: 'var(--space-2)', letterSpacing: '0.08em' }}>COMMUNITY HEALTH</div>
-          <div className="font-serif" style={{ fontSize: '2rem', fontWeight: 700, letterSpacing: '-0.03em', color: communityHealthIndex > 80 ? 'var(--success)' : communityHealthIndex > 50 ? 'var(--warning)' : 'var(--error)' }}>
-            {communityHealthIndex}%
+      <div className="kpi-grid-v2 animate-fade-up stagger-2" role="region" aria-label="Community health statistics">
+        <Panel className="kpi-card-v2 rpg-panel-sandstone" role="status" aria-label={`Community health: ${communityHealthIndex}%`}>
+          <div className="card pixel-border" style={{ background: '#fcf8ee', color: '#291d12', padding: 'var(--space-3)', height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'center', border: '2px solid #85613c', margin: 0, boxPattern: 'none' }}>
+            <div className="kpi-card-v2-label" style={{ color: '#6b5139', fontSize: '0.55rem', marginBottom: '4px' }}>TOWN HEALTH</div>
+            <div className="kpi-card-v2-num" style={{ color: communityHealthIndex > 80 ? '#15803d' : communityHealthIndex > 50 ? '#b45309' : '#b91c1c', fontSize: '1.6rem', textShadow: 'none', margin: '2px 0', lineHeight: 1 }}>
+              {communityHealthIndex}%
+            </div>
+            <StatBar value={communityHealthIndex} color={communityHealthIndex > 80 ? 'leaf' : communityHealthIndex > 50 ? 'gold' : 'heart'} />
+            <p className="kpi-card-v2-sub" style={{ color: '#4a3522', marginTop: '4px', fontSize: '0.65rem', margin: 0 }}>
+              {communityHealthIndex > 80 ? 'Stable' : communityHealthIndex > 50 ? 'Warnings active' : 'Critical backlog'}
+            </p>
           </div>
-          <p style={{ fontSize: '0.75rem', color: 'var(--ink-muted)', marginTop: 'var(--space-1)' }}>
-            {communityHealthIndex > 80 ? '🟢 Stable' : communityHealthIndex > 50 ? '🟡 Warnings active' : '🔴 Critical backlog'}
-          </p>
-        </div>
+        </Panel>
 
-        <div
-          className="summary-card"
-          data-tooltip="Issues currently open, reported or in-progress"
-          role="status"
-          aria-label={`${activeCount} active issues, ${urgentTickets} high priority`}
-        >
-          <div className="font-pixel text-muted" style={{ fontSize: '0.55rem', marginBottom: 'var(--space-2)', letterSpacing: '0.08em' }}>ACTIVE ISSUES</div>
-          <div className="font-serif" style={{ fontSize: '2rem', fontWeight: 700, letterSpacing: '-0.03em', color: activeCount > 0 ? 'var(--warning)' : 'var(--success)' }}>
-            {activeCount}
+        <Panel className="kpi-card-v2 rpg-panel-sandstone" role="status" aria-label={`${activeCount} active quests, ${urgentTickets} high priority`}>
+          <div className="card pixel-border" style={{ background: '#fcf8ee', color: '#291d12', padding: 'var(--space-3)', height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'center', border: '2px solid #85613c', margin: 0, boxPattern: 'none' }}>
+            <div className="kpi-card-v2-label" style={{ color: '#6b5139', fontSize: '0.55rem', marginBottom: '4px' }}>ACTIVE QUESTS</div>
+            <div className="kpi-card-v2-num" style={{ color: activeCount > 0 ? '#b45309' : '#15803d', fontSize: '1.6rem', textShadow: 'none', margin: '2px 0', lineHeight: 1 }}>
+              {activeCount}
+            </div>
+            <p className="kpi-card-v2-sub" style={{ color: '#4a3522', marginTop: '4px', fontSize: '0.65rem', margin: 0 }}>
+              {activeCount === 0 ? 'All clear' : <span><span style={{ color: '#b91c1c', fontWeight: 600 }}>{urgentTickets}</span> urgent threats</span>}
+            </p>
           </div>
-          <p style={{ fontSize: '0.75rem', color: 'var(--ink-muted)', marginTop: 'var(--space-1)' }}>
-            {activeCount === 0 ? '✓ All clear' : <span><span style={{ color: 'var(--error)' }}>{urgentTickets}</span> high-priority</span>}
-          </p>
-        </div>
+        </Panel>
 
-        <div
-          className="summary-card"
-          data-tooltip="Community-verified issues with 3+ citizen confirmations"
-          role="status"
-          aria-label={`${verifiedCount} verified issues`}
-        >
-          <div className="font-pixel text-muted" style={{ fontSize: '0.55rem', marginBottom: 'var(--space-2)', letterSpacing: '0.08em' }}>VERIFIED ISSUES</div>
-          <div className="font-serif" style={{ fontSize: '2rem', fontWeight: 700, letterSpacing: '-0.03em', color: 'var(--teal)' }}>
-            {verifiedCount}
+        <Panel className="kpi-card-v2 rpg-panel-sandstone" role="status" aria-label={`${verifiedCount} verified threats`}>
+          <div className="card pixel-border" style={{ background: '#fcf8ee', color: '#291d12', padding: 'var(--space-3)', height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'center', border: '2px solid #85613c', margin: 0, boxPattern: 'none' }}>
+            <div className="kpi-card-v2-label" style={{ color: '#6b5139', fontSize: '0.55rem', marginBottom: '4px' }}>CONFIRMED THREATS</div>
+            <div className="kpi-card-v2-num" style={{ color: '#2563eb', fontSize: '1.6rem', textShadow: 'none', margin: '2px 0', lineHeight: 1 }}>
+              {verifiedCount}
+            </div>
+            <p className="kpi-card-v2-sub" style={{ color: '#4a3522', marginTop: '4px', fontSize: '0.65rem', margin: 0 }}>Consensus confirmed</p>
           </div>
-          <p style={{ fontSize: '0.75rem', color: 'var(--ink-muted)', marginTop: 'var(--space-1)' }}>
-            ✓ Consensus confirmed
-          </p>
-        </div>
+        </Panel>
 
-        <div
-          className="summary-card"
-          data-tooltip="Locations with recurring civic problems detected by AI"
-          role="status"
-          aria-label={`${hotspotCount} community hotspots with recurrence risk`}
-        >
-          <div className="font-pixel text-muted" style={{ fontSize: '0.55rem', marginBottom: 'var(--space-2)', letterSpacing: '0.08em' }}>HOTSPOTS</div>
-          <div className="font-serif" style={{ fontSize: '2rem', fontWeight: 700, letterSpacing: '-0.03em', color: hotspotCount > 0 ? 'var(--error)' : 'var(--success)' }}>
-            {hotspotCount}
+        <Panel className="kpi-card-v2 rpg-panel-sandstone" role="status" aria-label={`${hotspotCount} danger zones`}>
+          <div className="card pixel-border" style={{ background: '#fcf8ee', color: '#291d12', padding: 'var(--space-3)', height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'center', border: '2px solid #85613c', margin: 0, boxPattern: 'none' }}>
+            <div className="kpi-card-v2-label" style={{ color: '#6b5139', fontSize: '0.55rem', marginBottom: '4px' }}>DANGER ZONES</div>
+            <div className="kpi-card-v2-num" style={{ color: hotspotCount > 0 ? '#b91c1c' : '#15803d', fontSize: '1.6rem', textShadow: 'none', margin: '2px 0', lineHeight: 1 }}>
+              {hotspotCount}
+            </div>
+            <p className="kpi-card-v2-sub" style={{ color: '#4a3522', marginTop: '4px', fontSize: '0.65rem', margin: 0 }}>{hotspotCount > 0 ? 'Recurrence risk' : 'No hotspots'}</p>
           </div>
-          <p style={{ fontSize: '0.75rem', color: 'var(--ink-muted)', marginTop: 'var(--space-1)' }}>
-            {hotspotCount > 0 ? '⚠ Recurrence risk' : '✓ No hotspots'}
-          </p>
-        </div>
+        </Panel>
       </div>
 
       {/* Section 2: Centerpiece Map */}
       <div className="animate-fade-up stagger-2" style={{ marginBottom: 'var(--space-6)' }}>
-        <div className="map-wrapper pixel-border" style={{ height: '520px', minHeight: 520, borderRadius: 0, position: 'relative' }}>
+        <Panel flush className="map-wrapper-v2 rpg-panel-sandstone" style={{ height: '520px', minHeight: 520, position: 'relative' }}>
           <ConfigurableMap
             provider={mapProvider}
             center={[26.8467, 80.9462]}
@@ -428,64 +384,63 @@ function HomePage() {
             capitalize={capitalize}
             focusCoords={focusCoords}
           />
-          <div className="layer-toggle" role="tablist" aria-label="Map layers">
+          <div className="layer-toggle-v2" role="tablist" aria-label="Map layers">
             {LAYERS.map(l => (
               <button
                 key={l.key}
                 role="tab"
                 aria-selected={layer === l.key}
-                className={`layer-chip font-pixel ${layer === l.key ? 'active' : ''}`}
-                style={{ fontSize: '0.65rem', borderRadius: 0, border: '1px solid var(--border)' }}
+                className={`layer-chip-v2 ${layer === l.key ? 'active' : ''}`}
                 onClick={() => setLayer(l.key)}
               >
                 {l.label}
               </button>
             ))}
           </div>
-          <div className="layer-legend" aria-hidden="true" style={{ borderRadius: 0, border: '1px solid var(--border)' }}>
+          <div className="layer-legend-v2" aria-hidden="true">
             {legendItems().map((item, i) => (
-              <div className="legend-item font-pixel" key={i} style={{ fontSize: '0.625rem' }}>
-                <span className="legend-swatch" style={{ background: item.color, borderRadius: 0 }} />
+              <div className="legend-item-v2" key={i}>
+                <span className="legend-swatch-v2" style={{ background: item.color }} />
                 <span>{item.label}</span>
               </div>
             ))}
           </div>
-        </div>
+        </Panel>
       </div>
 
       {/* Section 3 & 4: Bottom Grid */}
-      <div className="home-bottom-grid animate-fade-up stagger-2">
+      <div className="home-bottom-grid-v2 animate-fade-up stagger-2">
         {/* Left Column: Community Activity Feed */}
-        <div className="flex flex-col gap-4 home-feed-col rpg-panel" style={{ padding: 'var(--space-4)', height: '480px' }}>
-          <div className="flex justify-between items-center" style={{ borderBottom: '1px solid var(--border)', paddingBottom: '8px' }}>
-            <span className="font-pixel" style={{ fontSize: '0.65rem', color: 'var(--accent)' }}>📢 COMMUNITY ACTIVITY FEED</span>
+        <Panel className="home-feed-col-v2 rpg-panel-sandstone" style={{ height: '480px', padding: 0 }}>
+          <div className="card pixel-border" style={{ background: '#fcf8ee', border: 'none', padding: 'var(--space-4)', height: '100%', display: 'flex', flexDirection: 'column', flex: 1, color: '#291d12', margin: 0, boxPattern: 'none' }}>
+          <div className="hud-panel-header-v2">
+            <Eyebrow icon={<ScrollIcon width={14} height={14} />}>COMMUNITY ACTIVITY FEED</Eyebrow>
             <div className="flex gap-2">
-              <button 
-                onClick={() => scrollFeed('up')} 
-                className="btn btn-secondary font-pixel" 
-                style={{ padding: '4px 8px', fontSize: '0.625rem', borderRadius: 0, border: '1px solid var(--border)', background: 'var(--bg-surface)' }}
+              <Button
+                size="sm"
+                onClick={() => scrollFeed('up')}
                 aria-label="Scroll feed up"
+                style={{ background: '#1c130c', color: '#fcd34d', borderColor: '#d8a96d', textShadow: 'none', minWidth: '32px', height: '32px', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 0 }}
               >
                 ▲
-              </button>
-              <button 
-                onClick={() => scrollFeed('down')} 
-                className="btn btn-secondary font-pixel" 
-                style={{ padding: '4px 8px', fontSize: '0.625rem', borderRadius: 0, border: '1px solid var(--border)', background: 'var(--bg-surface)' }}
+              </Button>
+              <Button
+                size="sm"
+                onClick={() => scrollFeed('down')}
                 aria-label="Scroll feed down"
+                style={{ background: '#1c130c', color: '#fcd34d', borderColor: '#d8a96d', textShadow: 'none', minWidth: '32px', height: '32px', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 0 }}
               >
                 ▼
-              </button>
+              </Button>
             </div>
           </div>
 
           {/* Filter chips row */}
-          <div style={{ display: 'flex', gap: 'var(--space-2)', flexWrap: 'wrap', alignItems: 'center' }}>
+          <div className="home-filter-row-v2">
             <select
               value={filters.status}
               onChange={e => handleFilter('status', e.target.value)}
-              className="filter-chip-select font-pixel"
-              style={{ borderRadius: 0, fontSize: '0.625rem' }}
+              className="hud-select"
             >
               <option value="">ALL STATUSES</option>
               <option value="reported">REPORTED</option>
@@ -497,8 +452,7 @@ function HomePage() {
             <select
               value={filters.category}
               onChange={e => handleFilter('category', e.target.value)}
-              className="filter-chip-select font-pixel"
-              style={{ borderRadius: 0, fontSize: '0.625rem' }}
+              className="hud-select"
             >
               <option value="">ALL CATEGORIES</option>
               {Object.entries(CATEGORY_LABELS).map(([k, v]) => (
@@ -508,103 +462,102 @@ function HomePage() {
             <select
               value={filters.ward}
               onChange={e => handleFilter('ward', e.target.value)}
-              className="filter-chip-select font-pixel"
-              style={{ borderRadius: 0, fontSize: '0.625rem' }}
+              className="hud-select"
             >
               <option value="">ALL WARDS</option>
               {WARD_LIST.map(w => (<option key={w} value={w}>{w.toUpperCase()}</option>))}
             </select>
-            <span className="font-pixel text-muted" style={{ marginLeft: 'auto', whiteSpace: 'nowrap', fontSize: '0.625rem' }}>
-              {tickets.length} ISSUE{tickets.length !== 1 ? 'S' : ''}
+            <span className="font-pixel text-muted home-issue-count-v2">
+              {tickets.length} QUEST{tickets.length !== 1 ? 'S' : ''}
             </span>
           </div>
 
           {/* Feed list */}
-          <div ref={feedRef} className="flex flex-col gap-3 rpg-scrollbar" style={{ overflowY: 'auto', flex: 1 }}>
+          <div ref={feedRef} className="flex flex-col gap-3 hud-scroll" style={{ overflowY: 'auto', flex: 1 }}>
             {loading ? (
               <div aria-busy="true" aria-label="Loading reports" className="flex flex-col gap-3">
-                {[1, 2, 3, 4].map(i => (<div key={i} className="skeleton" style={{ height: 110, borderRadius: 0 }} />))}
+                {[1, 2, 3, 4].map(i => (<div key={i} className="skeleton" style={{ height: 110 }} />))}
               </div>
             ) : tickets.length === 0 ? (
-              <div className="empty-state flex flex-col gap-4 pixel-border" style={{ borderRadius: 0 }}>
-                <p className="font-pixel" style={{ fontSize: '0.65rem' }}>NO ISSUES FOUND.</p>
-                <Link to="/report" className="btn btn-primary pixel-border" style={{ alignSelf: 'center', borderRadius: 0, fontFamily: 'var(--font-pixel)', fontSize: '0.55rem' }}>REPORT ISSUE</Link>
-              </div>
+              <EmptyState
+                icon={<ScrollIcon width={36} height={36} />}
+                title="NO QUESTS FOUND"
+                action={<Link to="/report"><Button variant="primary">REPORT TROUBLE</Button></Link>}
+              />
             ) : (
               tickets.map((ticket) => (
-                <div
+                <QuestCard
                   key={ticket.id}
-                  className="home-ticket-card clickable-card pixel-border"
                   role="button"
                   tabIndex={0}
                   onClick={() => navigate(`/ticket/${ticket.id}`)}
                   onKeyDown={(e) => handleCardKey(e, ticket)}
-                  style={{
-                    borderColor: ticket.priority_score > 70 ? 'var(--error)' : ticket.priority_score > 40 ? 'var(--warning)' : 'var(--border)',
-                    background: activeTicketId === ticket.id ? 'var(--bg-elevated)' : 'var(--bg-secondary)',
-                    borderRadius: 0,
-                  }}
+                  accentColor={ticket.priority_score > 70 ? 'var(--hud-heart)' : ticket.priority_score > 40 ? 'var(--hud-gold)' : 'var(--hud-border-light)'}
+                  style={{ background: activeTicketId === ticket.id ? 'var(--hud-card-active-bg, var(--hud-panel-light))' : 'var(--hud-card-bg, var(--hud-panel))' }}
                   onMouseEnter={() => handleHover(ticket)}
                   onMouseLeave={() => setActiveTicketId(null)}
                 >
                   <div className="flex justify-between items-start" style={{ marginBottom: 'var(--space-2)' }}>
-                    <span className="font-serif" style={{ fontSize: '1.0625rem', fontWeight: 600, color: 'var(--ink-primary)', lineHeight: 1.3 }}>
+                    <span className="ticket-card-title-v2">
                       {ticket.title || ticket.ai_title || 'Untitled Issue'}
                     </span>
-                    <span className="font-pixel text-muted" style={{ marginLeft: 'var(--space-3)', whiteSpace: 'nowrap', flexShrink: 0, fontSize: '0.625rem' }}>{timeAgo(ticket.created_at).toUpperCase()}</span>
+                    <span className="font-pixel text-muted ticket-card-time-v2">{timeAgo(ticket.created_at).toUpperCase()}</span>
                   </div>
                   <div className="flex items-center gap-2" style={{ flexWrap: 'wrap' }}>
-                    <span className="badge badge-outline font-pixel" style={{ color: CATEGORY_COLORS[ticket.category] || 'var(--ink-secondary)', borderRadius: 0, fontSize: '0.625rem', padding: '2px 4px' }}>
+                    <Tag color={CATEGORY_COLORS[ticket.category] || 'var(--hud-ink-dim)'}>
                       {CATEGORY_LABELS[ticket.category] || capitalize(ticket.category)}
-                    </span>
-                    <span className={`${severityClass(ticket.severity)} font-pixel`} style={{ borderRadius: 0, fontSize: '0.625rem', padding: '2px 4px' }}>{capitalize(ticket.severity)}</span>
-                    <span className={`${statusClass(ticket.status)} font-pixel`} style={{ borderRadius: 0, fontSize: '0.625rem', padding: '2px 4px' }}>{capitalize(ticket.status)}</span>
-                    <span className="font-pixel text-muted" style={{ marginLeft: 'auto', fontSize: '0.625rem' }}>{ticket.ward?.toUpperCase() || '—'}</span>
+                    </Tag>
+                    <Tag color={`var(--severity-${(ticket.severity || 'low').toLowerCase()})`}>{capitalize(ticket.severity)}</Tag>
+                    <Tag color={`var(--status-${(ticket.status || 'reported').toLowerCase().replace(/ /g, '-')})`}>{capitalize(ticket.status)}</Tag>
+                    <span className="font-pixel text-muted ticket-card-ward-v2">{ticket.ward?.toUpperCase() || '—'}</span>
                   </div>
                   {ticket.priority_score != null && !isNaN(ticket.priority_score) && (
-                    <div className="priority-bar" style={{ height: '3px', marginTop: 'var(--space-3)', borderRadius: 0 }}>
-                      <div className="priority-bar-fill" style={{ width: `${Math.round(ticket.priority_score)}%`, background: ticket.priority_score > 70 ? 'var(--error)' : ticket.priority_score > 40 ? 'var(--warning)' : 'var(--accent)', borderRadius: 0 }} />
-                    </div>
+                    <StatBar
+                      value={Math.round(ticket.priority_score)}
+                      color={ticket.priority_score > 70 ? 'heart' : ticket.priority_score > 40 ? 'gold' : 'sky'}
+                    />
                   )}
-                </div>
+                </QuestCard>
               ))
             )}
           </div>
-        </div>
+          </div>
+        </Panel>
 
         {/* Right Column: Agent Insights Panel */}
-        <div className="flex flex-col gap-4 home-feed-col rpg-panel" style={{ padding: 'var(--space-4)', height: '480px' }}>
-          <div className="flex justify-between items-center" style={{ borderBottom: '1px solid var(--border)', paddingBottom: '8px' }}>
-            <span className="font-pixel" style={{ fontSize: '0.65rem', color: 'var(--accent)' }}>🤖 AGENT INSIGHTS NETWORK</span>
+        <Panel className="home-feed-col-v2 rpg-panel-sandstone" style={{ height: '480px', padding: 0 }}>
+          <div className="card pixel-border" style={{ background: '#fcf8ee', border: 'none', padding: 'var(--space-4)', height: '100%', display: 'flex', flexDirection: 'column', flex: 1, color: '#291d12', margin: 0, boxPattern: 'none' }}>
+          <div className="hud-panel-header-v2">
+            <Eyebrow icon={<RobotIcon width={14} height={14} />}>AGENT INSIGHTS NETWORK</Eyebrow>
           </div>
 
-          <div ref={insightsRef} className="flex flex-col gap-3 rpg-scrollbar" style={{ overflowY: 'auto', flex: 1 }}>
+          <div ref={insightsRef} className="flex flex-col gap-3 hud-scroll" style={{ overflowY: 'auto', flex: 1 }}>
             <div className="flex flex-col gap-3">
               {/* Insight 1: Active Clusters */}
-              <div className="pixel-border" style={{ padding: '12px', background: 'var(--bg-secondary)', borderRadius: 0 }}>
-                <span className="font-pixel" style={{ fontSize: '0.55rem', color: 'var(--accent)' }}>DBSCAN CLUSTERING ANALYSIS</span>
-                <p className="text-secondary" style={{ fontSize: '0.85rem', marginTop: '4px' }}>
-                  {clusterGroups.length > 0 
+              <div className="insight-row-v2">
+                <span className="font-pixel insight-row-v2-label" style={{ color: 'var(--hud-gold)' }}>DBSCAN CLUSTERING ANALYSIS</span>
+                <p className="text-secondary insight-row-v2-text">
+                  {clusterGroups.length > 0
                     ? `Grouped ${tickets.length} issues into ${clusterGroups.length} high-density geographic clusters. Concentration monitored in ${topRisk?.ward || 'Lucknow'}.`
                     : `Scanning coordinates... No high-density issue clusters detected yet.`}
                 </p>
               </div>
 
               {/* Insight 2: Recurrence Forecast */}
-              <div className="pixel-border" style={{ padding: '12px', background: 'var(--bg-secondary)', borderRadius: 0 }}>
-                <span className="font-pixel" style={{ fontSize: '0.55rem', color: 'var(--warning)' }}>RECURRENCE RISK FORECAST</span>
-                <p className="text-secondary" style={{ fontSize: '0.85rem', marginTop: '4px' }}>
-                  {topRisk 
+              <div className="insight-row-v2">
+                <span className="font-pixel insight-row-v2-label" style={{ color: 'var(--hud-ember)' }}>RECURRENCE RISK FORECAST</span>
+                <p className="text-secondary insight-row-v2-text">
+                  {topRisk
                     ? `AI predicts elevated recurrence risk (${Math.round((topRisk.probability || 0) * 100)}%) for ${topRisk.ward} ward based on historical patterns.`
                     : `Weibull hazard model indicators stable across all Lucknow wards.`}
                 </p>
               </div>
 
               {/* Insight 3: SLA Status */}
-              <div className="pixel-border" style={{ padding: '12px', background: 'var(--bg-secondary)', borderRadius: 0 }}>
-                <span className="font-pixel" style={{ fontSize: '0.55rem', color: slaBreachCount > 0 ? 'var(--error)' : 'var(--success)' }}>SLA COMPLIANCE MONITOR</span>
-                <p className="text-secondary" style={{ fontSize: '0.85rem', marginTop: '4px' }}>
-                  {slaBreachCount > 0 
+              <div className="insight-row-v2">
+                <span className="font-pixel insight-row-v2-label" style={{ color: slaBreachCount > 0 ? 'var(--hud-heart)' : 'var(--hud-leaf)' }}>SLA COMPLIANCE MONITOR</span>
+                <p className="text-secondary insight-row-v2-text">
+                  {slaBreachCount > 0
                     ? `Alert: ${slaBreachCount} active issues have breached or are near their SLA resolution deadline.`
                     : `All active issues are within expected SLA response window.`}
                 </p>
@@ -613,7 +566,7 @@ function HomePage() {
               {/* Dynamic Consensus Logs from SSE events */}
               {events.filter(e => ['ticket_created', 'ticket_updated', 'verification_recorded'].includes(e.type)).length > 0 && (
                 <div className="flex flex-col gap-2" style={{ marginTop: '4px' }}>
-                  <span className="font-pixel" style={{ fontSize: '0.55rem', color: 'var(--success)' }}>LIVE AI-CONSENSUS FEED</span>
+                  <span className="font-pixel insight-row-v2-label" style={{ color: 'var(--hud-leaf)' }}>LIVE AI-CONSENSUS FEED</span>
                   {events
                     .filter(e => ['ticket_created', 'ticket_updated', 'verification_recorded'].includes(e.type))
                     .slice(-5)
@@ -628,7 +581,7 @@ function HomePage() {
                         message = `[Consensus] Consensus updated for issue #${(ev.data.ticket_id || '').substring(0, 6)}: ${ev.data.up} approvals / ${ev.data.down} flags.`;
                       }
                       return (
-                        <div key={idx} style={{ fontSize: '0.75rem', fontFamily: 'var(--font-mono)', color: 'var(--ink-secondary)', borderLeft: '2px solid var(--accent)', paddingLeft: '8px', marginBottom: '4px' }}>
+                        <div key={idx} className="consensus-log-row-v2">
                           {message}
                         </div>
                       );
@@ -637,9 +590,10 @@ function HomePage() {
               )}
             </div>
           </div>
-        </div>
+          </div>
+        </Panel>
       </div>
-    </div>
+    </PageShell>
   );
 }
 

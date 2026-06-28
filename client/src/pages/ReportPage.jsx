@@ -6,6 +6,7 @@ import { capitalize } from '../utils/formatters';
 import { useToast } from '../hooks/useToast.jsx';
 import { useAgentStream } from '../hooks/useAgentStream.js';
 import AgentReveal from '../components/agent/AgentReveal.jsx';
+import { PageShell } from '../components/ui/PixelKit';
 
 const STEPS = ['Location', 'Media', 'Details', 'Review'];
 
@@ -289,11 +290,10 @@ function ReportPage() {
   const mediaType = file ? (file.type.startsWith('video') ? 'video' : file.type.startsWith('audio') ? 'audio' : 'image') : null;
 
   return (
-    <div className="report-page-container animate-fade-up" style={{ maxWidth: 720, margin: '0 auto', paddingBottom: 'var(--space-10)' }}>
-      <header style={{ marginBottom: 'var(--space-8)', textAlign: 'center' }}>
-        <h2 className="font-serif animate-reveal" style={{ fontSize: 'clamp(2rem, 5vw, 3rem)', marginBottom: 'var(--space-3)' }}>Report an Issue</h2>
-        <p className="text-secondary font-sans animate-fade-up stagger-1" style={{ fontSize: '1.125rem' }}>Help us improve the city by reporting infrastructure or civic concerns.</p>
-      </header>
+    <PageShell 
+      title="Report a Civic Issue" 
+      subtitle="AI-assisted classification, geocode deduplication, and automated ward dispatch"
+    >
 
       <div className="hero-panel rpg-panel animate-fade-up stagger-2" style={{ marginBottom: 'var(--space-6)', borderRadius: 0 }}>
         <div className="hero-panel-row">
@@ -642,7 +642,7 @@ function ReportPage() {
           />
         )}
       </AnimatePresence>
-    </div>
+    </PageShell>
   );
 }
 

@@ -138,87 +138,145 @@ function CopilotDrawer() {
   return (
     <>
       {/* Floating Toggle Button (Bottom-Right) */}
-      <motion.button
-        onClick={() => setIsOpen(true)}
-        whileHover={{ scale: 1.1 }}
-        whileTap={{ scale: 0.9 }}
-        className="font-pixel copilot-trigger"
-        style={{
-          position: 'fixed',
-          bottom: '24px',
-          right: '24px',
-          zIndex: 999,
-          background: 'oklch(0.12 0.01 260)',
-          color: 'var(--accent)',
-          border: '2px solid var(--accent)',
-          padding: '12px 18px',
-          cursor: 'pointer',
-          boxShadow: '4px 4px 0 rgba(0,0,0,0.6), 0 0 15px rgba(255,215,0,0.2)',
-          fontSize: '0.55rem',
-          display: 'flex',
-          alignItems: 'center',
-          gap: '8px',
-          borderRadius: 0,
-          textTransform: 'uppercase',
-          letterSpacing: '1px'
-        }}
-      >
-        🔮 CO-PILOT ASSISTANT
-      </motion.button>
+      {/* Floating Toggle Button (Bottom-Right) */}
+      {!isOpen && (
+        <motion.button
+          onClick={() => setIsOpen(true)}
+          whileHover={{ scale: 1.15 }}
+          whileTap={{ scale: 0.9 }}
+          animate={{ y: [0, -8, 0] }}
+          transition={{
+            y: {
+              repeat: Infinity,
+              duration: 3,
+              ease: "easeInOut"
+            }
+          }}
+          className="copilot-floating-trigger"
+          style={{
+            position: 'fixed',
+            bottom: '24px',
+            right: '24px',
+            zIndex: 999,
+            background: 'none',
+            border: 'none',
+            padding: 0,
+            cursor: 'pointer',
+            width: '96px',
+            height: '96px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            outline: 'none'
+          }}
+          aria-label="Open Co-pilot Assistant"
+        >
+          <img 
+            src="/robo.png" 
+            alt="Co-pilot Assistant" 
+            style={{ 
+              width: '100%', 
+              height: '100%', 
+              imageRendering: 'pixelated',
+              filter: 'drop-shadow(0px 8px 12px rgba(0,0,0,0.65)) drop-shadow(0 0 6px rgba(252,211,77,0.35))'
+            }} 
+          />
+        </motion.button>
+      )}
 
       {/* Slide-out Drawer Panel */}
       <AnimatePresence>
         {isOpen && (
-          <motion.div
-            initial={{ x: '100%' }}
-            animate={{ x: 0 }}
-            exit={{ x: '100%' }}
-            transition={{ type: 'spring', damping: 25, stiffness: 220 }}
-            className="rpg-panel"
-            style={{
-              position: 'fixed',
-              top: 0,
-              right: 0,
-              bottom: 0,
-              width: '100%',
-              maxWidth: '420px',
-              zIndex: 1002,
-              background: 'rgba(15, 17, 23, 0.98)',
-              backdropFilter: 'blur(10px)',
-              borderLeft: '4px solid var(--border)',
-              display: 'flex',
-              flexDirection: 'column',
-              boxShadow: '-10px 0 30px rgba(0,0,0,0.8)',
-              borderRadius: 0,
-              padding: 0
-            }}
-          >
+          <>
+            {/* Blurred Backdrop */}
+            <motion.div
+              key="copilot-backdrop"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setIsOpen(false)}
+              style={{
+                position: 'fixed',
+                top: 0,
+                left: 0,
+                right: 0,
+                bottom: 0,
+                zIndex: 1001,
+                background: 'rgba(16, 11, 8, 0.45)',
+                backdropFilter: 'blur(5px)',
+                WebkitBackdropFilter: 'blur(5px)'
+              }}
+            />
+
+            <motion.div
+              key="copilot-drawer"
+              initial={{ x: '100%' }}
+              animate={{ x: 0 }}
+              exit={{ x: '100%' }}
+              transition={{ type: 'spring', damping: 25, stiffness: 220 }}
+              className="rpg-panel-sandstone"
+              style={{
+                position: 'fixed',
+                top: 0,
+                right: 0,
+                bottom: 0,
+                width: '100%',
+                maxWidth: '420px',
+                zIndex: 1002,
+                background: 'url(/sandstone.png) repeat',
+                borderLeft: '4px solid #513a23',
+                outline: '2px solid #d8a96d',
+                outlineOffset: '-6px',
+                display: 'flex',
+                flexDirection: 'column',
+                boxShadow: '-10px 0 30px rgba(0,0,0,0.85)',
+                borderRadius: 0,
+                padding: '6px'
+              }}
+            >
             {/* Drawer Header */}
             <div 
               style={{ 
                 padding: '16px 20px', 
-                borderBottom: '2px solid var(--border-subtle)', 
-                background: 'oklch(0.12 0.01 260)',
+                borderBottom: '3px solid #513a23', 
+                background: '#1c130c',
                 display: 'flex',
                 justifyContent: 'space-between',
-                alignItems: 'center'
+                alignItems: 'center',
+                margin: '2px'
               }}
             >
-              <div>
-                <h3 className="font-pixel" style={{ fontSize: '11px', color: 'var(--accent)', margin: 0 }}>
-                  [ 🤖 SENTINEL CIVIC CO-PILOT ]
-                </h3>
-                <span className="font-pixel text-muted" style={{ fontSize: '9px', marginTop: '4px', display: 'block' }}>LUCKNOW HYPERLOCAL CIVIC ASSISTANT</span>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <img 
+                  src="/robo.png" 
+                  alt="Sentinel Robo" 
+                  style={{ 
+                    width: '32px', 
+                    height: '32px', 
+                    border: '1px solid #d8a96d', 
+                    background: '#100b08',
+                    imageRendering: 'pixelated', 
+                    boxShadow: '1px 1px 0 rgba(0,0,0,0.5)',
+                    padding: '2px'
+                  }} 
+                />
+                <div>
+                  <h3 className="font-pixel" style={{ fontSize: '11px', color: '#fcd34d', margin: 0, textShadow: '1px 1px 0 #000' }}>
+                    SENTINEL CIVIC CO-PILOT
+                  </h3>
+                  <span className="font-pixel" style={{ fontSize: '9px', marginTop: '2px', display: 'block', color: '#ecdcb9', textShadow: '1px 1px 0 #000' }}>LUCKNOW WATCH GUILD ASSISTANT</span>
+                </div>
               </div>
               <button 
                 onClick={() => setIsOpen(false)}
                 style={{
                   background: 'none',
                   border: 'none',
-                  color: 'var(--ink-muted)',
+                  color: '#ecdcb9',
                   cursor: 'pointer',
                   fontSize: '1.25rem',
-                  padding: 4
+                  padding: 4,
+                  textShadow: '1px 1px 0 #000'
                 }}
               >
                 ✕
@@ -231,7 +289,7 @@ function CopilotDrawer() {
               style={{
                 flex: 1,
                 overflowY: 'auto',
-                padding: '20px',
+                padding: '20px 14px',
                 display: 'flex',
                 flexDirection: 'column',
                 gap: '16px'
@@ -244,7 +302,7 @@ function CopilotDrawer() {
                     key={idx}
                     style={{
                       alignSelf: isModel ? 'flex-start' : 'flex-end',
-                      maxWidth: '85%',
+                      maxWidth: '90%',
                       display: 'flex',
                       flexDirection: 'column',
                       alignItems: isModel ? 'flex-start' : 'flex-end'
@@ -253,24 +311,48 @@ function CopilotDrawer() {
                     <span 
                       className="font-pixel" 
                       style={{ 
-                        fontSize: '0.35rem', 
-                        color: isModel ? 'var(--accent)' : 'oklch(0.68 0.16 55)', 
-                        marginBottom: '4px' 
+                        fontSize: '0.45rem', 
+                        color: isModel ? '#fcd34d' : '#60a5fa', 
+                        textShadow: '1px 1px 0 #000',
+                        marginBottom: '4px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '6px'
                       }}
                     >
-                      {isModel ? '🤖 SENTINEL AI' : '👤 CITIZEN SENSOR'}
+                      {isModel ? (
+                        <>
+                          <img 
+                            src="/robo.png" 
+                            alt="" 
+                            style={{ 
+                              width: '14px', 
+                              height: '14px', 
+                              imageRendering: 'pixelated',
+                              background: '#100b08',
+                              border: '1px solid #d8a96d',
+                              padding: '1px'
+                            }} 
+                          />
+                          <span>SENTINEL AI</span>
+                        </>
+                      ) : (
+                        <span>👤 CITIZEN SENSOR</span>
+                      )}
                     </span>
                     <div 
-                      className="rpg-panel"
+                      className="card pixel-border"
                       style={{
-                        padding: '10px 14px',
-                        background: isModel ? 'rgba(255,255,255,0.02)' : 'rgba(255,215,0,0.04)',
-                        border: isModel ? '1px solid var(--border-subtle)' : '1px solid var(--accent)',
+                        padding: '12px 16px',
+                        background: isModel ? '#fcf8ee' : '#fffbeb',
+                        border: isModel ? '2px solid #85613c' : '2px solid #b45309',
                         borderRadius: 0,
-                        fontSize: '0.72rem',
+                        fontSize: '0.95rem',
                         lineHeight: 1.5,
-                        color: isModel ? 'var(--ink-secondary)' : 'var(--ink-primary)',
-                        textAlign: 'left'
+                        color: '#291d12',
+                        textAlign: 'left',
+                        boxShadow: '2px 2px 0 rgba(0,0,0,0.15)',
+                        width: '100%'
                       }}
                       dangerouslySetInnerHTML={{ __html: parseMarkdown(m.content) }}
                     />
@@ -279,7 +361,7 @@ function CopilotDrawer() {
               })}
               {loading && (
                 <div style={{ alignSelf: 'flex-start', display: 'flex', gap: '6px', alignItems: 'center' }}>
-                  <span className="font-pixel text-muted animate-pulse" style={{ fontSize: '10px' }}>Analyzing civic database...</span>
+                  <span className="font-pixel animate-pulse" style={{ fontSize: '10px', color: '#fcd34d', textShadow: '1px 1px 0 #000' }}>Analyzing civic database...</span>
                 </div>
               )}
               <div ref={chatEndRef} />
@@ -287,8 +369,8 @@ function CopilotDrawer() {
 
             {/* Suggestions Panel */}
             {messages.length <= 2 && (
-              <div style={{ padding: '0 20px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                <span className="font-pixel text-muted" style={{ fontSize: '9px' }}>SUGGESTED CO-PILOT QUESTIONS:</span>
+              <div style={{ padding: '0 14px 16px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                <span className="font-pixel" style={{ fontSize: '9px', color: '#ecdcb9', textShadow: '1px 1px 0 #000' }}>SUGGESTED CO-PILOT QUESTIONS:</span>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
                   {suggestions.map((s, idx) => (
                     <button
@@ -296,22 +378,16 @@ function CopilotDrawer() {
                       onClick={() => handleSend(s)}
                       style={{
                         textAlign: 'left',
-                        background: 'oklch(0.12 0.01 260)',
-                        border: '1px dashed var(--border-subtle)',
-                        padding: '8px 12px',
+                        background: '#fcf8ee',
+                        border: '2px dashed #85613c',
+                        color: '#291d12',
+                        padding: '10px 14px',
+                        fontSize: '0.75rem',
+                        fontWeight: 600,
                         cursor: 'pointer',
-                        fontSize: '0.625rem',
-                        color: 'var(--ink-muted)',
-                        transition: 'all 0.15s ease'
+                        boxShadow: '1px 1px 0 rgba(0,0,0,0.1)'
                       }}
-                      onMouseEnter={(e) => {
-                        e.target.style.color = 'var(--accent)';
-                        e.target.style.borderColor = 'var(--accent)';
-                      }}
-                      onMouseLeave={(e) => {
-                        e.target.style.color = 'var(--ink-muted)';
-                        e.target.style.borderColor = 'var(--border-subtle)';
-                      }}
+                      className="suggestion-btn-v2"
                     >
                       📜 {s}
                     </button>
@@ -323,11 +399,12 @@ function CopilotDrawer() {
             {/* Chat Input Bar */}
             <div 
               style={{ 
-                padding: '20px', 
-                borderTop: '2px solid var(--border-subtle)', 
-                background: 'oklch(0.12 0.01 260)',
+                padding: '16px 20px', 
+                borderTop: '3px solid #513a23', 
+                background: '#1c130c',
                 display: 'flex',
-                gap: '10px'
+                gap: '10px',
+                margin: '2px'
               }}
             >
               <input
@@ -335,33 +412,36 @@ function CopilotDrawer() {
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 onKeyDown={handleKeyPress}
-                placeholder="Ask command console..."
+                placeholder="Ask watch guild..."
                 style={{
                   flex: 1,
-                  background: 'var(--bg-primary)',
-                  border: '1px solid var(--border-subtle)',
-                  color: 'var(--ink-primary)',
+                  background: '#fffbeb',
+                  border: '2px solid #85613c',
+                  color: '#291d12',
                   padding: '10px 14px',
                   outline: 'none',
-                  fontSize: '0.75rem',
-                  fontFamily: 'var(--font-mono)'
+                  fontSize: '0.85rem',
+                  fontFamily: 'var(--font-sans)',
+                  borderRadius: 0
                 }}
               />
               <button
                 onClick={() => handleSend()}
-                className="btn btn-primary font-pixel"
+                className="font-pixel"
                 style={{
                   padding: '10px 16px',
-                  borderRadius: 0,
-                  fontSize: '0.5rem',
+                  background: '#b45309',
+                  border: '2px solid #513a23',
+                  color: '#fff',
                   cursor: 'pointer',
-                  letterSpacing: '0.5px'
+                  fontSize: '0.65rem'
                 }}
               >
                 🪄 SEND
               </button>
             </div>
           </motion.div>
+          </>
         )}
       </AnimatePresence>
     </>

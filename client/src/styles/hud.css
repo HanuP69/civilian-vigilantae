@@ -1,0 +1,837 @@
+/* ============================================================
+   PIXEL HUD DESIGN SYSTEM
+   A small, consistent vocabulary of game-UI primitives.
+   Everything here is meant to be composed, not overridden
+   with inline styles. If you need a new look, add a class
+   here — don't reach for style={{}}.
+   ============================================================ */
+
+:root {
+  /* Stardew Valley inspired palette - warmer, earthier */
+  --hud-ink: #fef9e7;
+  --hud-ink-dim: #d4c5a0;
+  --hud-ink-faint: #9d8b6b;
+
+  /* Deeper, richer panels with wood-like gradients */
+  --hud-panel: #3d2f3f;
+  --hud-panel-light: #4a3d4f;
+  --hud-panel-dark: #2a1f2e;
+  --hud-border: #1a1219;
+  --hud-border-light: #6b5878;
+
+  /* Quest board accents */
+  --hud-gold: #f4c430;
+  --hud-gold-dim: #c09520;
+  --hud-heart: #e74c3c;
+  --hud-leaf: #6fba6d;
+  --hud-sky: #72c3dc;
+  --hud-ember: #ff8c5a;
+  --hud-purple: #9b59b6;
+
+  /* Softer shadows for depth */
+  --hud-shadow: 3px 3px 0 rgba(0,0,0,0.65);
+  --hud-shadow-sm: 2px 2px 0 rgba(0,0,0,0.65);
+  --hud-shadow-lg: 5px 5px 0 rgba(0,0,0,0.65);
+  --hud-shadow-inset: inset 2px 2px 4px rgba(0,0,0,0.3);
+
+  --hud-radius: 0px; /* pixel art = no rounding, ever */
+}
+
+/* ---------- Base panel: the one container shape for everything ---------- */
+.hud-panel {
+  background: linear-gradient(180deg, var(--hud-panel-light) 0%, var(--hud-panel) 50%, var(--hud-panel-dark) 100%);
+  border: 3px solid var(--hud-border);
+  outline: 2px solid var(--hud-border-light);
+  outline-offset: -6px;
+  box-shadow: var(--hud-shadow), var(--hud-shadow-inset);
+  border-radius: var(--hud-radius);
+  padding: var(--space-4);
+  position: relative;
+  color: var(--hud-ink);
+  /* Subtle wood grain texture */
+  background-image: 
+    linear-gradient(180deg, var(--hud-panel-light) 0%, var(--hud-panel) 50%, var(--hud-panel-dark) 100%),
+    repeating-linear-gradient(90deg, transparent 0px, rgba(0,0,0,0.03) 1px, transparent 2px);
+}
+
+.hud-panel--flush { padding: 0; }
+.hud-panel--tight { padding: var(--space-3); }
+.hud-panel--lg { padding: var(--space-6); box-shadow: var(--hud-shadow-lg); }
+
+/* Notch corners, like an old console window — subtle, not gimmicky */
+.hud-panel--notched::before,
+.hud-panel--notched::after {
+  content: '';
+  position: absolute;
+  width: 6px;
+  height: 6px;
+  background: var(--hud-border);
+  top: -3px;
+}
+.hud-panel--notched::before { left: -3px; }
+.hud-panel--notched::after { right: -3px; }
+
+/* ---------- Headers ---------- */
+.hud-eyebrow {
+  font-family: var(--font-pixel);
+  font-size: 0.6rem;
+  letter-spacing: 1.5px;
+  color: var(--hud-gold);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: var(--space-3);
+  padding-bottom: var(--space-2);
+  border-bottom: 2px solid var(--hud-border);
+}
+
+.hud-eyebrow .hud-icon {
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+}
+
+/* ---------- Buttons ---------- */
+.hud-btn {
+  font-family: var(--font-pixel);
+  font-size: 0.625rem;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  padding: 10px 16px;
+  border: 3px solid var(--hud-border);
+  border-radius: var(--hud-radius);
+  box-shadow: var(--hud-shadow-sm);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: transform 0.08s ease, box-shadow 0.08s ease, background 0.15s ease;
+  color: var(--hud-ink);
+  background: var(--hud-panel);
+  white-space: nowrap;
+}
+.hud-btn:hover { transform: translate(-1px, -1px); box-shadow: 5px 5px 0 rgba(0,0,0,0.55); }
+.hud-btn:active { transform: translate(2px, 2px); box-shadow: 0 0 0 rgba(0,0,0,0.55); }
+.hud-btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none; box-shadow: var(--hud-shadow-sm); }
+
+.hud-btn--primary { background: var(--hud-gold); color: #2a1d05; border-color: var(--hud-border); }
+.hud-btn--primary:hover { background: #ffd667; }
+
+.hud-btn--danger { background: var(--hud-heart); color: #fff; }
+.hud-btn--danger:hover { background: #f15a6e; }
+
+.hud-btn--ghost { background: transparent; box-shadow: none; border-color: var(--hud-border-light); }
+.hud-btn--ghost:hover { background: rgba(255,255,255,0.06); transform: none; }
+
+.hud-btn--sm { padding: 6px 10px; font-size: 0.55rem; }
+.hud-btn--lg { padding: 14px 22px; font-size: 0.75rem; }
+.hud-btn--block { width: 100%; }
+
+/* ---------- Stat bars (HP/XP style) ---------- */
+.hud-stat-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.hud-stat-label {
+  font-family: var(--font-pixel);
+  font-size: 0.55rem;
+  color: var(--hud-ink-dim);
+  width: 60px;
+  flex-shrink: 0;
+}
+.hud-bar-track {
+  flex: 1;
+  height: 14px;
+  background: var(--hud-panel-dark);
+  border: 2px solid var(--hud-border);
+  position: relative;
+  overflow: hidden;
+}
+.hud-bar-fill {
+  height: 100%;
+  transition: width 0.5s ease-out;
+  background-image: repeating-linear-gradient(
+    90deg, rgba(255,255,255,0.18) 0 2px, transparent 2px 4px
+  );
+}
+.hud-bar-fill--gold { background-color: var(--hud-gold); }
+.hud-bar-fill--leaf { background-color: var(--hud-leaf); }
+.hud-bar-fill--heart { background-color: var(--hud-heart); }
+.hud-bar-fill--ember { background-color: var(--hud-ember); }
+.hud-bar-fill--sky { background-color: var(--hud-sky); }
+
+/* ---------- Tags / badges (status, severity, category) ---------- */
+.hud-tag {
+  font-family: var(--font-pixel);
+  font-size: 0.55rem;
+  letter-spacing: 0.5px;
+  padding: 3px 7px;
+  border: 2px solid currentColor;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  white-space: nowrap;
+  background: rgba(0,0,0,0.25);
+}
+.hud-tag-dot {
+  width: 6px;
+  height: 6px;
+  background: currentColor;
+  flex-shrink: 0;
+}
+
+/* ---------- Quest card: the one card shape, used for tickets/missions/feed items ---------- */
+.hud-card {
+  background: linear-gradient(135deg, var(--hud-panel) 0%, var(--hud-panel-dark) 100%);
+  border: 3px solid var(--hud-border);
+  border-left-width: 5px;
+  box-shadow: var(--hud-shadow-sm);
+  padding: var(--space-3) var(--space-4);
+  cursor: pointer;
+  transition: transform 0.12s ease, box-shadow 0.12s ease, border-color 0.18s ease;
+  color: var(--hud-ink);
+  position: relative;
+  /* Quest paper texture */
+  background-image: 
+    linear-gradient(135deg, rgba(255,255,255,0.02) 0%, transparent 100%),
+    repeating-linear-gradient(0deg, transparent 0px, rgba(0,0,0,0.02) 1px, transparent 2px);
+}
+
+/* Quest completion glow effect */
+.hud-card::before {
+  content: '';
+  position: absolute;
+  inset: -2px;
+  background: linear-gradient(90deg, var(--hud-gold), transparent);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  pointer-events: none;
+  z-index: -1;
+}
+
+.hud-card:hover {
+  transform: translate(-1px, -1px);
+  box-shadow: 4px 4px 0 rgba(0,0,0,0.65);
+  border-left-color: var(--hud-gold);
+}
+
+.hud-card:hover::before {
+  opacity: 0.08;
+}
+
+.hud-card:focus-visible {
+  outline: 3px solid var(--hud-gold);
+  outline-offset: 2px;
+}
+
+/* ---------- Input fields ---------- */
+.hud-input, .hud-select, .hud-textarea {
+  font-family: var(--font-pixel);
+  font-size: 0.7rem;
+  background: var(--hud-panel-dark);
+  color: var(--hud-ink);
+  border: 3px solid var(--hud-border);
+  border-radius: 0;
+  padding: 10px 12px;
+  outline: none;
+  width: 100%;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+.hud-input:focus, .hud-select:focus, .hud-textarea:focus {
+  border-color: var(--hud-gold);
+  box-shadow: 0 0 0 2px rgba(255, 203, 71, 0.25);
+}
+.hud-input::placeholder { color: var(--hud-ink-faint); }
+
+/* ---------- Empty / loading states ---------- */
+.hud-empty {
+  text-align: center;
+  padding: var(--space-8) var(--space-4);
+  color: var(--hud-ink-dim);
+}
+.hud-empty .hud-icon { width: 40px; height: 40px; margin: 0 auto var(--space-3); opacity: 0.6; }
+
+/* ---------- Scrollbars to match the world ---------- */
+.hud-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: var(--hud-gold-dim) var(--hud-panel-dark);
+}
+.hud-scroll::-webkit-scrollbar { width: 8px; }
+.hud-scroll::-webkit-scrollbar-track { background: var(--hud-panel-dark); }
+.hud-scroll::-webkit-scrollbar-thumb { background: var(--hud-gold-dim); border: 1px solid var(--hud-border); }
+
+/* ---------- Page shell: gives every page the same "framed" feeling ---------- */
+.hud-page {
+  position: relative;
+  z-index: 1;
+  max-width: 1320px;
+  margin: 0 auto;
+  padding: 96px var(--space-5) var(--space-9);
+  min-height: 100dvh;
+}
+
+.hud-page-title {
+  font-family: var(--font-pixel);
+  font-size: clamp(1.1rem, 2.4vw, 1.6rem);
+  color: var(--hud-ink);
+  text-shadow: 3px 3px 0 rgba(0,0,0,0.5);
+  letter-spacing: 1px;
+  margin-bottom: var(--space-2);
+}
+
+.hud-page-subtitle {
+  font-size: 0.875rem;
+  color: var(--hud-ink-dim);
+  margin-bottom: var(--space-6);
+  max-width: 60ch;
+}
+
+@media (max-width: 720px) {
+  .hud-page { padding: 84px var(--space-3) var(--space-7); }
+}
+
+/* ---------- Immersive 8-bit Auth Layout ---------- */
+.auth-layout {
+  display: flex !important;
+  justify-content: center !important;
+  align-items: center !important;
+  min-height: calc(100vh - 160px);
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: var(--space-4) var(--space-4) var(--space-8) !important;
+  position: relative;
+  z-index: 2;
+}
+
+.auth-story-panel {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: var(--space-8) var(--space-9);
+  background: linear-gradient(135deg, var(--hud-panel-light) 0%, var(--hud-panel) 50%, var(--hud-panel-dark) 100%);
+  border: 4px solid var(--hud-border);
+  outline: 2px solid var(--hud-border-light);
+  outline-offset: -8px;
+  box-shadow: var(--hud-shadow-lg);
+  color: var(--hud-ink);
+  /* Wood texture */
+  background-image: 
+    linear-gradient(135deg, var(--hud-panel-light) 0%, var(--hud-panel) 50%, var(--hud-panel-dark) 100%),
+    repeating-linear-gradient(90deg, transparent 0px, rgba(0,0,0,0.03) 1px, transparent 2px);
+}
+
+.story-banner-tag {
+  font-family: var(--font-pixel);
+  font-size: 0.55rem;
+  background: rgba(0, 0, 0, 0.3);
+  border: 2px solid var(--hud-border);
+  color: var(--hud-gold);
+  padding: 4px 10px;
+  display: inline-block;
+}
+
+.auth-story-headline {
+  font-family: var(--font-pixel);
+  font-size: clamp(1.4rem, 4vw, 2.5rem);
+  line-height: 1.5;
+  color: var(--hud-ink);
+  text-shadow: 3px 3px 0 rgba(0, 0, 0, 0.4);
+  margin-bottom: var(--space-5);
+  font-style: normal;
+}
+.auth-story-headline em {
+  color: var(--hud-gold);
+  font-style: normal;
+  text-shadow: 3px 3px 0 rgba(0, 0, 0, 0.4), 0 0 12px rgba(244, 196, 48, 0.4);
+}
+
+.auth-story-body {
+  font-size: 0.95rem;
+  line-height: 1.8;
+  color: var(--hud-ink-dim);
+  margin-bottom: var(--space-7);
+  max-width: 58ch;
+}
+
+.auth-feature-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.auth-feature-item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  background: rgba(0, 0, 0, 0.15);
+  border: 2px solid var(--hud-border);
+  padding: 12px var(--space-4);
+}
+
+.auth-feature-icon {
+  font-size: 1.25rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.auth-form-panel {
+  display: flex;
+  flex-direction: column;
+  padding: var(--space-8) var(--space-9);
+  background: linear-gradient(180deg, var(--hud-panel-light) 0%, var(--hud-panel) 50%, var(--hud-panel-dark) 100%);
+  border: 4px solid var(--hud-border);
+  outline: 2px solid var(--hud-border-light);
+  outline-offset: -8px;
+  box-shadow: var(--hud-shadow-lg);
+  color: var(--hud-ink);
+  background-image: 
+    linear-gradient(180deg, var(--hud-panel-light) 0%, var(--hud-panel) 50%, var(--hud-panel-dark) 100%),
+    repeating-linear-gradient(90deg, transparent 0px, rgba(0,0,0,0.03) 1px, transparent 2px);
+}
+
+@media (max-width: 900px) {
+  .auth-layout {
+    grid-template-columns: 1fr;
+    padding: var(--space-4);
+    margin-top: 10px;
+  }
+  .auth-story-panel {
+    display: none;
+  }
+  .auth-form-panel {
+    max-width: 480px;
+    margin: 0 auto;
+    width: 100%;
+  }
+}
+
+/* ---------- Premium Sandstone panel style (Archaic cobblestone/sandstone reference image) ---------- */
+.rpg-panel-sandstone {
+  /* Redefine global theme colors to high-contrast dark colors for readability inside the sandstone block */
+  --ink-primary: #291d12 !important;
+  --ink-secondary: #4a3522 !important;
+  --ink-muted: #6b5139 !important;
+  --text-primary: #291d12 !important;
+  --text-secondary: #4a3522 !important;
+  --text-muted: #6b5139 !important;
+  --hud-ink: #291d12 !important;
+  --hud-ink-dim: #4a3522 !important;
+  --hud-ink-faint: #6b5139 !important;
+  --hud-card-bg: #fcf8ee !important;
+  --hud-card-active-bg: #fdfaf3 !important;
+  --accent: #b45309 !important; /* deep high-contrast warm brown/orange instead of light yellow */
+  --accent-muted: rgba(180, 83, 9, 0.15) !important;
+  --bg-secondary: #ebdcb9 !important;
+  --border: #85613c !important;
+  --border-subtle: #a17c55 !important;
+
+  border: 4px solid #513a23 !important;
+  outline: 2px solid #d8a96d !important;
+  outline-offset: -6px !important;
+  background-color: #ab7d4c !important;
+  background-image: url('/sandstone.png') !important;
+  background-repeat: repeat !important;
+  image-rendering: pixelated !important;
+  box-shadow: var(--hud-shadow-lg), inset 2px 2px 4px rgba(0,0,0,0.1) !important;
+  color: #291d12 !important;
+}
+
+/* Ensure headings inside sandstone panels are high-contrast gold/parchment with dark shadow */
+.rpg-panel-sandstone h1,
+.rpg-panel-sandstone h2,
+.rpg-panel-sandstone h3,
+.rpg-panel-sandstone h4,
+.rpg-panel-sandstone h5 {
+  color: #ecdcb9 !important;
+  text-shadow: 2px 2px 0 #513a23 !important;
+}
+
+/* Subtitles/labels directly on sandstone background */
+.rpg-panel-sandstone .text-muted,
+.rpg-panel-sandstone .font-mono.text-muted,
+.rpg-panel-sandstone .font-pixel.text-muted {
+  color: #ecdcb9 !important;
+  text-shadow: 1px 1px 0 #513a23 !important;
+}
+
+/* Inner nested card borders */
+.rpg-panel-sandstone .card.pixel-border {
+  background: #fcf8ee !important; /* solid warm cream parchment background */
+  border: 2px solid #85613c !important;
+  color: #291d12 !important;
+  box-shadow: 2px 2px 0 rgba(81, 58, 35, 0.15) !important;
+}
+
+/* Force all text in inner nested cards to inherit the dark readability color */
+.rpg-panel-sandstone .card.pixel-border span,
+.rpg-panel-sandstone .card.pixel-border div,
+.rpg-panel-sandstone .card.pixel-border p {
+  color: inherit !important;
+  text-shadow: none !important;
+}
+
+/* Specifically style reward metrics in the nested cards so they show up as high-contrast brown-orange */
+.rpg-panel-sandstone .card.pixel-border .flex-col.items-end span {
+  color: #b45309 !important;
+  font-weight: 800 !important;
+}
+
+/* Buttons inside sandstone panels */
+.rpg-panel-sandstone .btn,
+.rpg-panel-sandstone button.font-pixel {
+  background: #d8a96d !important;
+  border: 2px solid #513a23 !important;
+  color: #291d12 !important;
+  box-shadow: 2px 2px 0 rgba(81, 58, 35, 0.4) !important;
+  font-weight: 800 !important;
+}
+.rpg-panel-sandstone .btn:hover,
+.rpg-panel-sandstone button.font-pixel:hover {
+  background: #e3b878 !important;
+}
+.rpg-panel-sandstone .btn-primary,
+.rpg-panel-sandstone button.font-pixel.btn-primary {
+  background: #e8a832 !important;
+}
+.rpg-panel-sandstone .btn-primary:hover,
+.rpg-panel-sandstone button.font-pixel.btn-primary:hover {
+  background: #ffd667 !important;
+}
+
+/* Scrollbars in sandstone panels */
+.rpg-panel-sandstone .rpg-scrollbar::-webkit-scrollbar-track {
+  background: #ecdcb9 !important;
+  border: 1px solid #85613c !important;
+}
+.rpg-panel-sandstone .rpg-scrollbar::-webkit-scrollbar-thumb {
+  background: #c6945a !important;
+  border: 1px solid #513a23 !important;
+}
+
+/* Premium High-Contrast Gold Balance Box */
+.rpg-panel-sandstone .gold-balance-box {
+  margin-top: var(--space-5) !important;
+  background: #1c130c !important; /* Rich dark wood backdrop */
+  border: 2px solid #d8a96d !important; /* Glowing gold frame */
+  padding: 10px 14px !important;
+  text-align: center !important;
+  border-radius: 0 !important;
+  box-shadow: inset 1px 1px 4px rgba(0,0,0,0.8), 2px 2px 0 rgba(0,0,0,0.4) !important;
+}
+
+.rpg-panel-sandstone .gold-balance-box .gold-value {
+  font-size: 1.1rem !important;
+  color: #fcd34d !important; /* Bright Stardew golden-yellow */
+  display: block !important;
+  text-shadow: 1px 1px 0 #000 !important;
+  font-weight: 800 !important;
+}
+
+.rpg-panel-sandstone .gold-balance-box .gold-label {
+  font-size: 8px !important;
+  color: #ecdcb9 !important; /* Readable light parchment text */
+  margin-top: 4px !important;
+  display: block !important;
+  text-shadow: 1px 1px 0 #000 !important;
+  opacity: 0.95 !important;
+  font-weight: 600 !important;
+}
+
+/* ---------- Sandstone Tablet & Parchment Auth Pages ---------- */
+.auth-tablet {
+  display: grid !important;
+  grid-template-columns: 1.1fr 0.9fr !important;
+  max-width: 1120px !important;
+  width: 100% !important;
+  margin: var(--space-4) auto !important;
+  padding: var(--space-4) var(--space-6) !important;
+  gap: var(--space-12) !important;
+  align-items: stretch !important;
+  position: relative !important;
+  z-index: 2 !important;
+}
+
+@media (max-width: 840px) {
+  .auth-tablet {
+    grid-template-columns: 1fr !important;
+    gap: var(--space-4) !important;
+    padding: var(--space-4) !important;
+  }
+}
+
+.auth-story-side {
+  display: flex !important;
+  flex-direction: column !important;
+  justify-content: center !important;
+  padding: var(--space-2) var(--space-4) !important;
+  color: #fff !important;
+}
+
+.auth-story-side .auth-story-headline {
+  color: #ecdcb9 !important;
+  text-shadow: 2px 2px 0 #513a23 !important;
+}
+
+.auth-story-side .auth-story-headline em {
+  color: #fcd34d !important;
+  text-shadow: 2px 2px 0 #513a23 !important;
+}
+
+.auth-story-side .auth-story-body {
+  color: #ebdcb9 !important;
+  text-shadow: 1px 1px 0 #513a23 !important;
+  font-weight: 500 !important;
+  line-height: 1.6 !important;
+}
+
+.auth-story-side .auth-feature-item {
+  background: rgba(81, 58, 35, 0.4) !important;
+  border: 2px solid #d8a96d !important;
+  color: #fff !important;
+  text-shadow: 1px 1px 0 #000 !important;
+  box-shadow: 2px 2px 0 rgba(0,0,0,0.2) !important;
+}
+
+.auth-story-side .story-banner-tag {
+  background: #1c130c !important;
+  border: 2px solid #d8a96d !important;
+  color: #fcd34d !important;
+}
+
+/* Parchment form sheet inside sandstone outer frame */
+.auth-parchment-form {
+  background: #fcf8ee !important; /* solid warm cream parchment background */
+  border: 2px solid #85613c !important;
+  color: #291d12 !important;
+  box-shadow: 4px 4px 0 rgba(0, 0, 0, 0.25) !important;
+  padding: var(--space-4) var(--space-6) !important;
+  display: flex !important;
+  flex-direction: column !important;
+  justify-content: center !important;
+  margin: 0 !important;
+}
+
+/* Force dark brown text inside the parchment card */
+.auth-parchment-form label,
+.auth-parchment-form h1,
+.auth-parchment-form h2,
+.auth-parchment-form h3,
+.auth-parchment-form span,
+.auth-parchment-form p,
+.auth-parchment-form a {
+  color: #291d12 !important;
+  text-shadow: none !important;
+}
+
+.auth-parchment-form a {
+  font-weight: 700 !important;
+  text-decoration: underline !important;
+}
+.auth-parchment-form a:hover {
+  color: #b45309 !important;
+}
+
+/* Inputs on parchment background */
+.auth-parchment-form input[type="email"],
+.auth-parchment-form input[type="password"],
+.auth-parchment-form input[type="text"] {
+  background: #fffbeb !important;
+  border: 2px solid #85613c !important;
+  color: #291d12 !important;
+}
+.auth-parchment-form input[type="email"]::placeholder,
+.auth-parchment-form input[type="password"]::placeholder,
+.auth-parchment-form input[type="text"]::placeholder {
+  color: #a17c55 !important;
+}
+.auth-parchment-form input[type="email"]:focus,
+.auth-parchment-form input[type="password"]:focus,
+.auth-parchment-form input[type="text"]:focus {
+  border-color: #b45309 !important;
+  outline: none !important;
+  box-shadow: 0 0 0 2px rgba(180, 83, 9, 0.15) !important;
+}
+
+/* Buttons on parchment form */
+.auth-parchment-form .btn-primary {
+  background: #b45309 !important; /* rich dark orange-brown primary button */
+  border: 2px solid #513a23 !important;
+  color: #fff !important;
+  box-shadow: 2px 2px 0 rgba(0,0,0,0.3) !important;
+}
+.auth-parchment-form .btn-primary:hover {
+  background: #d97706 !important;
+}
+.auth-parchment-form .btn-secondary {
+  background: #ecdcb9 !important; /* light parchment secondary button */
+  border: 2px solid #85613c !important;
+  color: #513a23 !important;
+  box-shadow: 2px 2px 0 rgba(0,0,0,0.15) !important;
+}
+.auth-parchment-form .btn-secondary:hover {
+  background: #fdfaf3 !important;
+}
+
+/* ---------- Home Dashboard Sandstone & Parchment Theme Overrides ---------- */
+
+/* Nested Cards (Activity Feed) inside Sandstone Panels */
+.rpg-panel-sandstone .hud-card {
+  background: #fcf8ee !important; /* Cream parchment backing */
+  border: 2px solid #85613c !important;
+  color: #291d12 !important;
+  box-shadow: 2px 2px 0 rgba(81, 58, 35, 0.15) !important;
+}
+
+/* Force inherit dark brown text colors inside nested parchment cards */
+.rpg-panel-sandstone .hud-card span,
+.rpg-panel-sandstone .hud-card div,
+.rpg-panel-sandstone .hud-card p,
+.rpg-panel-sandstone .hud-card a {
+  color: inherit !important;
+  text-shadow: none !important;
+}
+
+/* Specific elements inside feed cards */
+.rpg-panel-sandstone .hud-card .ticket-card-title-v2 {
+  color: #291d12 !important;
+  font-weight: 700 !important;
+}
+.rpg-panel-sandstone .hud-card .ticket-card-ward-v2 {
+  color: #b45309 !important; /* Deep orange accent ward label */
+  font-weight: 700 !important;
+}
+.rpg-panel-sandstone .hud-card .ticket-card-time-v2 {
+  color: #6b5139 !important; /* Muted brown time label */
+}
+
+/* Dropdowns/Select Fields inside Sandstone Panels */
+.rpg-panel-sandstone .hud-select {
+  background: #ecdcb9 !important; /* Light cream parchment button style */
+  border: 2px solid #85613c !important;
+  color: #513a23 !important;
+  font-family: var(--font-pixel) !important;
+  font-size: 10px !important;
+  border-radius: 0 !important;
+  padding: 6px 10px !important;
+  box-shadow: 1px 1px 0 rgba(0,0,0,0.15) !important;
+}
+.rpg-panel-sandstone .hud-select:focus {
+  border-color: #b45309 !important;
+  outline: none !important;
+}
+
+/* Stats KPI Cards on Sandstone */
+.rpg-panel-sandstone.kpi-card-v2 {
+  text-align: center !important;
+}
+.rpg-panel-sandstone.kpi-card-v2 .kpi-card-v2-label {
+  color: #ecdcb9 !important;
+  text-shadow: 1px 1px 0 #513a23 !important;
+}
+.rpg-panel-sandstone.kpi-card-v2 .kpi-card-v2-num {
+  text-shadow: 2px 2px 0 #513a23 !important;
+}
+.rpg-panel-sandstone.kpi-card-v2 .kpi-card-v2-sub {
+  color: #ebdcb9 !important;
+  text-shadow: 1px 1px 0 #513a23 !important;
+}
+
+/* Agent Insights Rows inside Sandstone Panels */
+.rpg-panel-sandstone .insight-row-v2 {
+  border: 2px solid #85613c !important;
+  background: #fffbeb !important; /* Ivory parchment backing */
+  color: #291d12 !important;
+  box-shadow: inset 1px 1px 2px rgba(0,0,0,0.05), 1px 1px 0 rgba(81, 58, 35, 0.15) !important;
+  padding: 10px 12px !important;
+}
+.rpg-panel-sandstone .insight-row-v2-label {
+  color: #b45309 !important; /* Accent dark orange */
+  text-shadow: none !important;
+  font-weight: 700 !important;
+  font-size: 0.65rem !important;
+}
+.rpg-panel-sandstone .insight-row-v2-text {
+  color: #291d12 !important;
+  text-shadow: none !important;
+  font-size: 0.8rem !important;
+}
+
+/* Welcome Banner Sandstone Text Overrides */
+.rpg-panel-sandstone .story-banner-v2-title {
+  color: #ecdcb9 !important;
+  text-shadow: 2px 2px 0 #513a23 !important;
+}
+.rpg-panel-sandstone .story-banner-v2-title em {
+  color: #fcd34d !important;
+  text-shadow: 2px 2px 0 #513a23, 0 0 12px rgba(252, 211, 77, 0.4) !important;
+}
+.rpg-panel-sandstone .story-banner-v2-sub {
+  color: #ebdcb9 !important;
+  text-shadow: 1px 1px 0 #513a23 !important;
+  font-weight: 500 !important;
+}
+
+/* Pipeline nodes inside Welcome Banner */
+.rpg-panel-sandstone .pipeline-node-v2 {
+  background: #1c130c !important;
+  border: 2px solid #d8a96d !important;
+  box-shadow: 2px 2px 0 rgba(0,0,0,0.4) !important;
+}
+.rpg-panel-sandstone .pipeline-node-v2:hover {
+  background: #2d1f14 !important;
+  border-color: #fcd34d !important;
+}
+.rpg-panel-sandstone .pipeline-node-v2-icon {
+  background: #100b08 !important;
+  border: 2px solid #513a23 !important;
+  color: #fcd34d !important;
+}
+.rpg-panel-sandstone .pipeline-node-v2-label {
+  color: #ecdcb9 !important;
+  text-shadow: 1px 1px 0 #000 !important;
+}
+.rpg-panel-sandstone .pipeline-connector-v2 {
+  background: #d8a96d !important;
+}
+
+/* Stats in welcome banner side */
+.rpg-panel-sandstone .story-banner-v2-stats {
+  border-top: 3px solid #513a23 !important;
+}
+.rpg-panel-sandstone .story-stat-v2-num {
+  color: #fcd34d !important;
+  text-shadow: 2px 2px 0 #513a23 !important;
+}
+.rpg-panel-sandstone .story-stat-v2-label {
+  color: #ecdcb9 !important;
+  text-shadow: 1px 1px 0 #513a23 !important;
+}
+
+/* Consensus Feed logs styling inside Sandstone/Parchment */
+.rpg-panel-sandstone .consensus-log-row-v2 {
+  background: #fffbeb !important; /* Ivory parchment backing */
+  border: 1px solid #c6945a !important;
+  border-left: 3px solid #b45309 !important; /* accent border on left */
+  color: #291d12 !important;
+  padding: 8px 10px !important;
+  font-family: var(--font-sans) !important;
+  font-size: 0.72rem !important;
+  line-height: 1.4 !important;
+  margin-bottom: 4px !important;
+  box-shadow: 1px 1px 0 rgba(0,0,0,0.05) !important;
+  text-shadow: none !important;
+}
+
+/* Force header eyebrows inside columns to be high-contrast dark brown */
+.rpg-panel-sandstone .hud-panel-header-v2 {
+  margin-bottom: var(--space-3) !important;
+}
+.rpg-panel-sandstone .hud-panel-header-v2 .hud-eyebrow span,
+.rpg-panel-sandstone .hud-panel-header-v2 .hud-eyebrow {
+  color: #291d12 !important;
+  text-shadow: none !important;
+  font-weight: 700 !important;
+}
