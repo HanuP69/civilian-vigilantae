@@ -14,6 +14,25 @@ const SHOP_ITEMS = [
   { id: 'badge_sentinel', name: 'SLA Sentinel Badge', cost: 40, type: 'badge', value: 'SLA Sentinel', desc: 'A tactical shield badge' }
 ];
 
+const CoinIcon = ({ size = 16, style = {} }) => (
+  <svg width={size} height={size} viewBox="0 0 16 16" fill="none" style={{ display: 'inline-block', verticalAlign: 'middle', imageRendering: 'pixelated', ...style }}>
+    {/* Outer border */}
+    <rect x="5" y="1" width="6" height="14" fill="#513a23" />
+    <rect x="1" y="5" width="14" height="6" fill="#513a23" />
+    <rect x="3" y="3" width="10" height="10" fill="#513a23" />
+    {/* Golden face */}
+    <rect x="5" y="2" width="6" height="12" fill="#fbbf24" />
+    <rect x="2" y="5" width="12" height="6" fill="#fbbf24" />
+    <rect x="4" y="3" width="8" height="10" fill="#fbbf24" />
+    {/* Highlights */}
+    <rect x="6" y="3" width="4" height="2" fill="#fffbeb" />
+    <rect x="3" y="6" width="2" height="4" fill="#fffbeb" />
+    {/* Inner details */}
+    <rect x="7" y="5" width="2" height="6" fill="#d97706" />
+    <rect x="5" y="7" width="6" height="2" fill="#d97706" />
+  </svg>
+);
+
 function ShopItemIcon({ id }) {
   const renderPixelArt = () => {
     switch (id) {
@@ -234,7 +253,10 @@ function ShopPage() {
 
               {/* Gold Box */}
               <div className="pixel-border gold-balance-box" style={{ marginTop: 'var(--space-2)', background: '#1c130c', border: '2px solid #d8a96d', padding: '10px 14px', borderRadius: 0, textAlign: 'center', boxShadow: 'inset 1px 1px 4px rgba(0,0,0,0.8), 2px 2px 0 rgba(0,0,0,0.4)' }}>
-                <span className="font-pixel gold-value" style={{ color: '#fcd34d', textShadow: '1px 1px 0 #000', fontSize: '1.1rem', fontWeight: 800, display: 'block' }}>🪙 {user.gold || 0}</span>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}>
+                  <CoinIcon size={20} />
+                  <span className="font-pixel gold-value" style={{ color: '#fcd34d', textShadow: '1px 1px 0 #000', fontSize: '1.15rem', fontWeight: 800, lineHeight: 1 }}>{user.gold || 0}</span>
+                </div>
                 <span className="font-pixel gold-label" style={{ color: '#ecdcb9', textShadow: '1px 1px 0 #000', fontSize: '8px', fontWeight: 600, display: 'block', marginTop: '4px' }}>YOUR GOLD BALANCE</span>
               </div>
 
@@ -336,7 +358,11 @@ function ShopPage() {
                                 fontWeight: 800
                               }}
                             >
-                              {buying === item.id ? '...' : `BUY 🪙${item.cost}`}
+                              {buying === item.id ? '...' : (
+                                <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                                  BUY <CoinIcon size={12} style={{ marginRight: 0 }} /> {item.cost}
+                                </span>
+                              )}
                             </button>
                           )}
                         </div>
