@@ -7,6 +7,24 @@ const FALLBACK = {
   '--accent': '#c9a35a',
 };
 
+/*
+ * Chart.js draws to <canvas>, so it never participates in the normal CSS
+ * cascade. Colors baked from `:root` (via getComputedStyle on
+ * document.documentElement) ignore any scoped variable overrides set by a
+ * parent panel — e.g. `.rpg-panel-sandstone` redefines --ink-muted /
+ * --border-subtle / --bg-elevated to high-contrast dark-on-parchment values,
+ * but those never reach the canvas because the lookup target is the wrong
+ * element. All charts in this app are rendered inside sandstone panels, so
+ * we hardcode the sandstone-correct tick/grid colors here instead of
+ * resolving from :root.
+ */
+export const SANDSTONE_TICK_COLOR = '#6b5139';
+export const SANDSTONE_GRID_COLOR = 'rgba(81, 58, 35, 0.18)';
+export const SANDSTONE_TOOLTIP_BG = '#291d12';
+export const SANDSTONE_TOOLTIP_BORDER = '#85613c';
+export const SANDSTONE_TOOLTIP_TITLE = '#fdf6e3';
+export const SANDSTONE_TOOLTIP_BODY = '#ecdcb9';
+
 const cache = new Map();
 
 function resolveVar(value) {
@@ -31,8 +49,8 @@ function resolvePalette(values = []) {
   return values.map(resolveVar);
 }
 
-export const GRID_COLOR = resolveVar('var(--border-subtle)');
-export const TICK_COLOR = resolveVar('var(--ink-muted)');
+export const GRID_COLOR = SANDSTONE_GRID_COLOR;
+export const TICK_COLOR = SANDSTONE_TICK_COLOR;
 
 export const categoryPalette = (keys = []) =>
   resolvePalette(keys.map((k) => CATEGORY_COLORS[k] || 'var(--accent)'));

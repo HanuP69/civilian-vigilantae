@@ -581,6 +581,24 @@
   border: 1px solid #513a23 !important;
 }
 
+/* Chart.js renders to a transparent <canvas>, so whatever sits behind it
+   shows through — and that was the raw bumpy sandstone.png texture, which
+   varies in lightness pixel to pixel. Ticks/legend/tooltip colors alone
+   can't fix this: the canvas itself needs a flat, consistent surface under
+   it. Layer order inside a sandstone panel is therefore:
+     1. .rpg-panel-sandstone background-image (the stone texture)
+     2. this solid parchment rectangle, covering just the chart area
+     3. the chart canvas on top, drawing on a flat, predictable surface
+   Scoped to chart-card-body so it never touches the heatmap hexmap, the
+   ticket-detail panels, etc. — only the actual chart plotting area. */
+.rpg-panel-sandstone .chart-card-body-parchment {
+  background: #fdfaf3 !important;
+  border: 1px solid #d8c39c;
+  border-radius: 2px;
+  padding: 8px;
+  box-sizing: border-box;
+}
+
 /* Cool-toned method banner swapped for warm parchment chip */
 .rpg-panel-sandstone .method-banner {
   background: #ecdcb9 !important;
@@ -608,14 +626,53 @@
   border: 1px solid #513a23 !important;
 }
 
-/* Row hover state used in recurrence/ward lists */
+/* Row hover state used in recurrence/ward lists.
+   leaderboard-row needs its own same-element rule too: LeaderboardPage puts
+   `rpg-panel-sandstone` and `leaderboard-row` on the SAME div, not on a
+   descendant, so a plain descendant selector (.rpg-panel-sandstone .leaderboard-row)
+   never matches and the row falls through to the raw stone background-image
+   with no parchment surface — exactly the "text floating on bare rock" bug. */
 .rpg-panel-sandstone .recurrence-row,
-.rpg-panel-sandstone .leaderboard-row {
-  background: #fcf8ee !important;
+.rpg-panel-sandstone .leaderboard-row,
+.rpg-panel-sandstone.leaderboard-row {
+  background-color: #fcf8ee !important;
+  background-image: none !important;
   border-color: #85613c !important;
 }
-.rpg-panel-sandstone .recurrence-row:hover {
+.rpg-panel-sandstone .recurrence-row:hover,
+.rpg-panel-sandstone.leaderboard-row:hover {
+  background-color: #f3e6c4 !important;
+}
+
+/* Plain <table> rows (Department Ledger, Ward Heatmap list, etc.) have no
+   background by default — they were sitting directly on the bumpy sandstone
+   photo texture, so text contrast varied wildly depending on which rock/
+   shadow happened to render behind a given row. Give every row a solid
+   parchment backing, striped for scanability, so text legibility no longer
+   depends on the texture underneath. !important needed since some rows set
+   an inline background (e.g. the "TOP" row, or the selected-ward row) that
+   would otherwise win the cascade with a dark-theme-only color. */
+.rpg-panel-sandstone table { background: transparent; }
+.rpg-panel-sandstone thead tr {
+  background: #ecdcb9 !important;
+  border-bottom: 2px solid #85613c !important;
+}
+.rpg-panel-sandstone thead th {
+  color: #4a3522 !important;
+}
+.rpg-panel-sandstone tbody tr {
+  background: #fcf8ee !important;
+  border-bottom: 1px solid #d8c39c !important;
+}
+.rpg-panel-sandstone tbody tr:nth-child(even) {
   background: #f3e6c4 !important;
+}
+.rpg-panel-sandstone tbody tr:hover {
+  background: #e3cf9f !important;
+}
+.rpg-panel-sandstone tbody tr.is-selected,
+.rpg-panel-sandstone tbody tr[data-selected="true"] {
+  background: #e8a832 !important;
 }
 
 /* Premium High-Contrast Gold Balance Box */
@@ -635,20 +692,21 @@
   font-size: 1.2rem !important;
   color: #ffd54a !important; /* Bright high-contrast amber, not white-on-white-shadow */
   display: block !important;
-  text-shadow: 1px 1px 0 #000, 0 0 10px rgba(255, 213, 74, 0.35) !important;
+  text-shadow: 0 0 8px rgba(255, 213, 74, 0.45) !important;
   font-weight: 800 !important;
   letter-spacing: 0.5px !important;
 }
 
 .gold-balance-box .gold-label {
-  font-size: 9px !important;
-  color: #fffbeb !important; /* Warm near-white, brighter than pure white-on-shadow */
-  margin-top: 5px !important;
+  font-size: 11px !important;
+  line-height: 1.6 !important;
+  color: #ffe9a8 !important; /* Bright warm gold-white, unmistakable against dark wood */
+  margin-top: 6px !important;
   display: block !important;
-  text-shadow: 1px 1px 0 #000 !important;
+  text-shadow: none !important;
   opacity: 1 !important;
-  font-weight: 600 !important;
-  letter-spacing: 1.5px !important;
+  font-weight: 700 !important;
+  letter-spacing: 1px !important;
 }
 
 /* ---------- Sandstone Tablet & Parchment Auth Pages ---------- */

@@ -1610,6 +1610,13 @@ tr:hover td { background: var(--bg-surface); }
 }
 .recurrence-row:hover { background: var(--bg-hover); }
 
+.recurrence-detail-box {
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-top: none;
+  padding: var(--space-4);
+}
+
 .recurrence-meta {
   font-size: 0.7rem;
   color: var(--ink-muted);

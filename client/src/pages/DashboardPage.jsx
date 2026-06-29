@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { Bar, Doughnut, Line } from 'react-chartjs-2';
 import '../charts/register.js';
-import { TICK_COLOR, statusPalette, resolvePalette, resolveVar, refreshChartTheme, baseScales, baseChartProps } from '../charts/theme.js';
+import { TICK_COLOR, statusPalette, resolvePalette, resolveVar, refreshChartTheme, baseScales, baseChartProps, SANDSTONE_GRID_COLOR, SANDSTONE_TICK_COLOR } from '../charts/theme.js';
 import { fetchDashboardStats, fetchRecurrenceRisk, fetchTickets, fetchAssets } from '../services/api';
 import { CATEGORY_LABELS, CATEGORY_COLORS } from '../utils/constants';
 import { formatHours, capitalize } from '../utils/formatters';
@@ -944,7 +944,7 @@ function DashboardPage() {
                     {wardMetrics.slice().sort((a,b) => b.severityIndex - a.severityIndex).map(ward => (
                       <tr 
                         key={ward.name} 
-                        style={{ borderBottom: '1px solid var(--border-subtle)', cursor: 'pointer', background: selectedWardName === ward.name ? 'oklch(0.25 0.06 85 / 0.15)' : 'transparent' }}
+                        style={{ borderBottom: '1px solid var(--border-subtle)', cursor: 'pointer', background: selectedWardName === ward.name ? '#e8a832' : undefined }}
                         onClick={() => setSelectedWardName(ward.name)}
                       >
                         <td style={{ padding: '12px 16px', color: 'var(--ink-primary)', fontWeight: 600 }}>{ward.name.toUpperCase()}</td>
@@ -1127,7 +1127,7 @@ function DashboardPage() {
                   </thead>
                   <tbody>
                     {departments.map((dept, i) => (
-                      <tr key={dept.name} style={i === 0 ? { background: 'oklch(0.25 0.06 85 / 0.15)' } : undefined}>
+                      <tr key={dept.name} style={i === 0 ? { background: '#e8a832' } : undefined}>
                         <td className="font-medium" style={{ color: 'var(--ink-primary)' }}>
                           {dept.name}{i === 0 && <span className="badge font-pixel" style={{ marginLeft: 'var(--space-2)', background: 'var(--rank-gold)', color: '#000', fontSize: '0.45rem', borderRadius: 0, padding: '2px 4px' }}>TOP</span>}
                         </td>
@@ -1449,7 +1449,7 @@ function InteractivePanel({ title, subtitle, panelKey, activeInfo, onToggleInfo,
         </div>
       )}
 
-      <div className="chart-card-body" style={{ height, flex: 1, minHeight: 0 }}>
+      <div className="chart-card-body chart-card-body-parchment" style={{ height, flex: 1, minHeight: 0 }}>
         {children}
       </div>
     </motion.div>
@@ -1542,13 +1542,13 @@ function WeibullCurve({ lambda, k, lastResolved }) {
       x: {
         type: 'linear',
         grid: {
-          color: 'rgba(255, 255, 255, 0.05)',
+          color: SANDSTONE_GRID_COLOR,
           drawBorder: false,
         },
         ticks: {
           callback: (value) => `${value}h`,
           maxTicksLimit: 6,
-          color: 'var(--ink-muted)',
+          color: SANDSTONE_TICK_COLOR,
         }
       },
       y: {
@@ -1556,13 +1556,13 @@ function WeibullCurve({ lambda, k, lastResolved }) {
         min: 0,
         max: 100,
         grid: {
-          color: 'rgba(255, 255, 255, 0.05)',
+          color: SANDSTONE_GRID_COLOR,
           drawBorder: false,
         },
         ticks: {
           callback: (value) => `${value}%`,
           maxTicksLimit: 5,
-          color: 'var(--ink-muted)',
+          color: SANDSTONE_TICK_COLOR,
         }
       }
     }
@@ -1571,7 +1571,7 @@ function WeibullCurve({ lambda, k, lastResolved }) {
   return (
     <div className="flex flex-col gap-2" style={{ height: '100%' }}>
       <span className="label">Weibull CDF · P(recurrence) Curve</span>
-      <div style={{ flex: 1, minHeight: 140 }}>
+      <div className="chart-card-body-parchment" style={{ flex: 1, minHeight: 140 }}>
         <Line data={data} options={opts} />
       </div>
     </div>
