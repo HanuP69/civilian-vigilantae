@@ -334,10 +334,10 @@ function ShopPage() {
                               className="font-pixel" 
                               style={{ 
                                 fontSize: '0.45rem',
-                                background: 'oklch(0.2 0.01 260)', 
+                                background: '#14532d', 
                                 padding: '4px 8px', 
-                                border: '1px solid var(--border)',
-                                color: 'var(--ink-muted)'
+                                border: '1px solid #166534',
+                                color: '#4ade80'
                               }}
                             >
                               UNLOCKED
@@ -350,10 +350,10 @@ function ShopPage() {
                               style={{
                                 padding: '8px 12px',
                                 fontSize: '10px',
-                                border: '2px solid #000',
+                                border: canAfford ? '2px solid #000' : '2px solid #513a23',
                                 boxShadow: canAfford ? '2px 2px 0 rgba(0,0,0,0.5)' : 'none',
-                                background: canAfford ? 'var(--accent)' : 'oklch(0.22 0.01 260)',
-                                color: canAfford ? '#000' : 'var(--ink-muted)',
+                                background: canAfford ? 'var(--accent)' : '#1c130c',
+                                color: canAfford ? '#000' : '#a17c55',
                                 cursor: canAfford ? 'pointer' : 'not-allowed',
                                 fontWeight: 800
                               }}
