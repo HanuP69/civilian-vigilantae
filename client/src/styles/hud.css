@@ -1080,3 +1080,18 @@
   bottom: -4px !important;
 }
 
+/* Text-only button override inside sandstone panels */
+.rpg-panel-sandstone button.font-pixel.btn-text,
+.rpg-panel-sandstone .btn-text {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+  color: #6b5139 !important;
+}
+.rpg-panel-sandstone button.font-pixel.btn-text:hover,
+.rpg-panel-sandstone .btn-text:hover {
+  color: #b45309 !important;
+  background: transparent !important;
+}
+

@@ -652,6 +652,7 @@ function ReportPage() {
                     style={{
                       padding:'14px',
                       fontSize:'11px',
+                      lineHeight: 1.4,
                       background:'#b45309',
                       border:'2px solid #513a23',
                       color:'#fff',
@@ -709,7 +710,7 @@ function ReportPage() {
           <div className="flex justify-between items-center animate-fade-up stagger-4" style={{ marginTop:'var(--space-8)', paddingTop:'var(--space-6)', borderTop:'2px solid #85613c'}}>
             {step > 0 && !result && (
               <button
-                className="font-pixel"
+                className="font-pixel btn-text"
                 style={{ fontSize:'10px', color:'#6b5139', background:'transparent', border:'none', cursor:'pointer'}}
                 onClick={() => setStep(s => s - 1)}
               >
