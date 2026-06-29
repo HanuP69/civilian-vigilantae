@@ -233,9 +233,9 @@ function ShopPage() {
               </div>
 
               {/* Gold Box */}
-              <div className="pixel-border gold-balance-box" style={{ marginTop: 'var(--space-2)' }}>
-                <span className="font-pixel gold-value">🪙 {user.gold || 0}</span>
-                <span className="font-pixel gold-label">YOUR GOLD BALANCE</span>
+              <div className="pixel-border gold-balance-box" style={{ marginTop: 'var(--space-2)', background: '#1c130c', border: '2px solid #d8a96d', padding: '10px 14px', borderRadius: 0, textAlign: 'center', boxShadow: 'inset 1px 1px 4px rgba(0,0,0,0.8), 2px 2px 0 rgba(0,0,0,0.4)' }}>
+                <span className="font-pixel gold-value" style={{ color: '#fcd34d', textShadow: '1px 1px 0 #000', fontSize: '1.1rem', fontWeight: 800, display: 'block' }}>🪙 {user.gold || 0}</span>
+                <span className="font-pixel gold-label" style={{ color: '#ecdcb9', textShadow: '1px 1px 0 #000', fontSize: '8px', fontWeight: 600, display: 'block', marginTop: '4px' }}>YOUR GOLD BALANCE</span>
               </div>
 
             </div>
