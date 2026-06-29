@@ -495,24 +495,22 @@ function Navbar({ isConnected, onOpenQuestSidebar }) {
                 </div>
               )}
 
-              {/* Segmented Ring SVG container (Highlights on hover) */}
+              {/* Segmented Ring SVG container (Invisible hover zones) */}
               <svg style={{ position: 'absolute', inset: 0, width: '420px', height: '420px', pointerEvents: 'auto', zIndex: 1 }}>
                 {slots.map((slot, index) => {
                   const startAngle = index * (360 / slots.length) + 1.5;
                   const endAngle = (index + 1) * (360 / slots.length) - 1.5;
-                  const isHovered = hoveredSlot?.name === slot.name;
                   const pathData = getArcPath(210, 210, 180, 105, startAngle, endAngle);
                   
                   return (
                     <path
                       key={slot.name}
                       d={pathData}
-                      fill={isHovered ? 'rgba(251, 191, 36, 0.22)' : 'transparent'}
-                      stroke={isHovered ? '#fcd34d' : 'transparent'}
-                      strokeWidth={isHovered ? '2' : '0'}
+                      fill="transparent"
+                      stroke="transparent"
+                      strokeWidth="0"
                       style={{
-                        cursor: 'pointer',
-                        transition: 'all 0.15s cubic-bezier(0.16, 1, 0.3, 1)'
+                        cursor: 'pointer'
                       }}
                       onMouseEnter={() => setHoveredSlot(slot)}
                       onMouseLeave={() => setHoveredSlot(null)}
@@ -522,61 +520,12 @@ function Navbar({ isConnected, onOpenQuestSidebar }) {
                 })}
               </svg>
 
-              {/* Center Circular Display HUD */}
-              <div 
-                className="flex flex-col items-center justify-center"
-                style={{
-                  position: 'absolute',
-                  left: '150px',
-                  top: '150px',
-                  width: '120px',
-                  height: '120px',
-                  borderRadius: '50%',
-                  background: '#100b08',
-                  border: '3px solid #513a23',
-                  outline: '2px solid #d8a96d',
-                  outlineOffset: '-4px',
-                  boxShadow: 'inset 0 0 10px rgba(0,0,0,0.8), 0 0 20px rgba(216, 169, 109, 0.3)',
-                  padding: '16px',
-                  textAlign: 'center',
-                  zIndex: 3,
-                  pointerEvents: 'none'
-                }}
-              >
-                {hoveredSlot ? (
-                  <div style={{ animation: 'fadeIn 0.15s ease-out' }}>
-                    <div className="font-pixel" style={{ fontSize: '10px', color: '#fcd34d', fontWeight: 800, marginBottom: '4px' }}>
-                      {hoveredSlot.label}
-                    </div>
-                    <div style={{ fontSize: '9px', color: '#ecdcb9', lineHeight: 1.2, wordBreak: 'break-word' }}>
-                      {hoveredSlot.desc}
-                    </div>
-                  </div>
-                ) : (
-                  <div>
-                    <div className="font-pixel" style={{ fontSize: '9px', color: '#fcd34d', fontWeight: 800, marginBottom: '3px' }}>
-                      HUD STATUS
-                    </div>
-                    {isAuthenticated && (
-                      <div className="font-pixel" style={{ fontSize: '9px', color: '#ecdcb9', marginBottom: '3px' }}>
-                        LVL {user?.level || 1}
-                      </div>
-                    )}
-                    <div className="flex items-center justify-center gap-1.5" style={{ fontSize: '10px', color: '#ecdcb9' }}>
-                      <span style={liveDotStyle} />
-                      <span style={{ fontSize: '9px', fontFamily: 'var(--font-mono)' }}>{isConnected ? 'LIVE' : 'OFFLINE'}</span>
-                    </div>
-                  </div>
-                )}
-              </div>
-
-              {/* Radial slots (Buttons positioned at center of segments) */}
+              {/* Radial slots (Invisible click target buttons positioned at center of segments) */}
               {slots.map((slot, index) => {
                 const angle = (index + 0.5) * (360 / slots.length);
                 const rad = (angle - 90) * Math.PI / 180;
                 const x = 210 + 147.5 * Math.cos(rad);
                 const y = 210 + 147.5 * Math.sin(rad);
-                const isHovered = hoveredSlot?.name === slot.name;
 
                 return (
                   <button
@@ -586,30 +535,22 @@ function Navbar({ isConnected, onOpenQuestSidebar }) {
                     onMouseLeave={() => setHoveredSlot(null)}
                     style={{
                       position: 'absolute',
-                      left: `${x - 25}px`,
-                      top: `${y - 25}px`,
-                      width: '50px',
-                      height: '50px',
+                      left: `${x - 30}px`,
+                      top: `${y - 30}px`,
+                      width: '60px',
+                      height: '60px',
                       borderRadius: '50%',
                       cursor: 'pointer',
-                      fontSize: '1.75rem',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
                       background: 'transparent',
-                      color: isHovered ? '#fcd34d' : 'rgba(236, 220, 185, 0.85)',
-                      transform: isHovered ? 'scale(1.25)' : 'scale(1)',
-                      filter: isHovered ? 'drop-shadow(0 0 8px rgba(251, 191, 36, 0.85))' : 'drop-shadow(0 0 3px rgba(0, 0, 0, 0.5))',
-                      transition: 'all 0.15s cubic-bezier(0.16, 1, 0.3, 1)',
                       border: 'none',
+                      outline: 'none',
                       padding: 0,
                       zIndex: 4,
-                      pointerEvents: 'auto'
+                      pointerEvents: 'auto',
+                      WebkitTapHighlightColor: 'transparent'
                     }}
                     title={slot.name}
-                  >
-                    {slot.icon}
-                  </button>
+                  />
                 );
               })}
             </motion.div>
