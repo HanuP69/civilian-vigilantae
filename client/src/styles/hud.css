@@ -534,7 +534,7 @@
 }
 
 /* Premium High-Contrast Gold Balance Box */
-.rpg-panel-sandstone .gold-balance-box {
+.gold-balance-box {
   margin-top: var(--space-5) !important;
   background: #1c130c !important; /* Rich dark wood backdrop */
   border: 2px solid #d8a96d !important; /* Glowing gold frame */
@@ -544,7 +544,7 @@
   box-shadow: inset 1px 1px 4px rgba(0,0,0,0.8), 2px 2px 0 rgba(0,0,0,0.4) !important;
 }
 
-.rpg-panel-sandstone .gold-balance-box .gold-value {
+.gold-balance-box .gold-value {
   font-size: 1.1rem !important;
   color: #fcd34d !important; /* Bright Stardew golden-yellow */
   display: block !important;
@@ -552,7 +552,7 @@
   font-weight: 800 !important;
 }
 
-.rpg-panel-sandstone .gold-balance-box .gold-label {
+.gold-balance-box .gold-label {
   font-size: 8px !important;
   color: #ecdcb9 !important; /* Readable light parchment text */
   margin-top: 4px !important;
