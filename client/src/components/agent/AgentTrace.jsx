@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 
 const STEP_ICONS = {
   llm_reasoning: 'LLM',
+  triage_decision: 'AGT',
   classify_issue: 'CLS',
   geo_resolve: 'GEO',
   find_cluster: 'FND',
@@ -15,11 +16,14 @@ const STEP_ICONS = {
   notify_reporters: 'NOT',
   flag_for_review: 'FLG',
   query_recurrence_risk: 'RSK',
+  query_ward_historical_stats: 'AUD',
+  audit_ticket_details: 'AUD',
   agent_response: 'RES'
 };
 
 const STEP_COLORS = {
   llm_reasoning: 'var(--accent-muted)',
+  triage_decision: 'var(--accent)',
   classify_issue: 'var(--accent)',
   geo_resolve: 'var(--accent)',
   find_cluster: 'var(--accent)',
@@ -31,7 +35,9 @@ const STEP_COLORS = {
   escalate_ticket: 'var(--error)',
   notify_reporters: 'var(--success)',
   flag_for_review: 'var(--error)',
-  query_recurrence_risk: 'var(--warning)'
+  query_recurrence_risk: 'var(--warning)',
+  query_ward_historical_stats: 'var(--accent-muted)',
+  audit_ticket_details: 'var(--accent-muted)'
 };
 
 function AgentTrace({ trace = [] }) {

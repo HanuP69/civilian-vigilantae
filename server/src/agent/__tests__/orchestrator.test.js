@@ -4,14 +4,46 @@ import { db } from '../../config/firebase.js';
 import { createTraceLogger } from '../traceLogger.js';
 import { resetLLMClient, setTestLLMClient } from '../../llm/index.js';
 
+/**
+ * A stateful fake LLM that simulates a genuine ReAct tool-calling agent.
+ * Over successive chat() calls it reasons, then requests tool calls in
+ * sequence (classify → geo → find_cluster), then emits a final routing
+ * decision — exercising the real agent loop without network access.
+ */
+function createToolCallingFakeLlm() {
+  let phase = 0;
+  return {
+    async chat(messages) {
+      // The orchestrator's enrichReasoning() calls also route through here.
+      // Detect those single-shot "enrich this step" prompts and answer plainly.
+      const sys = messages.find(m => m.role === 'system');
+      const lastUser = [...messages].reverse().find(m => m.role === 'user');
+      const isEnrich = sys?.content?.includes('Enrich this agent step') || lastUser?.content?.includes('Enrich this agent step');
+
+      if (isEnrich) {
+        return { toolCalls: [], text: 'Enriched reasoning summary' };
+      }
+
+      // Agentic ReAct phases
+      phase += 1;
+      if (phase === 1) {
+        return { toolCalls: [{ name: 'classify_issue', args: { text: 'pothole' } }], text: 'I will classify the issue first.' };
+      }
+      if (phase === 2) {
+        return { toolCalls: [{ name: 'geo_resolve', args: {} }], text: 'Classified. Now resolving the location.' };
+      }
+      if (phase === 3) {
+        return { toolCalls: [{ name: 'find_cluster', args: {} }], text: 'Location resolved. Checking for duplicate clusters.' };
+      }
+      // Final turn: routing decision, no further tool calls
+      return { toolCalls: [], text: '{"decision":"create_ticket","reasoning":"Unique new issue, no duplicate found.","investigated":true}' };
+    },
+  };
+}
+
 async function loadOrchestratorWithStubbedLLM() {
   resetLLMClient();
-  const fakeLlm = {
-    async chat() {
-      return { text: 'Enriched reasoning summary' };
-    }
-  };
-  setTestLLMClient(fakeLlm);
+  setTestLLMClient(createToolCallingFakeLlm());
 
   const orchestratorUrl = new URL('../orchestrator.js', import.meta.url);
   const orchestrator = await import(`${orchestratorUrl.href}?t=${Date.now()}`);
