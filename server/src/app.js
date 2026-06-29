@@ -88,6 +88,19 @@ app.use('/api/events',   sseRoutes);
 app.use('/api/missions', missionRoutes);
 app.use('/api/copilot',  copilotRoutes);
 
+// Serve static frontend assets in production
+const clientDist = path.join(process.cwd(), 'client-dist');
+if (fs.existsSync(clientDist)) {
+  console.log('[Boot] Serving static client-dist directory');
+  app.use(express.static(clientDist));
+  app.get('*', (req, res, next) => {
+    if (req.path.startsWith('/api')) {
+      return next();
+    }
+    res.sendFile(path.join(clientDist, 'index.html'));
+  });
+}
+
 // ---------------------------------------------------------------------------
 // 404 handler
 // ---------------------------------------------------------------------------
