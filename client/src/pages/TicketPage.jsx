@@ -292,38 +292,42 @@ function TicketPage() {
             {activeExplainTab ==='diagnostics'&& (
               <>
                 {/* 1. Verification Consensus Outcome */}
-                <div className="panel rpg-panel rpg-panel-sandstone" style={{ borderRadius: 0 }}>
-                  <h3 className="section-title font-pixel" style={{ fontSize:'0.65rem', color:'var(--success)', marginBottom:'var(--space-3)'}}>
-                    [  VERIFICATION PROBABILITY P(V) ]
-                  </h3>
-                  <div className="flex items-center gap-4" style={{ marginBottom:'var(--space-2)'}}>
-                    <span className="font-pixel" style={{ fontSize:'1.25rem', color:'var(--success)', lineHeight: 1 }}>P(V) = {displayScore}%
-                    </span>
-                    <span className="badge badge-outline font-pixel" style={{ color:'var(--success)', borderRadius: 0, fontSize:'10px', padding:'2px 4px'}}>
-                      {ticket.status?.toUpperCase()}
-                    </span>
-                    <span className="text-xs text-muted font-mono" style={{ marginLeft:'auto'}}>Verification Probability</span>
+                <div className="panel rpg-panel rpg-panel-sandstone" style={{ borderRadius: 0, padding: '8px' }}>
+                  <div className="card pixel-border" style={{ background: '#fcf8ee', border: '1px solid #85613c', padding: '14px', color: '#291d12', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                    <h3 className="section-title font-pixel" style={{ fontSize:'0.65rem', color:'#b45309', marginBottom: 0, textShadow: 'none' }}>
+                      [  VERIFICATION PROBABILITY P(V) ]
+                    </h3>
+                    <div className="flex items-center gap-4" style={{ margin: 0 }}>
+                      <span className="font-pixel" style={{ fontSize:'1.25rem', color:'#16803d', lineHeight: 1 }}>P(V) = {displayScore}%
+                      </span>
+                      <span className="badge badge-outline font-pixel" style={{ color:'#16803d', borderColor: '#16803d', borderRadius: 0, fontSize:'10px', padding:'2px 4px'}}>
+                        {ticket.status?.toUpperCase()}
+                      </span>
+                      <span className="text-xs font-mono" style={{ marginLeft:'auto', color: '#6b5139' }}>Verification Probability</span>
+                    </div>
+                    <p className="text-sm" style={{ lineHeight: 1.6, color: '#291d12', margin: 0 }}>
+                      {displayExplanation}
+                    </p>
                   </div>
-                  <p className="text-secondary text-sm" style={{ lineHeight: 1.6 }}>
-                    {displayExplanation}
-                  </p>
                 </div>
 
                 {/* Root Cause Diagnosis */}
                 {ticket.root_cause && ticket.root_cause.explanation !== displayExplanation && (
-                  <div className="panel rpg-panel rpg-panel-sandstone" style={{ borderRadius: 0 }}>
-                    <h3 className="section-title font-pixel" style={{ fontSize:'0.65rem', color:'var(--accent)', marginBottom:'var(--space-3)'}}>
-                      [  ROOT CAUSE DIAGNOSIS ]
-                    </h3>
-                    <div className="flex items-center gap-4" style={{ marginBottom:'var(--space-2)'}}>
-                      <span className="font-pixel text-sm" style={{ color:'var(--accent)', display:'block'}}>Probable Cause: {ticket.root_cause.cause}
-                      </span>
-                      <span className="badge badge-outline font-pixel" style={{ color:'var(--accent)', borderRadius: 0, fontSize:'10px', padding:'2px 4px'}}>Confidence Index: {ticket.root_cause.confidence}/100
-                      </span>
+                  <div className="panel rpg-panel rpg-panel-sandstone" style={{ borderRadius: 0, padding: '8px' }}>
+                    <div className="card pixel-border" style={{ background: '#fcf8ee', border: '1px solid #85613c', padding: '14px', color: '#291d12', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                      <h3 className="section-title font-pixel" style={{ fontSize:'0.65rem', color:'#b45309', marginBottom: 0, textShadow: 'none' }}>
+                        [  ROOT CAUSE DIAGNOSIS ]
+                      </h3>
+                      <div className="flex items-center gap-4" style={{ margin: 0 }}>
+                        <span className="font-pixel text-sm" style={{ color:'#b45309', display:'block'}}>Probable Cause: {ticket.root_cause.cause}
+                        </span>
+                        <span className="badge badge-outline font-pixel" style={{ color:'#b45309', borderColor: '#85613c', borderRadius: 0, fontSize:'10px', padding:'2px 4px'}}>Confidence Index: {ticket.root_cause.confidence}/100
+                        </span>
+                      </div>
+                      <p className="text-sm" style={{ lineHeight: 1.6, color: '#291d12', margin: 0 }}>
+                        {ticket.root_cause.explanation}
+                      </p>
                     </div>
-                    <p className="text-secondary text-sm" style={{ lineHeight: 1.6 }}>
-                      {ticket.root_cause.explanation}
-                    </p>
                   </div>
                 )}
 
@@ -332,53 +336,55 @@ function TicketPage() {
                   (() => {
                     const graphNode = INFRASTRUCTURE_GRAPH[ticket.category];
                     return (
-                      <div className="panel rpg-panel rpg-panel-sandstone" style={{ borderRadius: 0 }}>
-                        <h3 className="section-title font-pixel" style={{ fontSize:'0.65rem', color:'var(--accent)', marginBottom:'var(--space-4)'}}>
-                          [  INFRASTRUCTURE IMPACT CASCADE ]
-                        </h3>
-                        <div style={{ display:'flex', flexDirection:'column', gap:'var(--space-3)', position:'relative'}}>
-                          {[
-                            { label:'MUNICIPAL ASSET', val: graphNode.asset, icon:'', color:'var(--accent)'},
-                            { label:'DIRECT IMPACT', val: graphNode.directImpact, icon:'', color:'var(--warning)'},
-                            { label:'CASCADING RISK', val: graphNode.cascadingRisk, icon:'', color:'var(--error)'},
-                            { label:'VULNERABILITY LEVEL', val: graphNode.vulnerability, icon:'', color:'oklch(0.55 0.18 300)'}
-                          ].map((step, idx, arr) => (
-                            <div key={idx} style={{ display:'flex', flexDirection:'column', alignItems:'center', width:'100%'}}>
-                              <div 
-                                className="flex items-center gap-3"
-                                style={{ 
-                                  width:'100%', 
-                                  padding:'var(--space-2) var(--space-3)', 
-                                  border:'1px solid var(--border-subtle)', 
-                                  background:'var(--bg-primary)',
-                                  boxShadow:'inset 1px 1px 0 rgba(255,255,255,0.05)',
-                                  position:'relative'
-                                }}
-                              >
-                                <span style={{ fontSize:'1.2rem'}}>{step.icon}</span>
-                                <div>
-                                  <span className="font-pixel block text-muted" style={{ fontSize:'0.35rem', letterSpacing:'0.05em'}}>
-                                    {step.label}
-                                  </span>
-                                  <span style={{ fontSize:'0.65rem', fontWeight: 600, color: step.color }}>
-                                    {step.val.toUpperCase()}
-                                  </span>
-                                </div>
-                              </div>
-                              {idx < arr.length - 1 && (
+                      <div className="panel rpg-panel rpg-panel-sandstone" style={{ borderRadius: 0, padding: '8px' }}>
+                        <div className="card pixel-border" style={{ background: '#fcf8ee', border: '1px solid #85613c', padding: '14px', color: '#291d12' }}>
+                          <h3 className="section-title font-pixel" style={{ fontSize:'0.65rem', color:'#b45309', marginBottom:'var(--space-4)', textShadow: 'none' }}>
+                            [  INFRASTRUCTURE IMPACT CASCADE ]
+                          </h3>
+                          <div style={{ display:'flex', flexDirection:'column', gap:'var(--space-3)', position:'relative'}}>
+                            {[
+                              { label:'MUNICIPAL ASSET', val: graphNode.asset, icon:'', color:'#b45309'},
+                              { label:'DIRECT IMPACT', val: graphNode.directImpact, icon:'', color:'#d97706'},
+                              { label:'CASCADING RISK', val: graphNode.cascadingRisk, icon:'', color:'#b91c1c'},
+                              { label:'VULNERABILITY LEVEL', val: graphNode.vulnerability, icon:'', color:'#7c3aed'}
+                            ].map((step, idx, arr) => (
+                              <div key={idx} style={{ display:'flex', flexDirection:'column', alignItems:'center', width:'100%'}}>
                                 <div 
-                                  className="font-pixel text-muted animate-pulse"
+                                  className="flex items-center gap-3"
                                   style={{ 
-                                    fontSize:'0.75rem', 
-                                    margin:'2px 0',
-                                    color:'var(--accent)'
+                                    width:'100%', 
+                                    padding:'var(--space-2) var(--space-3)', 
+                                    border:'1px solid #c6945a', 
+                                    background:'#fffbeb',
+                                    boxShadow:'inset 1px 1px 0 #fff',
+                                    position:'relative'
                                   }}
                                 >
-                                  ↓
+                                  <span style={{ fontSize:'1.2rem'}}>{step.icon}</span>
+                                  <div>
+                                    <span className="font-pixel block" style={{ fontSize:'0.35rem', letterSpacing:'0.05em', color: '#6b5139'}}>
+                                      {step.label}
+                                    </span>
+                                    <span style={{ fontSize:'0.65rem', fontWeight: 600, color: step.color }}>
+                                      {step.val.toUpperCase()}
+                                    </span>
+                                  </div>
                                 </div>
-                              )}
-                            </div>
-                          ))}
+                                {idx < arr.length - 1 && (
+                                  <div 
+                                    className="font-pixel animate-pulse"
+                                    style={{ 
+                                      fontSize:'0.75rem', 
+                                      margin:'2px 0',
+                                      color:'#b45309'
+                                    }}
+                                  >
+                                    ↓
+                                  </div>
+                                )}
+                              </div>
+                            ))}
+                          </div>
                         </div>
                       </div>
                     );
@@ -390,117 +396,123 @@ function TicketPage() {
             {activeExplainTab ==='telemetry'&& (
               <>
                 {/* 2. Why This Priority? */}
-                <div className="panel rpg-panel rpg-panel-sandstone" style={{ borderRadius: 0 }}>
-                  <h3 className="section-title font-pixel" style={{ fontSize:'0.65rem', color:'var(--warning)', marginBottom:'var(--space-3)'}}>
-                    [  PRIORITY SCORE (CONFIDENCE INDEX) ]
-                  </h3>
-                  <p className="text-secondary text-sm" style={{ lineHeight: 1.6, marginBottom:'var(--space-4)'}}>
-                    {ticket.priority_explanation ||'Priority calculations loading.'}
-                  </p>
-                  {ticket.priority_detail && (
-                    <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit, minmax(140px, 1fr))', gap:'var(--space-3)'}}>
-                      {Object.entries(ticket.priority_detail).map(([key, val]) => (
-                        <div key={key} style={{ padding:'var(--space-2)', border:'1px solid var(--border-subtle)', background:'var(--bg-primary)'}}>
-                          <span className="font-pixel block text-muted" style={{ fontSize:'0.35rem', letterSpacing:'0.05em'}}>
-                            {key.toUpperCase().replace('_','')}
-                          </span>
-                          <span className="font-pixel text-sm" style={{ color:'var(--accent)'}}>
-                            +{val}
-                          </span>
-                        </div>
-                      ))}
-                    </div>
-                  )}
+                <div className="panel rpg-panel rpg-panel-sandstone" style={{ borderRadius: 0, padding: '8px' }}>
+                  <div className="card pixel-border" style={{ background: '#fcf8ee', border: '1px solid #85613c', padding: '14px', color: '#291d12', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                    <h3 className="section-title font-pixel" style={{ fontSize:'0.65rem', color:'#b45309', marginBottom: 0, textShadow: 'none' }}>
+                      [  PRIORITY SCORE (CONFIDENCE INDEX) ]
+                    </h3>
+                    <p className="text-sm" style={{ lineHeight: 1.6, color: '#291d12', margin: 0 }}>
+                      {ticket.priority_explanation ||'Priority calculations loading.'}
+                    </p>
+                    {ticket.priority_detail && (
+                      <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit, minmax(140px, 1fr))', gap:'var(--space-3)', marginTop: '4px' }}>
+                        {Object.entries(ticket.priority_detail).map(([key, val]) => (
+                          <div key={key} style={{ padding:'var(--space-2)', border:'1px solid #c6945a', background:'#fffbeb'}}>
+                            <span className="font-pixel block" style={{ fontSize:'0.35rem', letterSpacing:'0.05em', color: '#6b5139'}}>
+                              {key.toUpperCase().replace('_','')}
+                            </span>
+                            <span className="font-pixel text-sm" style={{ color:'#b45309', fontWeight: 'bold'}}>
+                              +{val}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
                 </div>
 
                 {/* 3. Cluster Evidence */}
-                <div className="panel rpg-panel rpg-panel-sandstone" style={{ borderRadius: 0 }}>
-                  <h3 className="section-title font-pixel" style={{ fontSize:'0.65rem', color:'var(--accent)', marginBottom:'var(--space-3)'}}>
-                    [  CLUSTER EVIDENCE ]
-                  </h3>
-                  <p className="text-secondary text-sm" style={{ lineHeight: 1.6, marginBottom:'var(--space-3)'}}>
-                    {ticket.cluster_explanation ||'Duplicate detection summary details loading.'}
-                  </p>
-                  {ticket.cluster_detail && ticket.cluster_detail.found && (
-                    <div className="text-xs font-mono" style={{ padding:'var(--space-3)', background:'var(--bg-primary)', border:'1px solid var(--border-subtle)'}}>
-                      <div><strong>Cluster Match:</strong>Cluster ID #{ticket.cluster_detail.ticket_id}</div>
-                      <div><strong>Group Size:</strong> {ticket.cluster_detail.cluster_size} tickets</div>
-                      {ticket.cluster_detail.neighbors && ticket.cluster_detail.neighbors.length > 0 && (
-                        <div style={{ wordBreak:'break-all', marginTop:'4px'}}>
-                          <strong>Co-neighbors:</strong> {ticket.cluster_detail.neighbors.map(n => n.id || n).join(',')}
-                        </div>
-                      )}
-                    </div>
-                  )}
+                <div className="panel rpg-panel rpg-panel-sandstone" style={{ borderRadius: 0, padding: '8px' }}>
+                  <div className="card pixel-border" style={{ background: '#fcf8ee', border: '1px solid #85613c', padding: '14px', color: '#291d12', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                    <h3 className="section-title font-pixel" style={{ fontSize:'0.65rem', color:'#b45309', marginBottom: 0, textShadow: 'none' }}>
+                      [  CLUSTER EVIDENCE ]
+                    </h3>
+                    <p className="text-sm" style={{ lineHeight: 1.6, color: '#291d12', margin: 0 }}>
+                      {ticket.cluster_explanation ||'Duplicate detection summary details loading.'}
+                    </p>
+                    {ticket.cluster_detail && ticket.cluster_detail.found && (
+                      <div className="text-xs font-mono" style={{ padding:'var(--space-3)', background:'#fffbeb', border:'1px solid #c6945a', color: '#291d12'}}>
+                        <div><strong>Cluster Match:</strong>Cluster ID #{ticket.cluster_detail.ticket_id}</div>
+                        <div><strong>Group Size:</strong> {ticket.cluster_detail.cluster_size} tickets</div>
+                        {ticket.cluster_detail.neighbors && ticket.cluster_detail.neighbors.length > 0 && (
+                          <div style={{ wordBreak:'break-all', marginTop:'4px'}}>
+                            <strong>Co-neighbors:</strong> {ticket.cluster_detail.neighbors.map(n => n.id || n).join(',')}
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
                 </div>
 
                 {/* 4. SLA Risk */}
-                <div className="panel rpg-panel rpg-panel-sandstone" style={{ borderRadius: 0 }}>
-                  <h3 className="section-title font-pixel" style={{ fontSize:'0.65rem', color:'var(--error)', marginBottom:'var(--space-3)'}}>
-                    [  SLA BREACH PROBABILITY P(B) ]
-                  </h3>
-                  <div className="flex items-center gap-4" style={{ marginBottom:'var(--space-2)'}}>
-                    <span className="font-pixel" style={{ fontSize:'1.25rem', color:'var(--error)', lineHeight: 1 }}>P(B) = {ticket.sla_risk_score != null ?`${ticket.sla_risk_score}%`:'0%'}
-                    </span>
-                    <span className="text-xs text-muted">SLA Breach Probability</span>
-                  </div>
-                  <p className="text-secondary text-sm" style={{ lineHeight: 1.6, marginBottom:'var(--space-3)'}}>
-                    {ticket.sla_risk_explanation ||'Weibull time-to-resolution forecasting loading.'}
-                  </p>
-                  {ticket.sla_params && (
-                    <div className="text-xs font-mono" style={{ padding:'var(--space-3)', background:'var(--bg-primary)', border:'1px solid var(--border-subtle)'}}>
-                      <div><strong>Weibull scale (&lambda;):</strong> {ticket.sla_params.lambda} hours</div>
-                      <div><strong>Weibull shape (k):</strong> {ticket.sla_params.k}</div>
-                      <div><strong>Consensus level:</strong> {ticket.sla_params.localizedUsed ?'Localized MLE converges':'Category default parameters fallback'}</div>
+                <div className="panel rpg-panel rpg-panel-sandstone" style={{ borderRadius: 0, padding: '8px' }}>
+                  <div className="card pixel-border" style={{ background: '#fcf8ee', border: '1px solid #85613c', padding: '14px', color: '#291d12', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                    <h3 className="section-title font-pixel" style={{ fontSize:'0.65rem', color:'#b45309', marginBottom: 0, textShadow: 'none' }}>
+                      [  SLA BREACH PROBABILITY P(B) ]
+                    </h3>
+                    <div className="flex items-center gap-4" style={{ margin: 0 }}>
+                      <span className="font-pixel" style={{ fontSize:'1.25rem', color:'#b91c1c', lineHeight: 1 }}>P(B) = {ticket.sla_risk_score != null ?`${ticket.sla_risk_score}%`:'0%'}
+                      </span>
+                      <span className="text-xs font-mono" style={{ marginLeft: 'auto', color: '#6b5139' }}>SLA Breach Probability</span>
                     </div>
-                  )}
+                    <p className="text-sm" style={{ lineHeight: 1.6, color: '#291d12', margin: 0 }}>
+                      {ticket.sla_risk_explanation ||'Weibull time-to-resolution forecasting loading.'}
+                    </p>
+                    {ticket.sla_params && (
+                      <div className="text-xs font-mono" style={{ padding:'var(--space-3)', background:'#fffbeb', border:'1px solid #c6945a', color: '#291d12'}}>
+                        <div><strong>Weibull scale (&lambda;):</strong> {ticket.sla_params.lambda} hours</div>
+                        <div><strong>Weibull shape (k):</strong> {ticket.sla_params.k}</div>
+                        <div><strong>Consensus level:</strong> {ticket.sla_params.localizedUsed ?'Localized MLE converges':'Category default parameters fallback'}</div>
+                      </div>
+                    )}
+                  </div>
                 </div>
               </>
             )}
 
-
-
             {activeExplainTab ==='evidence'&& ticket.media_urls && ticket.media_urls.length > 0 && (
               /* 6. Submitted Evidence Media List */
-              <div className="panel rpg-panel rpg-panel-sandstone" style={{ borderRadius: 0 }}>
-                <h3 className="section-title font-pixel" style={{ fontSize:'0.65rem', color:'var(--accent)', marginBottom:'var(--space-4)'}}>
-                  [  SUBMITTED EVIDENCE ]
-                </h3>
-                <div className="flex flex-col gap-4">
-                  {ticket.media_urls.map((url, i) => {
-                    const type = ticket.media_type || (
-                      /\.(mp4|webm|mov|avi)$/i.test(url) ?'video':
-                      /\.(mp3|wav|webm|ogg|m4a)$/i.test(url) ?'audio':'image'
-                    );
-                    if (type ==='video') return (
-                      <div key={i} style={{ borderRadius: 0, overflow:'hidden', background:'var(--bg-secondary)', border:'1px solid var(--border-subtle)'}}>
-                        <video
-                          src={url}
-                          controls
-                          style={{ width:'100%', maxHeight: 400, display:'block', borderRadius: 0 }}
-                        />
-                      </div>
-                    );
-                    if (type ==='audio') return (
-                      <div key={i} className="panel rpg-panel rpg-panel-sandstone flex items-center gap-4" style={{ padding:'var(--space-4)', borderRadius: 0 }}>
-                        <div style={{ width: 40, height: 40, borderRadius: 0, background:'var(--accent-muted)', display:'flex', alignItems:'center', justifyContent:'center', flexShrink: 0 }}>
-                          <svg width="18"height="18"viewBox="0 0 24 24"fill="none"stroke="var(--accent)"strokeWidth="1.5"strokeLinecap="round"strokeLinejoin="round"><path d="M9 18V5l12-2v13"/><circle cx="6"cy="18"r="3"/><circle cx="18"cy="16"r="3"/></svg>
+              <div className="panel rpg-panel rpg-panel-sandstone" style={{ borderRadius: 0, padding: '8px' }}>
+                <div className="card pixel-border" style={{ background: '#fcf8ee', border: '1px solid #85613c', padding: '14px', color: '#291d12' }}>
+                  <h3 className="section-title font-pixel" style={{ fontSize:'0.65rem', color:'#b45309', marginBottom:'var(--space-4)', textShadow: 'none' }}>
+                    [  SUBMITTED EVIDENCE ]
+                  </h3>
+                  <div className="flex flex-col gap-4">
+                    {ticket.media_urls.map((url, i) => {
+                      const type = ticket.media_type || (
+                        /\.(mp4|webm|mov|avi)$/i.test(url) ?'video':
+                        /\.(mp3|wav|webm|ogg|m4a)$/i.test(url) ?'audio':'image'
+                      );
+                      if (type ==='video') return (
+                        <div key={i} style={{ borderRadius: 0, overflow:'hidden', background:'#ebdcb9', border:'1px solid #85613c'}}>
+                          <video
+                            src={url}
+                            controls
+                            style={{ width:'100%', maxHeight: 400, display:'block', borderRadius: 0 }}
+                          />
                         </div>
-                        <audio src={url} controls style={{ flex: 1, minWidth: 0 }} />
-                      </div>
-                    );
-                    // image (default)
-                    return (
-                      <a key={i} href={url} target="_blank"rel="noopener noreferrer"style={{ display:'block', borderRadius: 0, overflow:'hidden', border:'1px solid var(--border-subtle)'}}>
-                        <img
-                          src={url}
-                          alt={`Attachment ${i + 1}`}
-                          style={{ width:'100%', maxHeight: 480, objectFit:'cover', display:'block'}}
-                          onError={e => { e.target.style.display ='none'; }}
-                        />
-                      </a>
-                    );
-                  })}
+                      );
+                      if (type ==='audio') return (
+                        <div key={i} className="panel rpg-panel rpg-panel-sandstone flex items-center gap-4" style={{ padding:'var(--space-4)', borderRadius: 0 }}>
+                          <div style={{ width: 40, height: 40, borderRadius: 0, background:'rgba(180, 83, 9, 0.15)', display:'flex', alignItems:'center', justifyContent:'center', flexShrink: 0 }}>
+                            <svg width="18"height="18"viewBox="0 0 24 24"fill="none"stroke="#b45309"strokeWidth="1.5"strokeLinecap="round"strokeLinejoin="round"><path d="M9 18V5l12-2v13"/><circle cx="6"cy="18"r="3"/><circle cx="18"cy="16"r="3"/></svg>
+                          </div>
+                          <audio src={url} controls style={{ flex: 1, minWidth: 0 }} />
+                        </div>
+                      );
+                      // image (default)
+                      return (
+                        <a key={i} href={url} target="_blank"rel="noopener noreferrer"style={{ display:'block', borderRadius: 0, overflow:'hidden', border:'1px solid #85613c'}}>
+                          <img
+                            src={url}
+                            alt={`Attachment ${i + 1}`}
+                            style={{ width:'100%', maxHeight: 480, objectFit:'cover', display:'block'}}
+                            onError={e => { e.target.style.display ='none'; }}
+                          />
+                        </a>
+                      );
+                    })}
+                  </div>
                 </div>
               </div>
             )}
@@ -537,58 +549,63 @@ function TicketPage() {
         <div className="flex flex-col gap-6">
 
           {/* 1. Community Consensus Voting Block (Moved to Top) */}
-          <div className="panel rpg-panel rpg-panel-sandstone" style={{ borderRadius: 0 }}>
-            <h4 className="label font-pixel" style={{ fontSize:'10px', marginBottom:'var(--space-4)'}}>COMMUNITY CONSENSUS</h4>
-            <div className="flex flex-col gap-3">
-              <button
-                className={`verify-btn verify-btn-up flex justify-between font-pixel ${userVote ==='still_issue'?'active-vote':''}`}
-                style={{ 
-                  width:'100%', 
-                  color:'var(--warning)', 
-                  borderColor:'var(--warning)', 
-                  borderRadius: 0, 
-                  fontSize:'0.55rem',
-                  opacity: hasVoted && userVote !=='still_issue'? 0.4 : 1,
-                  background: userVote ==='still_issue'?'rgba(245, 158, 11, 0.15)':'transparent',
-                  borderWidth: userVote ==='still_issue'?'2px':'1px'
-                }}
-                onClick={() => handleOpenVerifyModal('still_issue')}
-                disabled={voting || hasVoted}
-              >
-                <span>STILL UNRESOLVED {userVote ==='still_issue'&&'(YOUR VOTE)'}</span>
-                {ticket.verification_up != null && <span style={{ opacity: 0.8 }}>{ticket.verification_up}</span>}
-              </button>
-              <button
-                className={`verify-btn verify-btn-down flex justify-between font-pixel ${userVote ==='looks_resolved'?'active-vote':''}`}
-                style={{ 
-                  width:'100%', 
-                  color:'var(--success)', 
-                  borderColor:'var(--success)', 
-                  borderRadius: 0, 
-                  fontSize:'0.55rem',
-                  opacity: hasVoted && userVote !=='looks_resolved'? 0.4 : 1,
-                  background: userVote ==='looks_resolved'?'rgba(16, 185, 129, 0.15)':'transparent',
-                  borderWidth: userVote ==='looks_resolved'?'2px':'1px'
-                }}
-                onClick={() => handleOpenVerifyModal('looks_resolved')}
-                disabled={voting || hasVoted}
-              >
-                <span>MARK AS RESOLVED {userVote ==='looks_resolved'&&'(YOUR VOTE)'}</span>
-                {ticket.verification_down != null && <span style={{ opacity: 0.8 }}>{ticket.verification_down}</span>}
-              </button>
-              {hasVoted && (
-                <p className="text-xs font-pixel text-center text-muted" style={{ fontSize:'8px', marginTop:'var(--space-1)'}}>
-                  [  consensus registered ]
-                </p>
-              )}
+          <div className="panel rpg-panel rpg-panel-sandstone" style={{ borderRadius: 0, padding: '8px' }}>
+            <div className="card pixel-border" style={{ background: '#fcf8ee', border: '1px solid #85613c', padding: '14px', color: '#291d12' }}>
+              <h4 className="label font-pixel" style={{ fontSize:'10px', marginBottom:'var(--space-4)', color: '#b45309', textShadow: 'none' }}>COMMUNITY CONSENSUS</h4>
+              <div className="flex flex-col gap-3">
+                <button
+                  className={`verify-btn verify-btn-up flex justify-between font-pixel ${userVote ==='still_issue'?'active-vote':''}`}
+                  style={{ 
+                    width:'100%', 
+                    color:'#b45309', 
+                    borderColor:'#85613c', 
+                    borderRadius: 0, 
+                    fontSize:'0.55rem',
+                    opacity: hasVoted && userVote !=='still_issue'? 0.4 : 1,
+                    background: userVote ==='still_issue'?'rgba(180, 83, 9, 0.15)':'#fffbeb',
+                    borderWidth: userVote ==='still_issue'?'2px':'1px',
+                    padding: '8px 12px',
+                    cursor: 'pointer'
+                  }}
+                  onClick={() => handleOpenVerifyModal('still_issue')}
+                  disabled={voting || hasVoted}
+                >
+                  <span>STILL UNRESOLVED {userVote ==='still_issue'&&'(YOUR VOTE)'}</span>
+                  {ticket.verification_up != null && <span style={{ opacity: 0.8 }}>{ticket.verification_up}</span>}
+                </button>
+                <button
+                  className={`verify-btn verify-btn-down flex justify-between font-pixel ${userVote ==='looks_resolved'?'active-vote':''}`}
+                  style={{ 
+                    width:'100%', 
+                    color:'#16803d', 
+                    borderColor:'#85613c', 
+                    borderRadius: 0, 
+                    fontSize:'0.55rem',
+                    opacity: hasVoted && userVote !=='looks_resolved'? 0.4 : 1,
+                    background: userVote ==='looks_resolved'?'rgba(22, 128, 61, 0.15)':'#fffbeb',
+                    borderWidth: userVote ==='looks_resolved'?'2px':'1px',
+                    padding: '8px 12px',
+                    cursor: 'pointer'
+                  }}
+                  onClick={() => handleOpenVerifyModal('looks_resolved')}
+                  disabled={voting || hasVoted}
+                >
+                  <span>MARK AS RESOLVED {userVote ==='looks_resolved'&&'(YOUR VOTE)'}</span>
+                  {ticket.verification_down != null && <span style={{ opacity: 0.8 }}>{ticket.verification_down}</span>}
+                </button>
+                {hasVoted && (
+                  <p className="text-xs font-pixel text-center text-muted" style={{ fontSize:'8px', marginTop:'var(--space-1)', color: '#6b5139' }}>
+                    [  consensus registered ]
+                  </p>
+                )}
+              </div>
             </div>
           </div>
 
           {/* 2. Interactive Geolocation Minimap */}
           {ticket.lat != null && ticket.lng != null && (
-            <div className="panel rpg-panel rpg-panel-sandstone" style={{ borderRadius: 0, padding: 0, overflow:'hidden', border:'1px solid var(--border)'}}>
-              <h4 className="label font-pixel" style={{ fontSize:'10px', padding:'var(--space-3) var(--space-4)', marginBottom: 0, borderBottom:'1px solid var(--border-subtle)'}}>INCIDENT SITE LOCATION
-              </h4>
+            <div className="panel rpg-panel rpg-panel-sandstone" style={{ borderRadius: 0, padding: 0, overflow:'hidden', border:'1px solid #85613c' }}>
+              <h4 className="label font-pixel" style={{ fontSize:'10px', padding:'var(--space-3) var(--space-4)', marginBottom: 0, borderBottom:'1px solid #85613c', background: '#fcf8ee', color: '#291d12', textShadow: 'none' }}>INCIDENT SITE LOCATION</h4>
               <div style={{ height:'220px', width:'100%', position:'relative', zIndex: 1 }}>
                 <MapContainer
                   center={[ticket.lat, ticket.lng]}
@@ -603,52 +620,57 @@ function TicketPage() {
                   <Marker position={[ticket.lat, ticket.lng]} icon={createTicketIcon(ticket.category)} />
                 </MapContainer>
               </div>
-              <div className="text-xs font-mono text-muted" style={{ padding:'var(--space-2) var(--space-4)', background:'var(--bg-primary)', fontSize:'0.65rem'}}>
-                 {ticket.lat.toFixed(5)}, {ticket.lng.toFixed(5)}
+              <div className="text-xs font-mono" style={{ padding:'var(--space-2) var(--space-4)', background:'#fcf8ee', borderTop: '1px solid #85613c', fontSize:'0.65rem', color: '#6b5139'}}>
+                 GPS COORDS: {ticket.lat.toFixed(5)}, {ticket.lng.toFixed(5)}
               </div>
             </div>
           )}
 
           {/* 3. Priority Rating Block */}
           {ticket.priority_score != null && !isNaN(ticket.priority_score) && (
-            <div className="panel rpg-panel rpg-panel-sandstone" style={{ borderColor:'var(--accent-muted)', borderRadius: 0 }}>
-              <h4 className="label font-pixel" style={{ fontSize:'10px', marginBottom:'var(--space-2)'}}>PRIORITY SCORE INDEX (0-100)</h4>
-              <div style={{ marginBottom:'var(--space-3)'}}>
-                <div className="flex items-center gap-2" style={{ marginBottom:'var(--space-2)'}}>
-                  <span className="font-pixel" style={{ fontSize:'1.6rem', lineHeight: 1, color: ticket.priority_score > 70 ?'var(--error)':'var(--accent)'}}>
-                    {Math.round(ticket.priority_score)}/100
+            <div className="panel rpg-panel rpg-panel-sandstone" style={{ borderRadius: 0, padding: '8px' }}>
+              <div className="card pixel-border" style={{ background: '#fcf8ee', border: '1px solid #85613c', padding: '14px', color: '#291d12' }}>
+                <h4 className="label font-pixel" style={{ fontSize:'10px', marginBottom:'var(--space-2)', color: '#b45309' }}>PRIORITY SCORE INDEX (0-100)</h4>
+                <div style={{ marginBottom:'var(--space-3)'}}>
+                  <div className="flex items-center gap-2" style={{ marginBottom:'var(--space-2)'}}>
+                    <span className="font-pixel" style={{ fontSize:'1.6rem', lineHeight: 1, color: ticket.priority_score > 70 ?'#b91c1c':'#b45309'}}>
+                      {Math.round(ticket.priority_score)}/100
+                    </span>
+                  </div>
+                  <span className="font-pixel" style={{ fontSize:'0.75rem', color: ticket.priority_score > 70 ?'#b91c1c': ticket.priority_score > 40 ?'#d97706':'#16803d', display: 'block'}}>
+                    {ticket.priority_score > 70 ?'CRITICAL': ticket.priority_score > 40 ?'MODERATE':'LOW'}
                   </span>
                 </div>
-                <span className="font-pixel" style={{ fontSize:'0.75rem', color: ticket.priority_score > 70 ?'var(--error)': ticket.priority_score > 40 ?'var(--warning)':'var(--success)', display: 'block'}}>
-                  {ticket.priority_score > 70 ?'CRITICAL': ticket.priority_score > 40 ?'MODERATE':'LOW'}
-                </span>
-              </div>
-              <div className="priority-bar" style={{ height:'3px', borderRadius: 0 }}>
-                <div
-                  className="priority-bar-fill"
-                  style={{
-                    width:`${Math.round(ticket.priority_score)}%`,
-                    background: ticket.priority_score > 70 ?'var(--error)': ticket.priority_score > 40 ?'var(--warning)':'var(--accent)',
-                    borderRadius: 0,
-                  }}
-                />
+                <div className="priority-bar" style={{ height:'4px', borderRadius: 0, background: '#ebdcb9', border: '1px solid #85613c', padding: '1px' }}>
+                  <div
+                    className="priority-bar-fill"
+                    style={{
+                      width:`${Math.round(ticket.priority_score)}%`,
+                      background: ticket.priority_score > 70 ?'#b91c1c': ticket.priority_score > 40 ?'#d97706':'#b45309',
+                      borderRadius: 0,
+                      height: '100%'
+                    }}
+                  />
+                </div>
               </div>
             </div>
           )}
 
           {/* 4. Resolution Deadline Block */}
           {slaDeadline && (
-            <div className="panel rpg-panel rpg-panel-sandstone" style={{ borderRadius: 0 }}>
-              <h4 className="label font-pixel" style={{ fontSize:'10px', marginBottom:'var(--space-3)'}}>RESOLUTION DEADLINE</h4>
-              <div className="font-mono text-sm text-primary" style={{ marginBottom:'var(--space-3)'}}>{slaDeadline.toLocaleString()}</div>
-              {slaRemaining != null && slaRemaining > 0 ? (
-                <span className="badge badge-outline font-pixel" style={{ color:'var(--accent)', borderRadius: 0, fontSize:'10px', padding:'2px 4px'}}>
-                  {slaHours}H {slaMinutes}M REMAINING
-                </span>
-              ) : (
-                <span className="badge badge-outline font-pixel" style={{ color:'var(--error)', borderRadius: 0, fontSize:'10px', padding:'2px 4px'}}>OVERDUE
-                </span>
-              )}
+            <div className="panel rpg-panel rpg-panel-sandstone" style={{ borderRadius: 0, padding: '8px' }}>
+              <div className="card pixel-border" style={{ background: '#fcf8ee', border: '1px solid #85613c', padding: '14px', color: '#291d12' }}>
+                <h4 className="label font-pixel" style={{ fontSize:'10px', marginBottom:'var(--space-3)', color: '#b45309' }}>RESOLUTION DEADLINE</h4>
+                <div className="font-mono text-sm" style={{ marginBottom:'var(--space-3)', color: '#291d12', fontWeight: 'bold' }}>{slaDeadline.toLocaleString()}</div>
+                {slaRemaining != null && slaRemaining > 0 ? (
+                  <span className="badge badge-outline font-pixel" style={{ color:'#b45309', borderColor: '#85613c', borderRadius: 0, fontSize:'10px', padding:'2px 4px', background: '#fffbeb'}}>
+                    {slaHours}H {slaMinutes}M REMAINING
+                  </span>
+                ) : (
+                  <span className="badge badge-outline font-pixel" style={{ color:'#b91c1c', borderColor: '#b91c1c', borderRadius: 0, fontSize:'10px', padding:'2px 4px', background: '#fef2f2'}}>OVERDUE
+                  </span>
+                )}
+              </div>
             </div>
           )}
 
