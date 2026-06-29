@@ -546,7 +546,7 @@
 
 .gold-balance-box .gold-value {
   font-size: 1.1rem !important;
-  color: #fcd34d !important; /* Bright Stardew golden-yellow */
+  color: #ffffff !important; /* Force white color */
   display: block !important;
   text-shadow: 1px 1px 0 #000 !important;
   font-weight: 800 !important;
@@ -554,7 +554,7 @@
 
 .gold-balance-box .gold-label {
   font-size: 8px !important;
-  color: #ecdcb9 !important; /* Readable light parchment text */
+  color: #ffffff !important; /* Force white color */
   margin-top: 4px !important;
   display: block !important;
   text-shadow: 1px 1px 0 #000 !important;
