@@ -1276,7 +1276,7 @@ function DashboardPage() {
                             <strong>Analysis:</strong> {item.recommendedAction}
                           </p>
                           <div className="flex flex-wrap gap-6">
-                            <div className="flex flex-col gap-4" style={{ minWidth: 160 }}>
+                            <div className="flex flex-col gap-4" style={{ flex: '1 1 120px', minWidth: 0 }}>
                               <div className="flex flex-col gap-1">
                                 <span className="label font-pixel" style={{ fontSize:'0.45rem'}}>SCALE FACTOR (λ)</span>
                                 <span className="font-mono text-base font-semibold">{item.lambda}h</span>
@@ -1300,7 +1300,7 @@ function DashboardPage() {
                                 </span>
                               </div>
                             </div>
-                            <div style={{ flex: 1, minWidth: 280, height: 180 }}>
+                            <div style={{ flex: '1 1 200px', minWidth: 0, height: 180 }}>
                               <WeibullCurve lambda={item.lambda} k={item.k} lastResolved={item.lastResolved} />
                             </div>
                           </div>
