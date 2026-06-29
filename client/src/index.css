@@ -1163,8 +1163,9 @@ tr:hover td { background: var(--bg-surface); }
   position: fixed;
   inset: 0;
   z-index: var(--z-modal-backdrop);
-  background: oklch(0.12 0.01 260 / 0.92);
-  backdrop-filter: blur(12px);
+  background: rgba(0, 0, 0, 0.45);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
   display: flex;
   align-items: center;
   justify-content: center;

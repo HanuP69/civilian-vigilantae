@@ -851,9 +851,32 @@
 .rpg-panel-sandstone .hud-panel-header-v2 {
   margin-bottom: var(--space-3) !important;
 }
-.rpg-panel-sandstone .hud-panel-header-v2 .hud-eyebrow span,
 .rpg-panel-sandstone .hud-panel-header-v2 .hud-eyebrow {
   color: #291d12 !important;
   text-shadow: none !important;
   font-weight: 700 !important;
 }
+
+/* High-contrast parchment styling for dialog speech bubbles inside sandstone blocks */
+.rpg-panel-sandstone .rpg-dialog-bubble {
+  background: #fffbeb !important;
+  border: 3px solid #85613c !important;
+  color: #291d12 !important;
+  font-family: var(--font-pixel) !important;
+  font-size: 7.5px !important;
+  box-shadow: inset 1px 1px 0 #fff, 3px 3px 0 rgba(133, 97, 60, 0.25) !important;
+  border-radius: 0 !important;
+}
+
+.rpg-panel-sandstone .rpg-dialog-bubble::after {
+  border-color: #85613c transparent !important;
+  border-width: 10px 6px 0 !important;
+  bottom: -10px !important;
+}
+
+.rpg-panel-sandstone .rpg-dialog-bubble::before {
+  border-color: #fffbeb transparent !important;
+  border-width: 7px 4px 0 !important;
+  bottom: -4px !important;
+}
+
