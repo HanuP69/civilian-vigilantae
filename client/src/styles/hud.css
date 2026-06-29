@@ -425,6 +425,7 @@
   --accent: #b45309 !important; /* deep high-contrast warm brown/orange instead of light yellow */
   --accent-muted: rgba(180, 83, 9, 0.15) !important;
   --bg-secondary: #ebdcb9 !important;
+  --bg-surface: #fffbeb !important;
   --border: #85613c !important;
   --border-subtle: #a17c55 !important;
 
