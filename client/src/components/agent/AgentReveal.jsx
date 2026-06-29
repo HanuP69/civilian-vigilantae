@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { useNavigate } from 'react-router-dom';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import AgentTrace from './AgentTrace.jsx';
 import ZigzagPath from './ZigzagPath.jsx';
 
@@ -31,13 +32,14 @@ function AgentReveal({ steps, isComplete, result, startedAt, onClose }) {
   const finalTicketId = result?.ticket_id || ticketResult?.ticket_id;
   const finalScore = priorityResult?.priority_score;
 
-  return (
+  return createPortal(
     <motion.div
       className="agent-reveal-overlay"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
       transition={{ duration: 0.3 }}
+      style={{ zIndex: 99999 }}
     >
       <motion.div
         className="agent-reveal-panel rpg-panel-sandstone rpg-scrollbar"
@@ -154,7 +156,8 @@ function AgentReveal({ steps, isComplete, result, startedAt, onClose }) {
           </AnimatePresence>
         </div>
       </motion.div>
-    </motion.div>
+    </motion.div>,
+    document.body
   );
 }
 
