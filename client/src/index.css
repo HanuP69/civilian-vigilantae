@@ -3110,3 +3110,36 @@ tr:hover td { background: var(--bg-surface); }
     transform: scale(0.58);
   }
 }
+
+/* Zigzag flowchart map responsive scaling */
+.zigzag-path-container {
+  transform-origin: center center;
+  transition: transform 0.2s ease-in-out;
+}
+
+@media (max-width: 640px) {
+  .zigzag-path-wrapper {
+    height: 200px !important;
+  }
+  .zigzag-path-container {
+    transform: scale(0.72);
+  }
+}
+
+@media (max-width: 480px) {
+  .zigzag-path-wrapper {
+    height: 160px !important;
+  }
+  .zigzag-path-container {
+    transform: scale(0.56);
+  }
+}
+
+@media (max-width: 380px) {
+  .zigzag-path-wrapper {
+    height: 135px !important;
+  }
+  .zigzag-path-container {
+    transform: scale(0.48);
+  }
+}

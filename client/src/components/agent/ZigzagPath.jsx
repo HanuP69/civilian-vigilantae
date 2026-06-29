@@ -189,23 +189,34 @@ function ZigzagPath({ steps = [], isComplete }) {
   }, [currentIdx]);
 
   return (
-    <div style={{
-      width: '600px',
-      height: '270px',
-      margin: '0 auto var(--space-6) auto',
-      position: 'relative',
-      background: '#f3e5c8', // premium parchment tan map backing
-      border: '3px solid #85613c', // brown leather/wood border
-      outline: '2.5px solid #d8a96d', // gold inlay
-      outlineOffset: '-5px',
-      boxShadow: 'inset 0 0 12px rgba(133, 97, 60, 0.3), 0 4px 12px rgba(0,0,0,0.15)'
+    <div className="zigzag-path-wrapper" style={{
+      width: '100%',
+      overflow: 'hidden',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      height: '270px'
     }}>
-      <svg style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', pointerEvents: 'none' }}>
-        <g opacity="0.15" strokeWidth="0">
-          <circle cx="300" cy="135" r="30" fill="none" stroke="#85613c" strokeWidth="1.5" />
-          <line x1="300" y1="95" x2="300" y2="175" stroke="#85613c" strokeWidth="1.5" />
-          <line x1="260" y1="135" x2="340" y2="135" stroke="#85613c" strokeWidth="1.5" />
-        </g>
+      <div 
+        className="zigzag-path-container"
+        style={{
+          width: '600px',
+          height: '270px',
+          position: 'relative',
+          background: '#f3e5c8', // premium parchment tan map backing
+          border: '3px solid #85613c', // brown leather/wood border
+          outline: '2.5px solid #d8a96d', // gold inlay
+          outlineOffset: '-5px',
+          boxShadow: 'inset 0 0 12px rgba(133, 97, 60, 0.3), 0 4px 12px rgba(0,0,0,0.15)',
+          flexShrink: 0
+        }}
+      >
+        <svg style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', pointerEvents: 'none' }}>
+          <g opacity="0.15" strokeWidth="0">
+            <circle cx="300" cy="135" r="30" fill="none" stroke="#85613c" strokeWidth="1.5" />
+            <line x1="300" y1="95" x2="300" y2="175" stroke="#85613c" strokeWidth="1.5" />
+            <line x1="260" y1="135" x2="340" y2="135" stroke="#85613c" strokeWidth="1.5" />
+          </g>
 
         <path
           d="M 520 65 L 300 65 L 80 65 L 80 205 L 300 205 L 520 205"
@@ -363,6 +374,7 @@ function ZigzagPath({ steps = [], isComplete }) {
         />
       </motion.div>
     </div>
+  </div>
   );
 }
 
