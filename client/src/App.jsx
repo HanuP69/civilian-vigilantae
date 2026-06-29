@@ -274,6 +274,10 @@ function Navbar({ isConnected, onOpenQuestSidebar }) {
     }
   ];
 
+  const activeIndex = slots.findIndex(s => location.pathname === s.path);
+  const hoveredIndex = slots.findIndex(s => s.name === hoveredSlot?.name);
+  const selectedIndex = hoveredIndex !== -1 ? hoveredIndex : (activeIndex !== -1 ? activeIndex : 0);
+
   const liveDotStyle = {
     width: 6,
     height: 6,
@@ -424,8 +428,9 @@ function Navbar({ isConnected, onOpenQuestSidebar }) {
             style={{
               position: 'fixed',
               inset: 0,
-              background: 'rgba(15, 17, 23, 0.85)',
-              backdropFilter: 'blur(8px)',
+              background: 'rgba(16, 11, 8, 0.55)',
+              backdropFilter: 'blur(10px)',
+              WebkitBackdropFilter: 'blur(10px)',
               zIndex: 1000,
               display: 'flex',
               alignItems: 'center',
@@ -433,7 +438,7 @@ function Navbar({ isConnected, onOpenQuestSidebar }) {
             }}
           >
             <motion.div
-              className="rpg-panel rpg-radial-menu-container"
+              className="rpg-radial-menu-container"
               initial={{ scale: 0.9, rotate: -15 }}
               animate={{ scale: 1, rotate: 0 }}
               exit={{ scale: 0.9, rotate: 15 }}
@@ -441,31 +446,73 @@ function Navbar({ isConnected, onOpenQuestSidebar }) {
               style={{
                 width: '420px',
                 height: '420px',
-                borderRadius: 0,
+                borderRadius: '50%',
                 position: 'relative',
-                boxShadow: '16px 16px 0 rgba(0,0,0,0.8)',
+                background: 'url(/wheel.png) no-repeat center/contain',
+                filter: 'drop-shadow(0 0 25px rgba(0,0,0,0.95))',
                 overflow: 'visible'
               }}
             >
-              {/* Segmented Ring SVG container */}
+              {/* Rotating Pointer Indicator (Coded) */}
+              {selectedIndex !== -1 && (
+                <div
+                  style={{
+                    position: 'absolute',
+                    left: '0px',
+                    top: '0px',
+                    width: '420px',
+                    height: '420px',
+                    pointerEvents: 'none',
+                    zIndex: 2,
+                    transform: `rotate(${(selectedIndex + 0.5) * (360 / slots.length)}deg)`,
+                    transition: 'transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275)',
+                    transformOrigin: '210px 210px'
+                  }}
+                >
+                  <svg width="420" height="420" viewBox="0 0 420 420" fill="none">
+                    {/* Glowing Pointer Arrow pointing outwards from center hub to the hovered segment */}
+                    <path
+                      d="M 210 100 L 203 124 L 217 124 Z"
+                      fill="#f59e0b"
+                      stroke="#513a23"
+                      strokeWidth="2"
+                      style={{
+                        filter: 'drop-shadow(0 0 10px rgba(245, 158, 11, 0.9))'
+                      }}
+                    />
+                    {/* Dashed line connector */}
+                    <line
+                      x1="210"
+                      y1="124"
+                      x2="210"
+                      y2="150"
+                      stroke="#fbbf24"
+                      strokeWidth="2.5"
+                      strokeDasharray="4 3"
+                      opacity="0.8"
+                    />
+                  </svg>
+                </div>
+              )}
+
+              {/* Segmented Ring SVG container (Highlights on hover) */}
               <svg style={{ position: 'absolute', inset: 0, width: '420px', height: '420px', pointerEvents: 'auto', zIndex: 1 }}>
                 {slots.map((slot, index) => {
-                  const startAngle = index * (360 / slots.length) + 3;
-                  const endAngle = (index + 1) * (360 / slots.length) - 3;
+                  const startAngle = index * (360 / slots.length) + 1.5;
+                  const endAngle = (index + 1) * (360 / slots.length) - 1.5;
                   const isHovered = hoveredSlot?.name === slot.name;
-                  const pathData = getArcPath(210, 210, 180, 115, startAngle, endAngle);
+                  const pathData = getArcPath(210, 210, 180, 105, startAngle, endAngle);
                   
                   return (
                     <path
                       key={slot.name}
                       d={pathData}
-                      fill={isHovered ? 'rgba(251, 191, 36, 0.4)' : 'rgba(255, 255, 255, 0.12)'}
-                      stroke={isHovered ? 'var(--accent)' : 'rgba(255, 255, 255, 0.15)'}
-                      strokeWidth={isHovered ? '2' : '1'}
+                      fill={isHovered ? 'rgba(251, 191, 36, 0.22)' : 'transparent'}
+                      stroke={isHovered ? '#fcd34d' : 'transparent'}
+                      strokeWidth={isHovered ? '2' : '0'}
                       style={{
                         cursor: 'pointer',
-                        transition: 'all 0.15s cubic-bezier(0.16, 1, 0.3, 1)',
-                        filter: isHovered ? 'drop-shadow(0 0 10px rgba(251, 191, 36, 0.6))' : 'none'
+                        transition: 'all 0.15s cubic-bezier(0.16, 1, 0.3, 1)'
                       }}
                       onMouseEnter={() => setHoveredSlot(slot)}
                       onMouseLeave={() => setHoveredSlot(null)}
@@ -485,37 +532,39 @@ function Navbar({ isConnected, onOpenQuestSidebar }) {
                   width: '120px',
                   height: '120px',
                   borderRadius: '50%',
-                  background: 'rgba(12, 13, 18, 0.94)',
-                  border: '2px solid var(--border)',
-                  boxShadow: 'inset 0 0 12px rgba(0,0,0,0.85), 0 0 20px rgba(251, 191, 36, 0.25)',
-                  padding: '12px',
+                  background: '#100b08',
+                  border: '3px solid #513a23',
+                  outline: '2px solid #d8a96d',
+                  outlineOffset: '-4px',
+                  boxShadow: 'inset 0 0 10px rgba(0,0,0,0.8), 0 0 20px rgba(216, 169, 109, 0.3)',
+                  padding: '16px',
                   textAlign: 'center',
-                  zIndex: 2,
+                  zIndex: 3,
                   pointerEvents: 'none'
                 }}
               >
                 {hoveredSlot ? (
                   <div style={{ animation: 'fadeIn 0.15s ease-out' }}>
-                    <div className="font-pixel" style={{ fontSize: '10px', color: 'var(--accent)', fontWeight: 800, marginBottom: '4px' }}>
+                    <div className="font-pixel" style={{ fontSize: '10px', color: '#fcd34d', fontWeight: 800, marginBottom: '4px' }}>
                       {hoveredSlot.label}
                     </div>
-                    <div style={{ fontSize: '10px', color: 'var(--ink-muted)', lineHeight: 1.2, wordBreak: 'break-word' }}>
+                    <div style={{ fontSize: '9px', color: '#ecdcb9', lineHeight: 1.2, wordBreak: 'break-word' }}>
                       {hoveredSlot.desc}
                     </div>
                   </div>
                 ) : (
                   <div>
-                    <div className="font-pixel" style={{ fontSize: '9px', color: 'var(--accent)', fontWeight: 800, marginBottom: '3px' }}>
+                    <div className="font-pixel" style={{ fontSize: '9px', color: '#fcd34d', fontWeight: 800, marginBottom: '3px' }}>
                       HUD STATUS
                     </div>
                     {isAuthenticated && (
-                      <div className="font-pixel" style={{ fontSize: '9px', color: 'var(--ink-primary)', marginBottom: '3px' }}>
+                      <div className="font-pixel" style={{ fontSize: '9px', color: '#ecdcb9', marginBottom: '3px' }}>
                         LVL {user?.level || 1}
                       </div>
                     )}
-                    <div className="flex items-center justify-center gap-1.5" style={{ fontSize: '10px', color: 'var(--ink-secondary)' }}>
+                    <div className="flex items-center justify-center gap-1.5" style={{ fontSize: '10px', color: '#ecdcb9' }}>
                       <span style={liveDotStyle} />
-                      <span style={{ fontSize: '10px', fontFamily: 'var(--font-mono)' }}>{isConnected ? 'LIVE' : 'OFFLINE'}</span>
+                      <span style={{ fontSize: '9px', fontFamily: 'var(--font-mono)' }}>{isConnected ? 'LIVE' : 'OFFLINE'}</span>
                     </div>
                   </div>
                 )}
@@ -548,11 +597,13 @@ function Navbar({ isConnected, onOpenQuestSidebar }) {
                       alignItems: 'center',
                       justifyContent: 'center',
                       background: 'transparent',
-                      transform: isHovered ? 'scale(1.2)' : 'scale(1)',
+                      color: isHovered ? '#fcd34d' : 'rgba(236, 220, 185, 0.85)',
+                      transform: isHovered ? 'scale(1.25)' : 'scale(1)',
+                      filter: isHovered ? 'drop-shadow(0 0 8px rgba(251, 191, 36, 0.85))' : 'drop-shadow(0 0 3px rgba(0, 0, 0, 0.5))',
                       transition: 'all 0.15s cubic-bezier(0.16, 1, 0.3, 1)',
                       border: 'none',
                       padding: 0,
-                      zIndex: 3,
+                      zIndex: 4,
                       pointerEvents: 'auto'
                     }}
                     title={slot.name}
