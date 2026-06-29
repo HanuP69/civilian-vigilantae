@@ -295,339 +295,453 @@ function ReportPage() {
       subtitle="AI-assisted classification, geocode deduplication, and automated ward dispatch"
     >
 
-      <div className="hero-panel rpg-panel animate-fade-up stagger-2" style={{ marginBottom: 'var(--space-6)', borderRadius: 0 }}>
-        <div className="hero-panel-row">
-          <span className="info-pill" style={{ borderRadius: 0 }}>🤖 AI classifies your issue</span>
-          <span className="info-pill" style={{ borderRadius: 0 }}>🧠 Detects duplicates</span>
-          <span className="info-pill" style={{ borderRadius: 0 }}>📍 Prioritizes by ward and urgency</span>
+      <div className="rpg-panel-sandstone animate-fade-up stagger-2" style={{ padding: '6px', marginBottom: 'var(--space-6)', borderRadius: 0 }}>
+        <div className="card pixel-border" style={{ background: '#fcf8ee', border: '2px solid #85613c', padding: '16px 20px', color: '#291d12' }}>
+          <div className="hero-panel-row">
+            <span className="info-pill" style={{ borderRadius: 0, background: '#fffbeb', border: '1px solid #85613c', color: '#b45309', fontWeight: 600 }}>🤖 AI Classifies Troubles</span>
+            <span className="info-pill" style={{ borderRadius: 0, background: '#fffbeb', border: '1px solid #85613c', color: '#b45309', fontWeight: 600 }}>🧠 Scans duplicate reports</span>
+            <span className="info-pill" style={{ borderRadius: 0, background: '#fffbeb', border: '1px solid #85613c', color: '#b45309', fontWeight: 600 }}>📍 Dispatches to Ward Hero</span>
+          </div>
+          <p style={{ marginTop: 'var(--space-3)', color: '#4a3522', fontWeight: 500, fontSize: '0.9rem', lineHeight: 1.5 }}>
+            Report local troubles to the Town Council. The Sentinel AI understands the problem, checks for similar reports, and alerts the nearest active wards immediately.
+          </p>
         </div>
-        <p className="text-secondary" style={{ marginTop: 'var(--space-2)' }}>
-          Report a civic issue in minutes. The system understands the problem, checks for similar reports, and helps it reach the right people faster.
-        </p>
       </div>
 
-      <div className="report-step-rail animate-fade-up stagger-2">
-        {STEPS.map((s, i) => (
-          <div key={s} className="report-step">
-            <button
-              type="button"
-              onClick={() => goToStep(i)}
-              aria-label={`Go to step ${i + 1}: ${s}`}
-              className={`report-step-node ${i === step ? 'active' : ''} ${i < step ? 'done' : ''}`}
-              disabled={!!result}
-              style={{ borderRadius: 0 }}
-            >
-              {i < step ? '✓' : i + 1}
-            </button>
-            <button
-              type="button"
-              onClick={() => goToStep(i)}
-              className={`report-step-label ${i === step ? 'active' : ''}`}
-              disabled={!!result}
-            >
-              {s}
-            </button>
-            {i < STEPS.length - 1 && (
-              <div className={`report-step-connector ${i < step ? 'done' : ''}`} style={{ borderRadius: 0 }} />
-            )}
-          </div>
-        ))}
-      </div>
-
-      <div className="card rpg-panel animate-fade-up stagger-3" style={{ minHeight: 320, position: 'relative', padding: 'var(--space-6) var(--space-7)', borderRadius: 0, background: 'var(--bg-surface)' }}>
-        {step === 0 && (
-          <div className="flex flex-col gap-6 animate-fade-up">
-            <h3 className="section-title" style={{ fontSize: '1.75rem' }}>Location Details</h3>
-            <div className="flex flex-col gap-4">
-              <label className="flex flex-col gap-1">
-                <span className="label">Street Address</span>
-                <div className="flex gap-3">
-                  <input
-                    type="text"
-                    placeholder="e.g. Near Hazratganj crossing, Lucknow"
-                    value={address}
-                    onChange={e => setAddress(e.target.value)}
-                    style={{ flex: 1, fontSize: '1.25rem', padding: 'var(--space-4)', background: 'var(--bg-secondary)', borderRadius: 0 }}
-                  />
-                  <button className="btn btn-secondary" onClick={getLocation} disabled={detecting} style={{ padding: '0 var(--space-6)', borderRadius: 0 }}>
-                    {detecting ? 'Locating...' : '📍 Auto-detect'}
-                  </button>
-                </div>
-              </label>
-              {geoError && (
-                <p className="text-sm" style={{ color: 'var(--error)' }}>{geoError}</p>
-              )}
-              {lat != null && !geoError && (
-                <div className="report-location-confirmed" style={{ borderRadius: 0 }}>
-                  <span>✓</span>
-                  <span>Location locked · coordinates captured for geo-clustering</span>
-                </div>
-              )}
-              <p className="text-xs text-secondary">
-                {lat != null
-                  ? <span className="report-coord-display">📐 {lat.toFixed(4)}, {lng.toFixed(4)}</span>
-                  : 'We use your location to cluster duplicate reports and route to the right ward.'}
-              </p>
-            </div>
-          </div>
-        )}
-
-        {step === 1 && (
-          <div className="flex flex-col gap-6 animate-fade-up">
-            <div className="flex items-center justify-between">
-              <h3 className="section-title" style={{ fontSize: '1.75rem', marginBottom: 0 }}>Upload Media</h3>
-              <span className="text-xs text-muted">optional · powers AI classification</span>
-            </div>
-            <div
-              className={`dropzone rpg-panel ${dragOver ? 'dragover' : ''}`}
-              onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
-              onDragLeave={() => setDragOver(false)}
-              onDrop={handleDrop}
-              onClick={() => !file && fileRef.current?.click()}
-              style={{ cursor: file ? 'default' : 'pointer', borderRadius: 0 }}
-            >
-              {preview && mediaType === 'image' ? (
-                <div style={{ position: 'relative' }}>
-                  <img src={preview} alt="Preview" style={{ maxHeight: 240, borderRadius: 0, margin: '0 auto', display: 'block' }} />
-                  <button
-                    type="button"
-                    className="btn btn-secondary btn-sm"
-                    onClick={(e) => { e.stopPropagation(); removeFile(); }}
-                    style={{ position: 'absolute', top: 'var(--space-2)', right: 'var(--space-2)', borderRadius: 0 }}
-                  >
-                    ✕ Remove
-                  </button>
-                </div>
-              ) : preview && mediaType === 'video' ? (
-                <div style={{ position: 'relative' }}>
-                  <video src={preview} controls style={{ maxHeight: 240, borderRadius: 0, margin: '0 auto', display: 'block', maxWidth: '100%' }} />
-                  <button
-                    type="button"
-                    className="btn btn-secondary btn-sm"
-                    onClick={(e) => { e.stopPropagation(); removeFile(); }}
-                    style={{ position: 'absolute', top: 'var(--space-2)', right: 'var(--space-2)', borderRadius: 0 }}
-                  >
-                    ✕ Remove
-                  </button>
-                </div>
-              ) : audioUrl && mediaType === 'audio' && !recording ? (
-                <div className="flex flex-col items-center gap-3" onClick={(e) => e.stopPropagation()}>
-                  <div style={{ width: '48px', height: '48px', borderRadius: 0, background: 'var(--accent-muted)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
-                  </div>
-                  <audio src={audioUrl} controls style={{ width: '100%', maxWidth: 320 }} />
-                  <p className="text-xs text-muted">{file?.name || 'audio file'}</p>
-                  <button className="btn btn-ghost btn-sm" onClick={removeFile} style={{ borderRadius: 0 }}>✕ Remove</button>
-                </div>
-              ) : (
-                <div className="flex flex-col items-center justify-center">
-                  <div style={{ width: '56px', height: '56px', borderRadius: 0, background: 'var(--bg-primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 'var(--space-4)' }}>
-                    <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
-                  </div>
-                  <p className="font-serif" style={{ fontSize: '1.25rem', marginBottom: 'var(--space-2)' }}>Drag & drop image, video, or audio</p>
-                  <p className="text-sm text-muted">or click to browse · JPG, PNG, MP4, MP3, WAV</p>
-                </div>
-              )}
-              <input
-                ref={fileRef}
-                type="file"
-                accept="image/*,video/*,audio/*"
-                style={{ display: 'none' }}
-                onChange={e => handleFile(e.target.files[0])}
-              />
-            </div>
-
-            {!(audioUrl && mediaType === 'audio' && !recording) && (
-              <>
-                <div className="flex items-center gap-4" aria-hidden="true">
-                  <div style={{ flex: 1, height: 1, background: 'var(--border)' }} />
-                  <span className="text-xs text-muted" style={{ textTransform: 'uppercase', letterSpacing: '0.1em' }}>OR</span>
-                  <div style={{ flex: 1, height: 1, background: 'var(--border)' }} />
-                </div>
-
-                {audioUrl && recording === false ? null : recording ? (
-                  <button
-                    className="btn btn-danger flex justify-center items-center"
-                    style={{ padding: 'var(--space-4)', fontSize: '1.125rem', borderRadius: 0, width: '100%' }}
-                    onClick={stopRecording}
-                  >
-                    <span className="rec-indicator" style={{ borderRadius: 0 }}><span className="rec-dot" style={{ borderRadius: 0 }} /> Recording</span>
-                    <span style={{ marginLeft: 'var(--space-3)' }}>Tap to stop</span>
-                  </button>
-                ) : (
-                  <button
-                    className="btn btn-secondary flex justify-center items-center"
-                    style={{ padding: 'var(--space-4)', fontSize: '1.125rem', borderRadius: 0, width: '100%' }}
-                    onClick={startRecording}
-                  >
-                    🎙 Record Voice Note instead
-                  </button>
-                )}
-              </>
-            )}
-          </div>
-        )}
-
-        {step === 2 && (
-          <div className="flex flex-col gap-6 animate-fade-up">
-            <div className="flex items-center justify-between">
-              <h3 className="section-title" style={{ fontSize: '1.75rem', marginBottom: 0 }}>Issue Description</h3>
-              <span className="text-xs text-muted">{description.trim().length} chars</span>
-            </div>
-            <div className="flex flex-col gap-3">
-              <label className="flex flex-col gap-1">
-                <span className="label">What's the issue?</span>
-                <textarea
-                  rows={6}
-                  placeholder="Describe what happened, the current state, and any potential hazards..."
-                  value={description}
-                  onChange={e => setDescription(e.target.value)}
-                  style={{ fontSize: '1.125rem', lineHeight: 1.6, padding: 'var(--space-4)', background: 'var(--bg-secondary)', resize: 'vertical', borderRadius: 0 }}
+      <div className="report-step-rail animate-fade-up stagger-2" style={{ marginBottom: 'var(--space-6)' }}>
+        {STEPS.map((s, i) => {
+          const isActive = i === step;
+          const isDone = i < step;
+          return (
+            <div key={s} className="report-step">
+              <button
+                type="button"
+                onClick={() => goToStep(i)}
+                aria-label={`Go to step ${i + 1}: ${s}`}
+                className="font-pixel"
+                disabled={!!result}
+                style={{
+                  borderRadius: 0,
+                  width: '32px',
+                  height: '32px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  fontSize: '11px',
+                  cursor: 'pointer',
+                  background: isDone ? '#16803d' : (isActive ? '#b45309' : '#fffbeb'),
+                  border: isDone ? '2px solid #14532d' : (isActive ? '2px solid #513a23' : '2px solid #85613c'),
+                  color: (isDone || isActive) ? '#fff' : '#85613c',
+                  outline: 'none',
+                  fontWeight: 'bold',
+                  boxShadow: '1px 1px 0 rgba(0,0,0,0.15)'
+                }}
+              >
+                {isDone ? '✓' : i + 1}
+              </button>
+              <button
+                type="button"
+                onClick={() => goToStep(i)}
+                className="font-pixel"
+                disabled={!!result}
+                style={{
+                  background: 'transparent',
+                  border: 'none',
+                  cursor: 'pointer',
+                  fontSize: '9px',
+                  color: isActive ? '#b45309' : '#6b5139',
+                  fontWeight: isActive ? '800' : '600',
+                  outline: 'none'
+                }}
+              >
+                {s.toUpperCase()}
+              </button>
+              {i < STEPS.length - 1 && (
+                <div 
+                  style={{ 
+                    height: '3px',
+                    flex: 1,
+                    background: isDone ? '#16803d' : '#85613c',
+                    opacity: isDone ? 1 : 0.45,
+                    margin: '0 8px'
+                  }} 
                 />
-              </label>
-              <div className="report-example">
-                <span className="text-xs text-muted" style={{ alignSelf: 'center' }}>Quick fill:</span>
-                {[
-                  'Large pothole flooding the road after rain',
-                  'Streetlight not working for a week, area is dark at night',
-                  'Garbage piling up near the bus stop',
-                ].map((ex, i) => (
-                  <button
-                    key={i}
-                    type="button"
-                    className="report-example-chip"
-                    onClick={() => setDescription(ex)}
-                    style={{ borderRadius: 0 }}
-                  >
-                    {ex}
-                  </button>
-                ))}
-              </div>
+              )}
             </div>
+          );
+        })}
+      </div>
 
-            {classification && (
-              <div className="flex items-center gap-4 panel rpg-panel" style={{ borderRadius: 0 }}>
-                <span className="font-serif" style={{ fontSize: '1.25rem', fontWeight: 600, color: 'var(--accent)' }}>AI</span>
-                <div>
-                  <p className="label" style={{ marginBottom: '2px' }}>AI Classification</p>
-                  <p className="font-serif" style={{ fontSize: '1.25rem', color: 'var(--ink-primary)' }}>{capitalize(classification)}</p>
-                </div>
-              </div>
-            )}
-          </div>
-        )}
-
-        {step === 3 && (
-          <div className="flex flex-col gap-8 animate-fade-up">
-            <h3 className="section-title" style={{ fontSize: '1.75rem' }}>Review & Dispatch</h3>
-
-            <div className="report-review-grid">
-              {preview && (
-                <div className="review-field review-field-full" style={{ textAlign: 'center' }}>
-                  <img src={preview} alt="Attached" style={{ maxHeight: 180, borderRadius: 0, margin: '0 auto' }} />
-                </div>
-              )}
-              {mediaType && (
-                <div className="review-field">
-                  <span className="label">Media</span>
-                  <span className="font-serif" style={{ fontSize: '1.1rem' }}>{MEDIA_TYPES[mediaType]}{file ? ` · ${file.name}` : ''}</span>
-                </div>
-              )}
-              {classification && (
-                <div className="review-field">
-                  <span className="label">AI Classification</span>
-                  <span className="font-serif" style={{ fontSize: '1.1rem', color: 'var(--accent)' }}>{capitalize(classification)}</span>
-                </div>
-              )}
-              <div className="review-field">
-                <span className="label">Location</span>
-                <span className="font-serif" style={{ fontSize: '1.1rem' }}>{address || '—'}</span>
-              </div>
-              <div className="review-field">
-                <span className="label">Coordinates</span>
-                <span className="font-mono text-sm" style={{ color: 'var(--accent)' }}>{lat != null ? `${lat.toFixed(4)}, ${lng.toFixed(4)}` : 'default'}</span>
-              </div>
-              <div className="review-field review-field-full">
-                <span className="label">Description</span>
-                <span className="text-secondary" style={{ fontSize: '1.05rem', lineHeight: 1.6 }}>{description || '—'}</span>
-              </div>
-            </div>
-
-            {!result && (
-              <button
-                className="btn btn-primary flex justify-center items-center"
-                style={{ padding: 'var(--space-4)', fontSize: '1.25rem', borderRadius: 0 }}
-                onClick={handleSubmit}
-                disabled={submitting}
-              >
-                {submitting ? 'Dispatching to agent...' : '⚡ Dispatch to Agent'}
-              </button>
-            )}
-
-            {result && result.error && (
-              <div className="flex flex-col gap-4 panel rpg-panel" style={{ borderColor: 'var(--error)', borderRadius: 0 }}>
-                <p style={{ color: 'var(--error)', fontSize: '1.125rem' }}>{result.error}</p>
-                <div className="flex gap-3">
-                  <button className="btn btn-primary" onClick={() => { setResult(null); }} style={{ borderRadius: 0 }}>Try Again</button>
-                  <button className="btn btn-secondary" onClick={resetForm} style={{ borderRadius: 0 }}>Start Over</button>
-                </div>
-              </div>
-            )}
-
-            {result && !result.error && (
-              <div className="flex flex-col gap-4 panel rpg-panel" style={{ borderColor: 'var(--success)', borderRadius: 0 }}>
-                <div className="flex flex-col gap-2">
-                  <div className="flex items-center gap-3">
-                    <div style={{ width: 32, height: 32, borderRadius: 0, background: result.merged ? 'var(--warning)' : 'var(--success)', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.875rem', fontWeight: 600 }}>✓</div>
-                    <span className="font-serif" style={{ fontSize: '1.5rem', color: 'var(--ink-primary)' }}>
-                      {result.merged ? 'Verification Upvote Registered' : 'Report Dispatched'}
-                    </span>
-                  </div>
-                  {result.merged && (
-                    <p className="text-secondary text-sm" style={{ lineHeight: 1.4, marginTop: 'var(--space-2)', color: 'var(--ink-secondary)' }}>
-                      An active report for this issue already exists at this location. Your report has been merged and registered as an official verification upvote for Ticket #{result.ticket_id}.
-                    </p>
+      <div className="rpg-panel-sandstone animate-fade-up stagger-3" style={{ padding: '6px', minHeight: 320, position: 'relative', borderRadius: 0 }}>
+        <div className="card pixel-border" style={{ background: '#fcf8ee', border: '2px solid #85613c', padding: '24px 28px', color: '#291d12', minHeight: '308px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+          
+          <div style={{ flex: 1 }}>
+            {step === 0 && (
+              <div className="flex flex-col gap-6 animate-fade-up">
+                <h3 className="font-pixel" style={{ fontSize: '14px', color: '#291d12', borderBottom: '2px solid #85613c', paddingBottom: '6px', marginBottom: '12px' }}>📍 LOCATION DETAILS</h3>
+                <div className="flex flex-col gap-4">
+                  <label className="flex flex-col gap-2">
+                    <span className="font-pixel" style={{ fontSize: '10px', color: '#6b5139', fontWeight: 600 }}>STREET ADDRESS</span>
+                    <div className="flex gap-3">
+                      <input
+                        type="text"
+                        placeholder="e.g. Near Hazratganj crossing, Lucknow"
+                        value={address}
+                        onChange={e => setAddress(e.target.value)}
+                        style={{
+                          flex: 1,
+                          fontSize: '11px',
+                          fontFamily: 'var(--font-sans)',
+                          padding: '10px 14px',
+                          background: '#fffbeb',
+                          border: '2px solid #85613c',
+                          color: '#291d12',
+                          outline: 'none',
+                          borderRadius: 0
+                        }}
+                      />
+                      <button 
+                        className="font-pixel" 
+                        onClick={getLocation} 
+                        disabled={detecting} 
+                        style={{ 
+                          padding: '10px 16px', 
+                          borderRadius: 0,
+                          background: '#b45309',
+                          border: '2px solid #513a23',
+                          color: '#fff',
+                          fontSize: '8px',
+                          cursor: 'pointer'
+                        }}
+                      >
+                        {detecting ? 'LOCATING...' : '📍 AUTO-DETECT'}
+                      </button>
+                    </div>
+                  </label>
+                  {geoError && (
+                    <p className="text-sm" style={{ color: 'var(--error)' }}>{geoError}</p>
                   )}
+                  {lat != null && !geoError && (
+                    <div className="card pixel-border" style={{ background: '#ecfdf5', border: '2px solid #059669', color: '#047857', padding: '10px 14px', display: 'flex', gap: '8px', alignItems: 'center', fontSize: '9px', fontWeight: 600 }}>
+                      <span>✓</span>
+                      <span>Location locked · coordinates captured for geo-clustering</span>
+                    </div>
+                  )}
+                  <p className="text-xs" style={{ color: '#6b5139', margin: 0 }}>
+                    {lat != null
+                      ? <span className="font-mono" style={{ color: '#b45309', fontWeight: 600 }}>📐 {lat.toFixed(4)}, {lng.toFixed(4)}</span>
+                      : 'Coordinates are used to cluster duplicate reports and route them to active Wards.'}
+                  </p>
                 </div>
-                {result.ticket_id && (
-                  <p className="text-secondary text-xs" style={{ letterSpacing: '0.05em', marginTop: 'var(--space-2)' }}>Ticket ID: <span className="font-mono">{result.ticket_id}</span></p>
+              </div>
+            )}
+
+            {step === 1 && (
+              <div className="flex flex-col gap-6 animate-fade-up">
+                <div className="flex items-center justify-between" style={{ borderBottom: '2px solid #85613c', paddingBottom: '6px', marginBottom: '12px' }}>
+                  <h3 className="font-pixel" style={{ fontSize: '14px', color: '#291d12', margin: 0 }}>📸 UPLOAD EVIDENCE</h3>
+                  <span className="font-pixel" style={{ fontSize: '7.5px', color: '#6b5139' }}>OPTIONAL · POWERS SENTINEL AI</span>
+                </div>
+                
+                <div
+                  className={`dropzone ${dragOver ? 'dragover' : ''}`}
+                  onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
+                  onDragLeave={() => setDragOver(false)}
+                  onDrop={handleDrop}
+                  onClick={() => !file && fileRef.current?.click()}
+                  style={{
+                    cursor: file ? 'default' : 'pointer',
+                    borderRadius: 0,
+                    border: '2px dashed #85613c',
+                    background: '#fffbeb',
+                    padding: '24px',
+                    textAlign: 'center',
+                    transition: 'all 0.2s ease',
+                    outline: 'none'
+                  }}
+                >
+                  {preview && mediaType === 'image' ? (
+                    <div style={{ position: 'relative' }}>
+                      <img src={preview} alt="Preview" style={{ maxHeight: 200, borderRadius: 0, margin: '0 auto', display: 'block', border: '1px solid #85613c' }} />
+                      <button
+                        type="button"
+                        className="font-pixel"
+                        onClick={(e) => { e.stopPropagation(); removeFile(); }}
+                        style={{ position: 'absolute', top: '8px', right: '8px', borderRadius: 0, background: '#b91c1c', color: '#fff', border: 'none', padding: '6px 10px', fontSize: '7px', cursor: 'pointer' }}
+                      >
+                        ✕ Remove
+                      </button>
+                    </div>
+                  ) : preview && mediaType === 'video' ? (
+                    <div style={{ position: 'relative' }}>
+                      <video src={preview} controls style={{ maxHeight: 200, borderRadius: 0, margin: '0 auto', display: 'block', maxWidth: '100%', border: '1px solid #85613c' }} />
+                      <button
+                        type="button"
+                        className="font-pixel"
+                        onClick={(e) => { e.stopPropagation(); removeFile(); }}
+                        style={{ position: 'absolute', top: '8px', right: '8px', borderRadius: 0, background: '#b91c1c', color: '#fff', border: 'none', padding: '6px 10px', fontSize: '7px', cursor: 'pointer' }}
+                      >
+                        ✕ Remove
+                      </button>
+                    </div>
+                  ) : audioUrl && mediaType === 'audio' && !recording ? (
+                    <div className="flex flex-col items-center gap-3" onClick={(e) => e.stopPropagation()}>
+                      <div style={{ width: '48px', height: '48px', borderRadius: 0, background: '#ecdcb9', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1px solid #85613c' }}>
+                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#b45309" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
+                      </div>
+                      <audio src={audioUrl} controls style={{ width: '100%', maxWidth: 320 }} />
+                      <p className="font-mono text-xs" style={{ color: '#6b5139', fontSize: '8px' }}>{file?.name || 'audio file'}</p>
+                      <button className="font-pixel" onClick={removeFile} style={{ borderRadius: 0, background: 'transparent', border: 'none', color: '#b91c1c', fontSize: '8px', cursor: 'pointer' }}>✕ Remove</button>
+                    </div>
+                  ) : (
+                    <div className="flex flex-col items-center justify-center">
+                      <div style={{ width: '56px', height: '56px', borderRadius: 0, background: '#fcf8ee', border: '2px solid #85613c', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '12px' }}>
+                        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#b45309" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
+                      </div>
+                      <p className="font-pixel" style={{ fontSize: '11px', color: '#291d12', marginBottom: '4px' }}>DRAG & DROP EVIDENCE</p>
+                      <p className="font-pixel" style={{ fontSize: '7.5px', color: '#6b5139' }}>OR CLICK TO BROWSE · JPG, PNG, MP4, MP3, WAV</p>
+                    </div>
+                  )}
+                  <input
+                    ref={fileRef}
+                    type="file"
+                    accept="image/*,video/*,audio/*"
+                    style={{ display: 'none' }}
+                    onChange={e => handleFile(e.target.files[0])}
+                  />
+                </div>
+
+                {!(audioUrl && mediaType === 'audio' && !recording) && (
+                  <>
+                    <div className="flex items-center gap-4" aria-hidden="true" style={{ margin: '8px 0' }}>
+                      <div style={{ flex: 1, height: 1, background: '#85613c', opacity: 0.3 }} />
+                      <span className="font-pixel" style={{ fontSize: '7px', color: '#6b5139', letterSpacing: '0.1em' }}>OR</span>
+                      <div style={{ flex: 1, height: 1, background: '#85613c', opacity: 0.3 }} />
+                    </div>
+
+                    {audioUrl && recording === false ? null : recording ? (
+                      <button
+                        className="font-pixel flex justify-center items-center"
+                        style={{ padding: '12px', fontSize: '9px', borderRadius: 0, width: '100%', background: '#b91c1c', border: '2px solid #7f1d1d', color: '#fff', cursor: 'pointer' }}
+                        onClick={stopRecording}
+                      >
+                        <span className="rec-indicator"><span className="rec-dot" style={{ borderRadius: 0 }} /> RECORDING...</span>
+                        <span style={{ marginLeft: '12px', opacity: 0.8 }}>TAP TO STOP</span>
+                      </button>
+                    ) : (
+                      <button
+                        className="font-pixel flex justify-center items-center"
+                        style={{ padding: '12px', fontSize: '9px', borderRadius: 0, width: '100%', background: '#fffbeb', border: '2px solid #85613c', color: '#b45309', cursor: 'pointer' }}
+                        onClick={startRecording}
+                      >
+                        🎙️ RECORD VOICE NOTE INSTEAD
+                      </button>
+                    )}
+                  </>
                 )}
-                <div className="flex gap-3" style={{ marginTop: 'var(--space-4)' }}>
-                  {result.ticket_id && (
-                    <Link to={`/ticket/${result.ticket_id}`} className="btn btn-primary" style={{ borderRadius: 0 }}>View Ticket</Link>
-                  )}
-                  <button className="btn btn-secondary" onClick={resetForm} style={{ borderRadius: 0 }}>Report Another</button>
-                  <button className="btn btn-ghost" onClick={() => navigate('/')} style={{ borderRadius: 0 }}>Back to Map</button>
+              </div>
+            )}
+
+            {step === 2 && (
+              <div className="flex flex-col gap-6 animate-fade-up">
+                <div className="flex items-center justify-between" style={{ borderBottom: '2px solid #85613c', paddingBottom: '6px', marginBottom: '12px' }}>
+                  <h3 className="font-pixel" style={{ fontSize: '14px', color: '#291d12', margin: 0 }}>📜 ISSUE DESCRIPTION</h3>
+                  <span className="font-pixel text-muted" style={{ fontSize: '7.5px' }}>{description.trim().length} CHARS</span>
                 </div>
+                <div className="flex flex-col gap-3">
+                  <label className="flex flex-col gap-2">
+                    <span className="font-pixel" style={{ fontSize: '10px', color: '#6b5139', fontWeight: 600 }}>WHAT IS THE TROUBLE?</span>
+                    <textarea
+                      rows={6}
+                      placeholder="Describe what happened, the current state, and any potential hazards..."
+                      value={description}
+                      onChange={e => setDescription(e.target.value)}
+                      style={{
+                        fontSize: '11px',
+                        fontFamily: 'var(--font-sans)',
+                        lineHeight: 1.6,
+                        padding: '12px 14px',
+                        background: '#fffbeb',
+                        border: '2px solid #85613c',
+                        color: '#291d12',
+                        resize: 'vertical',
+                        borderRadius: 0,
+                        outline: 'none'
+                      }}
+                    />
+                  </label>
+                  <div className="report-example" style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', alignItems: 'center', marginTop: '4px' }}>
+                    <span className="font-pixel" style={{ fontSize: '7px', color: '#6b5139', marginRight: '4px' }}>Quick fill:</span>
+                    {[
+                      'Large pothole flooding the road after rain',
+                      'Streetlight not working, Hazratganj area is dark at night',
+                      'Garbage pile near the main ward bus stop',
+                    ].map((ex, i) => (
+                      <button
+                        key={i}
+                        type="button"
+                        className="font-pixel"
+                        onClick={() => setDescription(ex)}
+                        style={{
+                          borderRadius: 0,
+                          background: '#fffbeb',
+                          border: '1px solid #85613c',
+                          padding: '6px 10px',
+                          fontSize: '7.5px',
+                          color: '#b45309',
+                          cursor: 'pointer'
+                        }}
+                      >
+                        {ex}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {classification && (
+                  <div className="card pixel-border" style={{ background: '#fffbeb', border: '2px solid #b45309', padding: '10px 14px', display: 'flex', gap: '12px', alignItems: 'center', borderRadius: 0, marginTop: '8px' }}>
+                    <span className="font-pixel" style={{ fontSize: '14px', color: '#b45309', fontWeight: 800 }}>🤖 AI</span>
+                    <div>
+                      <p className="font-pixel" style={{ fontSize: '8px', color: '#6b5139', margin: 0 }}>AUTO-CLASSIFIED CATEGORY</p>
+                      <p className="font-pixel" style={{ fontSize: '11px', color: '#291d12', fontWeight: 700, margin: 0 }}>{capitalize(classification)}</p>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {step === 3 && (
+              <div className="flex flex-col gap-8 animate-fade-up">
+                <h3 className="font-pixel" style={{ fontSize: '14px', color: '#291d12', borderBottom: '2px solid #85613c', paddingBottom: '6px', marginBottom: '12px' }}>⚔️ REVIEW & DISPATCH</h3>
+
+                <div className="report-review-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                  {preview && (
+                    <div className="review-field review-field-full" style={{ gridColumn: 'span 2', textAlign: 'center', background: '#fffbeb', border: '1px solid #85613c', padding: '8px' }}>
+                      <img src={preview} alt="Attached" style={{ maxHeight: 150, borderRadius: 0, margin: '0 auto', border: '1px solid #85613c' }} />
+                    </div>
+                  )}
+                  {mediaType && (
+                    <div className="review-field" style={{ background: '#fffbeb', border: '1px solid #85613c', padding: '8px 12px', display: 'flex', flexDirection: 'column' }}>
+                      <span className="font-pixel" style={{ fontSize: '7.5px', color: '#6b5139' }}>MEDIA TYPE</span>
+                      <span className="font-pixel" style={{ fontSize: '10px', color: '#291d12', fontWeight: 600 }}>{MEDIA_TYPES[mediaType]}</span>
+                    </div>
+                  )}
+                  {classification && (
+                    <div className="review-field" style={{ background: '#fffbeb', border: '1px solid #85613c', padding: '8px 12px', display: 'flex', flexDirection: 'column' }}>
+                      <span className="font-pixel" style={{ fontSize: '7.5px', color: '#6b5139' }}>CLASSIFICATION</span>
+                      <span className="font-pixel" style={{ fontSize: '10px', color: '#b45309', fontWeight: 600 }}>{capitalize(classification)}</span>
+                    </div>
+                  )}
+                  <div className="review-field" style={{ background: '#fffbeb', border: '1px solid #85613c', padding: '8px 12px', display: 'flex', flexDirection: 'column' }}>
+                    <span className="font-pixel" style={{ fontSize: '7.5px', color: '#6b5139' }}>LOCATION</span>
+                    <span className="font-pixel" style={{ fontSize: '10px', color: '#291d12', fontWeight: 600 }}>{address || '—'}</span>
+                  </div>
+                  <div className="review-field" style={{ background: '#fffbeb', border: '1px solid #85613c', padding: '8px 12px', display: 'flex', flexDirection: 'column' }}>
+                    <span className="font-pixel" style={{ fontSize: '7.5px', color: '#6b5139' }}>COORDINATES</span>
+                    <span className="font-mono" style={{ fontSize: '10px', color: '#b45309', fontWeight: 600 }}>{lat != null ? `${lat.toFixed(4)}, ${lng.toFixed(4)}` : 'Captured'}</span>
+                  </div>
+                  <div className="review-field review-field-full" style={{ gridColumn: 'span 2', background: '#fffbeb', border: '1px solid #85613c', padding: '8px 12px', display: 'flex', flexDirection: 'column' }}>
+                    <span className="font-pixel" style={{ fontSize: '7.5px', color: '#6b5139' }}>DESCRIPTION</span>
+                    <span style={{ fontSize: '10px', color: '#4a3522', fontWeight: 500, lineHeight: 1.4 }}>{description || '—'}</span>
+                  </div>
+                </div>
+
+                {!result && (
+                  <button
+                    className="font-pixel"
+                    style={{
+                      padding: '14px',
+                      fontSize: '11px',
+                      background: '#b45309',
+                      border: '2px solid #513a23',
+                      color: '#fff',
+                      cursor: 'pointer',
+                      width: '100%',
+                      boxShadow: '1px 1px 0 rgba(0,0,0,0.15)'
+                    }}
+                    onClick={handleSubmit}
+                    disabled={submitting}
+                  >
+                    {submitting ? 'DISPATCHING TO WARD HERO...' : '⚡ DISPATCH QUEST TO GUILD BOARD'}
+                  </button>
+                )}
+
+                {result && result.error && (
+                  <div className="card pixel-border" style={{ background: '#fef2f2', border: '2px solid #b91c1c', padding: '14px', color: '#991b1b', borderRadius: 0 }}>
+                    <p className="font-pixel" style={{ fontSize: '10px', margin: '0 0 12px 0' }}>{result.error}</p>
+                    <div className="flex gap-3">
+                      <button className="font-pixel" onClick={() => { setResult(null); }} style={{ padding: '8px 14px', background: '#b91c1c', border: '1px solid #7f1d1d', color: '#fff', cursor: 'pointer', fontSize: '9px' }}>TRY AGAIN</button>
+                      <button className="font-pixel" onClick={resetForm} style={{ padding: '8px 14px', background: '#fff', border: '1px solid #b91c1c', color: '#b91c1c', cursor: 'pointer', fontSize: '9px' }}>START OVER</button>
+                    </div>
+                  </div>
+                )}
+
+                {result && !result.error && (
+                  <div className="card pixel-border" style={{ background: '#fffbeb', border: '2px solid #b45309', padding: '16px', color: '#291d12', borderRadius: 0 }}>
+                    <div className="flex flex-col gap-2">
+                      <div className="flex items-center gap-3">
+                        <div style={{ width: 32, height: 32, borderRadius: 0, background: result.merged ? '#d97706' : '#16803d', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '14px', fontWeight: 600 }}>✓</div>
+                        <span className="font-pixel" style={{ fontSize: '13px', color: '#291d12' }}>
+                          {result.merged ? 'VERIFICATION REPORT MERGED' : 'QUEST DISPATCHED TO BOARD'}
+                        </span>
+                      </div>
+                      {result.merged && (
+                        <p style={{ fontSize: '9.5px', color: '#4a3522', lineHeight: 1.4, marginTop: '8px', fontWeight: 500 }}>
+                          An active quest for this trouble already exists at this location. Your report has been merged and registered as an official verification upvote for Quest #{result.ticket_id}.
+                        </p>
+                      )}
+                    </div>
+                    {result.ticket_id && (
+                      <p className="font-pixel" style={{ fontSize: '8px', color: '#6b5139', marginTop: '8px' }}>QUEST ID: <span className="font-mono">{result.ticket_id}</span></p>
+                    )}
+                    <div className="flex gap-3" style={{ marginTop: '16px' }}>
+                      {result.ticket_id && (
+                        <Link to={`/ticket/${result.ticket_id}`} className="font-pixel" style={{ padding: '8px 14px', background: '#b45309', border: '1px solid #513a23', color: '#fff', textDecoration: 'none', fontSize: '9px' }}>VIEW QUEST</Link>
+                      )}
+                      <button className="font-pixel" onClick={resetForm} style={{ padding: '8px 14px', background: '#fffbeb', border: '1px solid #85613c', color: '#b45309', cursor: 'pointer', fontSize: '9px' }}>REPORT ANOTHER</button>
+                      <button className="font-pixel" onClick={() => navigate('/')} style={{ padding: '8px 14px', background: 'transparent', border: 'none', color: '#6b5139', cursor: 'pointer', fontSize: '9px' }}>BACK TO BOARD</button>
+                    </div>
+                  </div>
+                )}
               </div>
             )}
           </div>
-        )}
-        <div className="flex justify-between items-center animate-fade-up stagger-4" style={{ marginTop: 'var(--space-8)', paddingTop: 'var(--space-6)', borderTop: '1px solid var(--border)' }}>
-          {step > 0 && !result && (
-            <button
-              className="btn btn-ghost text-secondary"
-              style={{ fontSize: '1.125rem', borderRadius: 0 }}
-              onClick={() => setStep(s => s - 1)}
-            >
-              ← Back
-            </button>
-          )}
-          {step < 3 && !result && (
-            <div className="flex flex-col items-end gap-1" style={{ marginLeft: 'auto' }}>
+
+          <div className="flex justify-between items-center animate-fade-up stagger-4" style={{ marginTop: 'var(--space-8)', paddingTop: 'var(--space-6)', borderTop: '2px solid #85613c' }}>
+            {step > 0 && !result && (
               <button
-                className="btn btn-secondary"
-                style={{ fontSize: '1.125rem', padding: 'var(--space-3) var(--space-6)', borderRadius: 0 }}
-                onClick={() => setStep(s => s + 1)}
-                disabled={!canNext()}
+                className="font-pixel"
+                style={{ fontSize: '10px', color: '#6b5139', background: 'transparent', border: 'none', cursor: 'pointer' }}
+                onClick={() => setStep(s => s - 1)}
               >
-                Continue →
+                ← BACK
               </button>
-              {stepError() && (
-                <span className="text-xs" style={{ color: 'var(--error)' }}>{stepError()}</span>
-              )}
-            </div>
-          )}
+            )}
+            {step < 3 && !result && (
+              <div className="flex flex-col items-end gap-1" style={{ marginLeft: 'auto' }}>
+                <button
+                  className="font-pixel"
+                  style={{ 
+                    fontSize: '10px', 
+                    padding: '10px 18px', 
+                    borderRadius: 0,
+                    background: '#b45309',
+                    border: '2px solid #513a23',
+                    color: '#fff',
+                    cursor: 'pointer'
+                  }}
+                  onClick={() => setStep(s => s + 1)}
+                  disabled={!canNext()}
+                >
+                  CONTINUE →
+                </button>
+                {stepError() && (
+                  <span className="font-pixel" style={{ fontSize: '7.5px', color: 'var(--error)' }}>{stepError().toUpperCase()}</span>
+                )}
+              </div>
+            )}
+          </div>
+
         </div>
       </div>
 
