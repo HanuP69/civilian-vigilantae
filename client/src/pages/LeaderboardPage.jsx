@@ -1,23 +1,23 @@
-import { useState, useEffect } from 'react';
-import { fetchLeaderboard } from '../services/api';
-import { useToast } from '../hooks/useToast.jsx';
-import { motion } from 'framer-motion';
-import { CustomAvatar, parseCustomAvatar } from '../components/CustomAvatar';
-import { PageShell } from '../components/ui/PixelKit';
+import { useState, useEffect } from'react';
+import { fetchLeaderboard } from'../services/api';
+import { useToast } from'../hooks/useToast.jsx';
+import { motion } from'framer-motion';
+import { CustomAvatar, parseCustomAvatar } from'../components/CustomAvatar';
+import { PageShell } from'../components/ui/PixelKit';
 
 const BADGE_DISPLAY = {
-  'Neighborhood Watch': { emoji: '🛡️', name: 'Neighborhood Watch' },
-  'Verified Reporter': { emoji: '✅', name: 'Verified Reporter' },
-  'Eagle Eye': { emoji: '🔍', name: 'Eagle Eye' },
-  'Community Champion': { emoji: '🏆', name: 'Community Champion' },
-  'Ward Guardian': { emoji: '⭐', name: 'Ward Guardian' },
+ 'Neighborhood Watch': { emoji:'', name:'Neighborhood Watch'},
+ 'Verified Reporter': { emoji:'', name:'Verified Reporter'},
+ 'Eagle Eye': { emoji:'', name:'Eagle Eye'},
+ 'Community Champion': { emoji:'', name:'Community Champion'},
+ 'Ward Guardian': { emoji:'', name:'Ward Guardian'},
 };
 
 const getBadgeDisplay = (badge) => {
-  if (typeof badge === 'object' && badge !== null) {
-    return { emoji: badge.emoji || badge.icon || '🏅', name: badge.name || 'Badge' };
+  if (typeof badge ==='object'&& badge !== null) {
+    return { emoji: badge.emoji || badge.icon ||'', name: badge.name ||'Badge'};
   }
-  return BADGE_DISPLAY[badge] || { emoji: '🏅', name: badge };
+  return BADGE_DISPLAY[badge] || { emoji:'', name: badge };
 };
 
 const Avatar = ({ photoUrl, name }) => {
@@ -26,12 +26,12 @@ const Avatar = ({ photoUrl, name }) => {
     width: 48,
     height: 48,
     borderRadius: 0,
-    border: '2px solid var(--border)',
-    background: 'var(--bg-surface)',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    boxShadow: 'var(--shadow-sm)',
+    border:'2px solid var(--border)',
+    background:'var(--bg-surface)',
+    display:'flex',
+    alignItems:'center',
+    justifyContent:'center',
+    boxShadow:'var(--shadow-sm)',
     flexShrink: 0
   };
 
@@ -44,9 +44,9 @@ const Avatar = ({ photoUrl, name }) => {
   }
 
   if (error) {
-    const initial = (name || '?').charAt(0).toUpperCase();
+    const initial = (name ||'?').charAt(0).toUpperCase();
     return (
-      <div style={{ ...avatarStyle, color: 'var(--accent)', fontWeight: 600, fontSize: '1.25rem' }}>
+      <div style={{ ...avatarStyle, color:'var(--accent)', fontWeight: 600, fontSize:'1.25rem'}}>
         {initial}
       </div>
     );
@@ -74,17 +74,17 @@ function LeaderboardPage() {
       })
       .catch(() => {
         setUsers([]);
-        toast('Failed to load leaderboard', 'error');
+        toast('Failed to load leaderboard','error');
       })
       .finally(() => setLoading(false));
   }, [toast]);
 
   if (loading) {
     return (
-      <div className="flex flex-col gap-4" aria-busy="true" aria-label="Loading leaderboard">
+      <div className="flex flex-col gap-4"aria-busy="true"aria-label="Loading leaderboard">
         <div className="skeleton" style={{ height: 32, width: 200 }} />
         {[1, 2, 3, 4, 5].map(i => (
-          <div key={i} className="skeleton" style={{ height: 72, borderRadius: 'var(--radius-md)' }} />
+          <div key={i} className="skeleton" style={{ height: 72, borderRadius:'var(--radius-md)'}} />
         ))}
       </div>
     );
@@ -100,23 +100,23 @@ function LeaderboardPage() {
 
   const itemAnim = {
     hidden: { opacity: 0, y: 20 },
-    show: { opacity: 1, y: 0, transition: { type: "spring", stiffness: 300, damping: 24 } }
+    show: { opacity: 1, y: 0, transition: { type:"spring", stiffness: 300, damping: 24 } }
   };
 
   const getRankTitle = (index, total) => {
-    if (total <= 0) return "Scout 🧭";
+    if (total <= 0) return "Scout";
     const percentile = ((total - index) / total) * 100;
     
-    if (index === 0) return "City Champion 🏆";
-    if (percentile >= 95) return "Sentinel 🛡️";
-    if (percentile >= 80) return "Guardian ⚔️";
-    if (percentile >= 50) return "Investigator 🔍";
-    return "Scout 🧭";
+    if (index === 0) return "City Champion";
+    if (percentile >= 95) return "Sentinel";
+    if (percentile >= 80) return "Guardian";
+    if (percentile >= 50) return "Investigator";
+    return "Scout";
   };
 
   return (
     <PageShell 
-      title="🏆 Hero League Rankings" 
+      title="Hero League Rankings"
       subtitle="Citizen contribution and verification rankings"
     >
 
@@ -129,13 +129,13 @@ function LeaderboardPage() {
         {users.map((user, i) => {
           const rank = user.rank || i + 1;
           const maxXP = users[0]?.xp || 1;
-          const name = user.name || user.username || user.display_name || `User ${user.id || user.uid || i + 1}`;
+          const name = user.name || user.username || user.display_name ||`User ${user.id || user.uid || i + 1}`;
           const badges = user.badges || [];
 
-          let rankColor = 'var(--ink-secondary)';
-          if (rank === 1) rankColor = 'var(--rank-gold)';
-          if (rank === 2) rankColor = 'var(--rank-silver)';
-          if (rank === 3) rankColor = 'var(--rank-bronze)';
+          let rankColor ='var(--ink-secondary)';
+          if (rank === 1) rankColor ='var(--rank-gold)';
+          if (rank === 2) rankColor ='var(--rank-silver)';
+          if (rank === 3) rankColor ='var(--rank-bronze)';
 
           // Accuracy & Trust calculation with database schemas fallbacks
           const verifications = user.verifications_made !== undefined 
@@ -168,18 +168,18 @@ function LeaderboardPage() {
               variants={itemAnim}
               className="card rpg-panel rpg-panel-sandstone flex items-center gap-4 leaderboard-row"
               style={{
-                padding: 'var(--space-3) var(--space-4)',
+                padding:'var(--space-3) var(--space-4)',
                 borderRadius: 0
               }}
             >
               <div
                 className="font-mono"
                 style={{
-                  fontSize: '1.25rem',
+                  fontSize:'1.25rem',
                   fontWeight: 700,
                   color: rankColor,
-                  minWidth: '40px',
-                  textAlign: 'center'
+                  minWidth:'40px',
+                  textAlign:'center'
                 }}
               >
                 #{rank}
@@ -189,18 +189,18 @@ function LeaderboardPage() {
 
               <div className="flex flex-col flex-1 gap-1" style={{ minWidth: 0 }}>
                 <div className="flex items-center gap-2 flex-wrap">
-                  <span className="font-medium truncate" style={{ color: 'var(--ink-primary)', fontSize: '1.1rem' }}>
+                  <span className="font-medium truncate" style={{ color:'var(--ink-primary)', fontSize:'1.1rem'}}>
                     {name}
                   </span>
                   <span 
-                    className="font-pixel" 
+                    className="font-pixel"
                     style={{ 
-                      fontSize: '8px', 
-                      background: 'var(--accent-muted)', 
-                      color: 'var(--accent)', 
-                      padding: '2px 6px',
-                      border: '1px solid var(--accent)',
-                      display: 'inline-block'
+                      fontSize:'8px', 
+                      background:'var(--accent-muted)', 
+                      color:'var(--accent)', 
+                      padding:'2px 6px',
+                      border:'1px solid var(--accent)',
+                      display:'inline-block'
                     }}
                   >
                     {getRankTitle(i, users.length)}
@@ -212,39 +212,39 @@ function LeaderboardPage() {
                     <div
                       className="xp-bar-fill"
                       style={{
-                        width: `${Math.min(((user.xp || 0) / maxXP) * 100, 100)}%`,
-                        background: rank <= 3 ? rankColor : 'var(--accent)'
+                        width:`${Math.min(((user.xp || 0) / maxXP) * 100, 100)}%`,
+                        background: rank <= 3 ? rankColor :'var(--accent)'
                       }}
                     />
                   </div>
-                  <span className="text-xs text-muted" style={{ whiteSpace: 'nowrap' }}>
+                  <span className="text-xs text-muted" style={{ whiteSpace:'nowrap'}}>
                     {user.reports ?? user.reports_submitted ?? 0} Reported
                   </span>
-                  <span className="text-xs text-muted" style={{ whiteSpace: 'nowrap' }}>
+                  <span className="text-xs text-muted" style={{ whiteSpace:'nowrap'}}>
                     · {verifications} Verified
                   </span>
-                  <span className="text-xs" style={{ whiteSpace: 'nowrap', color: accuracyRate >= 70 ? 'var(--success)' : 'var(--warning)', fontWeight: 600 }}>
+                  <span className="text-xs" style={{ whiteSpace:'nowrap', color: accuracyRate >= 70 ?'var(--success)':'var(--warning)', fontWeight: 600 }}>
                     · Accuracy: {accuracyRate}%
                   </span>
-                  <span className="text-xs" style={{ whiteSpace: 'nowrap', color: 'var(--accent)', fontWeight: 600 }}>
+                  <span className="text-xs" style={{ whiteSpace:'nowrap', color:'var(--accent)', fontWeight: 600 }}>
                     · Trust: {trustScore}%
                   </span>
                 </div>
               </div>
 
               <div className="flex flex-col items-end gap-1 leaderboard-score-col">
-                <span className="font-pixel" style={{ color: 'var(--accent)', fontSize: '10px', fontWeight: 700 }}>
+                <span className="font-pixel" style={{ color:'var(--accent)', fontSize:'10px', fontWeight: 700 }}>
                   {contributionScore} PTS
                 </span>
-                <span className="font-mono text-muted" style={{ fontSize: '0.75rem' }}>
+                <span className="font-mono text-muted" style={{ fontSize:'0.75rem'}}>
                   {user.xp ?? 0} XP
                 </span>
                 {badges.length > 0 && (
-                  <div className="flex gap-1" style={{ fontSize: '0.875rem' }}>
+                  <div className="flex gap-1" style={{ fontSize:'0.875rem'}}>
                     {badges.slice(0, 5).map((badge, bi) => {
                       const display = getBadgeDisplay(badge);
                       return (
-                        <span key={bi} title={display.name} role="img" aria-label={display.name}>
+                        <span key={bi} title={display.name} role="img"aria-label={display.name}>
                           {display.emoji}
                         </span>
                       );
@@ -257,7 +257,7 @@ function LeaderboardPage() {
         })}
 
         {users.length === 0 && (
-          <div className="card rpg-panel rpg-panel-sandstone" style={{ textAlign: 'center', padding: 'var(--space-8)', borderRadius: 0 }}>
+          <div className="card rpg-panel rpg-panel-sandstone" style={{ textAlign:'center', padding:'var(--space-8)', borderRadius: 0 }}>
             <span className="font-mono text-muted text-sm">NO DATA DETECTED</span>
           </div>
         )}
