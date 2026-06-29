@@ -363,7 +363,7 @@ function HomePage() {
 
       {/* Section 2: Centerpiece Map */}
       <div className="animate-fade-up stagger-2" style={{ marginBottom: 'var(--space-6)' }}>
-        <Panel flush className="map-wrapper-v2 rpg-panel-sandstone" style={{ height: '520px', minHeight: 520, position: 'relative' }}>
+        <Panel flush className="map-wrapper-v2 rpg-panel-sandstone" style={{ position: 'relative' }}>
           <ConfigurableMap
             provider={mapProvider}
             center={[26.8467, 80.9462]}
@@ -411,7 +411,7 @@ function HomePage() {
       {/* Section 3 & 4: Bottom Grid */}
       <div className="home-bottom-grid-v2 animate-fade-up stagger-2">
         {/* Left Column: Community Activity Feed */}
-        <Panel className="home-feed-col-v2 rpg-panel-sandstone" style={{ height: '480px', padding: 0 }}>
+        <Panel className="home-feed-col-v2 rpg-panel-sandstone" style={{ padding: 0 }}>
           <div className="card pixel-border" style={{ background: '#fcf8ee', border: 'none', padding: 'var(--space-4)', height: '100%', display: 'flex', flexDirection: 'column', flex: 1, color: '#291d12', margin: 0, boxPattern: 'none' }}>
           <div className="hud-panel-header-v2">
             <Eyebrow icon={<ScrollIcon width={14} height={14} />}>COMMUNITY ACTIVITY FEED</Eyebrow>
@@ -525,7 +525,7 @@ function HomePage() {
         </Panel>
 
         {/* Right Column: Agent Insights Panel */}
-        <Panel className="home-feed-col-v2 rpg-panel-sandstone" style={{ height: '480px', padding: 0 }}>
+        <Panel className="home-feed-col-v2 rpg-panel-sandstone" style={{ padding: 0 }}>
           <div className="card pixel-border" style={{ background: '#fcf8ee', border: 'none', padding: 'var(--space-4)', height: '100%', display: 'flex', flexDirection: 'column', flex: 1, color: '#291d12', margin: 0, boxPattern: 'none' }}>
           <div className="hud-panel-header-v2">
             <Eyebrow icon={<RobotIcon width={14} height={14} />}>AGENT INSIGHTS NETWORK</Eyebrow>

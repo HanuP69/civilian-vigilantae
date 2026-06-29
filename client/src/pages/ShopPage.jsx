@@ -265,7 +265,7 @@ function ShopPage() {
         </div>
 
         {/* RIGHT COLUMN: ITEMS CATALOG CARD */}
-        <div style={{ display:'flex', flexDirection:'column', gap:'var(--space-6)', flex: 1, minWidth:'320px'}} className="profile-right-col">
+        <div style={{ display:'flex', flexDirection:'column', gap:'var(--space-6)', flex: 1 }} className="profile-right-col">
           
           <div className="card rpg-panel rpg-panel-sandstone" style={{ borderRadius: 0, padding:'var(--space-5)'}}>
             <h3 className="font-pixel" style={{ margin:'0 0 var(--space-4) 0', fontSize:'0.75rem', paddingBottom:'var(--space-2)'}}>MERCHANDISE CATALOG</h3>

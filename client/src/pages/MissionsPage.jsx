@@ -87,8 +87,7 @@ function MissionsPage() {
                   cursor: mission.ticket_id ?'pointer':'default'
                 }}
               >
-                <div className="flex justify-between items-start" style={{ flexWrap:'wrap', gap:'var(--space-4)'}}>
-                  <div style={{ flex: 1, minWidth:'280px'}}>
+                <div className="flex justify-between items-start" style={{ flexWrap:'wrap', gap:'var(--space-4)'}}>                  <div style={{ flex: 1, minWidth:'240px'}}>
                     <div className="flex items-center gap-3" style={{ marginBottom:'var(--space-2)'}}>
                       <h3 className="font-pixel" style={{ fontSize:'12px', margin: 0, color: isCompleted ?'var(--success)':'var(--ink-primary)'}}>
                         {mission.title}
@@ -107,7 +106,7 @@ function MissionsPage() {
                     <p className="text-secondary text-xs" style={{ lineHeight: 1.5, marginBottom:'var(--space-4)'}}>
                       {mission.description}
                     </p>
-
+ 
                     <div style={{ maxWidth:'400px'}}>
                       <div className="flex justify-between text-xs font-mono" style={{ marginBottom:'4px'}}>
                         <span className="text-muted">Confirmations:</span>
@@ -117,7 +116,7 @@ function MissionsPage() {
                       </div>
                       <div className="priority-bar" style={{ height:'6px', borderRadius: 0 }}>
                         <div 
-                          className="priority-bar-fill"
+                           className="priority-bar-fill"
                           style={{ 
                             width:`${progressRatio}%`,
                             background: isCompleted ?'var(--success)':'var(--accent)',
@@ -127,8 +126,8 @@ function MissionsPage() {
                       </div>
                     </div>
                   </div>
-
-                  <div className="flex flex-col items-end gap-3 mission-actions-col" style={{ minWidth:'160px'}}>
+ 
+                  <div className="flex flex-col items-end gap-3 mission-actions-col" style={{ minWidth:'120px'}}>
                     <div className="flex gap-2">
                       <div className="summary-card text-center" style={{ padding:'6px 12px', minWidth:'70px', borderRadius: 0 }}>
                         <div className="font-pixel" style={{ fontSize:'11px', color:'var(--success)'}}>+{mission.xp_reward}</div>

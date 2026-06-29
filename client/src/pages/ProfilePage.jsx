@@ -514,7 +514,7 @@ function ProfilePage() {
         </div>
 
         {/* RIGHT COLUMN: ACTION CONSOLE VIEW (FLEX-1) */}
-        <div style={{ display:'flex', flexDirection:'column', gap:'var(--space-6)', flex: 1, minWidth:'320px'}} className="profile-right-col flex flex-col gap-6">
+        <div style={{ display:'flex', flexDirection:'column', gap:'var(--space-6)', flex: 1 }} className="profile-right-col flex flex-col gap-6">
           
           {/* SECTION 1: MISSION JOURNAL */}
           <div className="card rpg-panel rpg-panel-sandstone" style={{ borderRadius: 0, padding:'var(--space-5)'}}>
@@ -670,7 +670,7 @@ function ProfilePage() {
           }}
         >
           <div 
-            className="card rpg-panel rpg-panel-sandstone"
+            className="card rpg-panel rpg-panel-sandstone avatar-customizer-modal-card"
             style={{ 
               width:'100%', 
               maxWidth:'420px', 

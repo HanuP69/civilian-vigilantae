@@ -3076,3 +3076,85 @@ tr:hover td { background: var(--bg-surface); }
     animation: none !important;
   }
 }
+
+/* ═══ RESPONSIVE OVERRIDES ═══ */
+
+/* Tablet & Mobile Layout Adaptations */
+@media (max-width: 768px) {
+  /* Profile & Shop page 2-column sidebar stacking */
+  .profile-left-col {
+    max-width: 100% !important;
+    width: 100% !important;
+  }
+  .profile-right-col {
+    min-width: 0 !important;
+    width: 100% !important;
+  }
+  
+  /* Leaderboard card wrapping and spacing */
+  .leaderboard-row {
+    flex-wrap: wrap !important;
+    gap: var(--space-3) !important;
+    padding: var(--space-3) !important;
+  }
+  .leaderboard-score-col {
+    align-items: flex-start !important;
+    width: 100% !important;
+    flex-direction: row !important;
+    justify-content: space-between !important;
+    border-top: 1px dashed var(--border-subtle);
+    padding-top: var(--space-2);
+    margin-left: 56px; /* offset to align with user details */
+  }
+
+  /* Daily Missions Card layout wrapping */
+  .mission-card .flex.justify-between {
+    flex-direction: column !important;
+    gap: var(--space-4) !important;
+  }
+  .mission-actions-col {
+    width: 100% !important;
+    align-items: flex-start !important;
+    border-top: 1px dashed var(--border-subtle);
+    padding-top: var(--space-3);
+  }
+
+  /* Scaling down fixed-width elements like the radial menu wrapper */
+  .rpg-radial-menu-wrapper {
+    transform: scale(0.85);
+    transform-origin: center center;
+  }
+}
+
+/* Mobile Viewport Adaptations */
+@media (max-width: 480px) {
+  .rpg-radial-menu-wrapper {
+    transform: scale(0.68);
+  }
+  
+  .leaderboard-score-col {
+    margin-left: 0 !important;
+  }
+
+  /* Page Shell Padding Adjustment for extra small screens */
+  .hud-page {
+    padding-left: var(--space-2) !important;
+    padding-right: var(--space-2) !important;
+  }
+
+  /* Centerpiece Map heights */
+  .map-wrapper-v2 {
+    height: 320px !important;
+  }
+
+  .avatar-customizer-modal-card {
+    max-width: calc(100% - 24px) !important;
+    padding: var(--space-4) !important;
+  }
+}
+
+@media (max-width: 380px) {
+  .rpg-radial-menu-wrapper {
+    transform: scale(0.58);
+  }
+}
