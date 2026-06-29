@@ -436,8 +436,29 @@
   background-repeat: repeat !important;
   image-rendering: pixelated !important;
   box-shadow: var(--hud-shadow-lg), inset 2px 2px 4px rgba(0,0,0,0.1) !important;
-  color: #291d12 !important;
 }
+
+/* High-contrast parchment styling for inputs and textareas inside sandstone blocks */
+.rpg-panel-sandstone input[type="text"],
+.rpg-panel-sandstone input[type="email"],
+.rpg-panel-sandstone input[type="password"],
+.rpg-panel-sandstone textarea {
+  background-color: #fffbeb !important;
+  background-image: none !important;
+  color: #291d12 !important;
+  border: 2px solid #85613c !important;
+}
+.rpg-panel-sandstone input::placeholder,
+.rpg-panel-sandstone textarea::placeholder {
+  color: #a17c55 !important;
+}
+.rpg-panel-sandstone input:focus,
+.rpg-panel-sandstone textarea:focus {
+  border-color: #b45309 !important;
+  outline: none !important;
+  box-shadow: 0 0 0 2px rgba(180, 83, 9, 0.15) !important;
+}
+
 
 /* Ensure headings inside sandstone panels are high-contrast gold/parchment with dark shadow */
 .rpg-panel-sandstone h1,
