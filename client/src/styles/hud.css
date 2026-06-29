@@ -475,14 +475,87 @@
 .rpg-panel-sandstone h5 {
   color: #291d12;
   text-shadow: 1px 1px 0 #fdf6e3, -1px -1px 0 #fdf6e3, 1px -1px 0 #fdf6e3, -1px 1px 0 #fdf6e3;
+  font-size: 0.75rem !important; /* Larger, more readable font */
+  font-weight: 700 !important; /* Bolder for visibility */
+}
+
+/* Section title labels - bigger, darker, more readable */
+.rpg-panel-sandstone .section-title {
+  font-size: 0.75rem !important;
+  font-weight: 800 !important;
+  letter-spacing: 0.1em !important;
+  color: #1c130c !important;
+  text-shadow: 1px 1px 0 #fdf6e3, -1px -1px 0 #fdf6e3, 1px -1px 0 #fdf6e3, -1px 1px 0 #fdf6e3 !important;
+}
+
+/* ALL panels inside sandstone MUST have parchment backing - solid skin color box layer */
+.rpg-panel-sandstone .panel {
+  background-color: #fcf8ee !important; /* Solid skin/parchment color - NO texture */
+  background-image: none !important; /* Remove any inherited textures */
+  border: 3px solid #85613c !important;
+  padding: var(--space-4) !important;
+  box-shadow: 2px 2px 0 rgba(81, 58, 35, 0.3) !important;
+  position: relative !important;
+  z-index: 2 !important; /* Above the wall texture */
+}
+
+/* Text inside panels should be darker and more readable */
+.rpg-panel-sandstone .panel p,
+.rpg-panel-sandstone .panel span:not(.hud-icon),
+.rpg-panel-sandstone .panel div {
+  color: #291d12 !important;
+  text-shadow: none !important;
+  font-size: 0.95rem !important;
+  font-weight: 500 !important;
+}
+
+/* Section titles - bigger and bolder */
+.rpg-panel-sandstone .panel .section-title,
+.rpg-panel-sandstone .panel h3.section-title {
+  color: #1c130c !important;
+  font-size: 0.8rem !important;
+  font-weight: 900 !important;
+  text-shadow: none !important;
+  margin-bottom: var(--space-3) !important;
+}
+
+/* Font pixel text needs to be darker and bigger */
+.rpg-panel-sandstone .panel .font-pixel {
+  color: #1c130c !important;
+  font-weight: 800 !important;
+  font-size: 0.7rem !important;
+  text-shadow: none !important;
 }
 
 /* Subtitles/labels directly on sandstone background */
 .rpg-panel-sandstone .text-muted,
 .rpg-panel-sandstone .font-mono.text-muted,
 .rpg-panel-sandstone .font-pixel.text-muted {
-  color: #ecdcb9 !important;
-  text-shadow: 1px 1px 0 #513a23 !important;
+  color: #000000 !important; /* Pure black */
+  text-shadow: none !important;
+  font-weight: 800 !important;
+  font-size: 0.85rem !important;
+}
+
+/* Labels on sandstone - add parchment backing */
+.rpg-panel-sandstone .label {
+  background: #fcf8ee !important;
+  border: 2px solid #85613c !important;
+  padding: 8px 12px !important;
+  color: #000000 !important;
+  font-weight: 900 !important;
+  font-size: 0.75rem !important;
+  text-shadow: none !important;
+}
+
+/* Text xs, sm, all sizes should be black */
+.rpg-panel-sandstone .text-xs,
+.rpg-panel-sandstone .text-sm,
+.rpg-panel-sandstone .text-base,
+.rpg-panel-sandstone [class*="text-"] {
+  color: #1c130c !important;
+  font-size: 0.95rem !important;
+  font-weight: 600 !important;
 }
 
 /* Inner nested card borders */
@@ -498,6 +571,58 @@
 .rpg-panel-sandstone .card.pixel-border div,
 .rpg-panel-sandstone .card.pixel-border p {
   color: inherit !important;
+  text-shadow: none !important;
+}
+
+/* Make sure text-secondary is darker and more readable */
+.rpg-panel-sandstone .text-secondary {
+  color: #291d12 !important;
+  font-size: 0.95rem !important;
+  line-height: 1.7 !important;
+  font-weight: 500 !important;
+}
+
+/* ANY div with text content inside sandstone needs parchment backing */
+.rpg-panel-sandstone > div:not(.card):not(.panel):not([class*="wrapper"]):not([class*="grid"]) {
+  background-color: #fcf8ee !important;
+  background-image: none !important;
+  padding: var(--space-3) !important;
+  border: 2px solid #85613c !important;
+  margin-bottom: var(--space-3) !important;
+}
+
+/* Flex containers with text need backing too */
+.rpg-panel-sandstone .flex.items-center,
+.rpg-panel-sandstone .flex.justify-between {
+  background-color: #fcf8ee !important;
+  background-image: none !important;
+  padding: var(--space-2) var(--space-3) !important;
+  border-radius: 0 !important;
+}
+
+/* FORCE all text inside parchment boxes to be BLACK and BIGGER */
+.rpg-panel-sandstone .panel *,
+.rpg-panel-sandstone .card *,
+.rpg-panel-sandstone > div * {
+  color: #1c130c !important;
+  font-size: 1rem !important;
+  font-weight: 600 !important;
+  line-height: 1.6 !important;
+}
+
+/* Override any white/light colored text */
+.rpg-panel-sandstone span,
+.rpg-panel-sandstone p,
+.rpg-panel-sandstone div:not([class*="icon"]) {
+  color: #1c130c !important;
+}
+
+/* Font pixel specifically */
+.rpg-panel-sandstone .font-pixel,
+.rpg-panel-sandstone .font-mono {
+  color: #000000 !important;
+  font-size: 1.1rem !important;
+  font-weight: 800 !important;
   text-shadow: none !important;
 }
 

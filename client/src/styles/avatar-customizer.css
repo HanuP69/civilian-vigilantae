@@ -1,0 +1,44 @@
+/* Avatar Customizer Quest Board Styling Override */
+
+/* Ensure modal has parchment background */
+.rpg-panel-sandstone {
+  background-image: url('/sandstone.png') !important;
+  background-repeat: repeat !important;
+  image-rendering: pixelated !important;
+}
+
+/* Style all adjuster rows uniformly */
+.rpg-panel-sandstone .flex.justify-between.items-center {
+  background: rgba(255, 255, 255, 0.25) !important;
+  border: 2px solid #d8a96d !important;
+  padding: 10px 12px !important;
+  margin-bottom: 0 !important;
+  border-bottom: 2px solid #85613c !important;
+}
+
+/* Labels in adjusters */
+.rpg-panel-sandstone .flex.justify-between.items-center .font-pixel.text-muted {
+  color: #1c130c !important;
+  font-weight: 800 !important;
+  font-size: 0.55rem !important;
+  text-shadow: none !important;
+}
+
+/* Counter displays */
+.rpg-panel-sandstone .flex.justify-between.items-center .font-pixel[style*="minWidth"] {
+  color: #1c130c !important;
+  font-weight: 700 !important;
+  font-size: 0.65rem !important;
+}
+
+/* Arrow buttons */
+.rpg-panel-sandstone .flex.justify-between.items-center button.font-pixel {
+  color: #513a23 !important;
+  font-weight: 900 !important;
+  font-size: 0.75rem !important;
+}
+
+.rpg-panel-sandstone .flex.justify-between.items-center button.font-pixel:hover {
+  color: #b45309 !important;
+  transform: scale(1.2) !important;
+}

@@ -327,54 +327,11 @@ const itemAnim = {
   hidden: { opacity: 0, y: 20 },
   show: { opacity: 1, y: 0, transition: { type:'spring', stiffness: 300, damping: 24 } },
 };
-
-const solveKnapsack = (items, capacity) => {
-  if (!items || items.length === 0 || capacity <= 0) {
-    return { selected: [], totalValue: 0, totalCost: 0 };
-  }
-  const scale = 100;
-  const W = Math.floor(capacity / scale);
-  const n = items.length;
-  
-  const K = Array(n + 1).fill(0).map(() =>Array(W + 1).fill(0));
-  
-  for (let i = 1; i <= n; i++) {
-    const item = items[i - 1];
-    const w = Math.max(1, Math.floor(item.cost / scale));
-    const v = item.value;
-    for (let j = 0; j <= W; j++) {
-      if (w <= j) {
-        K[i][j] = Math.max(K[i - 1][j], K[i - 1][j - w] + v);
-      } else {
-        K[i][j] = K[i - 1][j];
-      }
-    }
-  }
-  
-  const selected = [];
-  let j = W;
-  for (let i = n; i > 0; i--) {
-    const item = items[i - 1];
-    const w = Math.max(1, Math.floor(item.cost / scale));
-    if (K[i][j] !== K[i - 1][j]) {
-      selected.push(item.original);
-      j -= w;
-    }
-  }
-  
-  return {
-    selected,
-    totalValue: K[n][W],
-    totalCost: selected.reduce((sum, item) => sum + (item.estimated_cost || 4000), 0)
-  };
-};
-
 function DashboardPage() {
   const [stats, setStats] = useState(null);
   const [recurrence, setRecurrence] = useState([]);
   const [tickets, setTickets] = useState([]);
   const [assets, setAssets] = useState([]);
-  const [budget, setBudget] = useState(80000);
   const [loading, setLoading] = useState(true);
   const [expandedRisk, setExpandedRisk] = useState(null);
   const [activeInfo, setActiveInfo] = useState({});
@@ -459,17 +416,6 @@ function DashboardPage() {
   const createdSpark = useMemo(() => build7dSpark(tickets,'created_at'), [tickets]);
   const resolvedSpark = useMemo(() => build7dSpark(tickets,'resolved_at'), [tickets]);
   const velocity = useMemo(() => buildVelocity30d(tickets), [tickets]);
-
-  const optimizedLedger = useMemo(() => {
-    const activeTickets = tickets.filter(t => t.status !=='resolved');
-    const items = activeTickets.map(t => ({
-      id: t.id,
-      cost: Number(t.estimated_cost) || 4000,
-      value: Number(t.priority_score) || 10,
-      original: t
-    }));
-    return solveKnapsack(items, budget);
-  }, [tickets, budget]);
 
   const mathMetrics = useMemo(() => {
     // 1. Verification Confidence

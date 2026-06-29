@@ -5,7 +5,7 @@ const API = '/api';
  * Note: Standard fetch() does not throw errors on 4xx/5xx status codes, meaning
  * this logic will ONLY retry on actual network connection failures or timeouts.
  */
-export async function fetchWithTimeout(url, options = {}, timeoutMs = 15000, retries = 2) {
+export async function fetchWithTimeout(url, options = {}, timeoutMs = 180000, retries = 2) {
   const callerSignal = options.signal;
   for (let attempt = 0; attempt <= retries; attempt++) {
     const controller = new AbortController();

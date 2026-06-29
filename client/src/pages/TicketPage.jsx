@@ -613,12 +613,14 @@ function TicketPage() {
           {ticket.priority_score != null && !isNaN(ticket.priority_score) && (
             <div className="panel rpg-panel rpg-panel-sandstone" style={{ borderColor:'var(--accent-muted)', borderRadius: 0 }}>
               <h4 className="label font-pixel" style={{ fontSize:'10px', marginBottom:'var(--space-2)'}}>PRIORITY SCORE INDEX (0-100)</h4>
-              <div className="flex items-end justify-between" style={{ marginBottom:'var(--space-3)'}}>
-                <span className="font-pixel" style={{ fontSize:'1.25rem', lineHeight: 1, color: ticket.priority_score > 70 ?'var(--error)':'var(--accent)'}}>
-                  {Math.round(ticket.priority_score)} / 100
-                </span>
-                <span className="font-pixel text-secondary" style={{ fontSize:'10px', paddingBottom:'4px'}}>
-                  {ticket.priority_score > 70 ?'CRITICAL CRITICAL': ticket.priority_score > 40 ?'MODERATE MODERATE':'LOW LOW'}
+              <div style={{ marginBottom:'var(--space-3)'}}>
+                <div className="flex items-center gap-2" style={{ marginBottom:'var(--space-2)'}}>
+                  <span className="font-pixel" style={{ fontSize:'1.6rem', lineHeight: 1, color: ticket.priority_score > 70 ?'var(--error)':'var(--accent)'}}>
+                    {Math.round(ticket.priority_score)}/100
+                  </span>
+                </div>
+                <span className="font-pixel" style={{ fontSize:'0.75rem', color: ticket.priority_score > 70 ?'var(--error)': ticket.priority_score > 40 ?'var(--warning)':'var(--success)', display: 'block'}}>
+                  {ticket.priority_score > 70 ?'CRITICAL': ticket.priority_score > 40 ?'MODERATE':'LOW'}
                 </span>
               </div>
               <div className="priority-bar" style={{ height:'3px', borderRadius: 0 }}>

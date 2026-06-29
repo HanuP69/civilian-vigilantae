@@ -6,6 +6,7 @@ import { useQuestToast } from'../components/QuestToast';
 import { apiClaimQuest, apiEquipAvatar } from'../services/api';
 import { CustomAvatar, parseCustomAvatar } from'../components/CustomAvatar';
 import { PageShell } from'../components/ui/PixelKit';
+import'../styles/avatar-customizer.css';
 
 const SHOP_ITEMS = [
   { id:'title_paladin', name:'Lucknow Paladin Title', cost: 50, type:'title', value:'Lucknow Paladin', desc:'A legendary title representing honor'},
@@ -324,22 +325,22 @@ function ProfilePage() {
                   onClick={openAvatarCustomizer}
                   onMouseEnter={(e) => {
                     e.currentTarget.style.transform ='scale(1.1)';
-                    e.currentTarget.style.backgroundColor ='var(--accent)';
+                    e.currentTarget.style.backgroundColor ='#fcd34d';
                   }}
                   onMouseLeave={(e) => {
                     e.currentTarget.style.transform ='scale(1)';
-                    e.currentTarget.style.backgroundColor ='var(--bg-surface)';
+                    e.currentTarget.style.backgroundColor ='#fcf8ee';
                   }}
                   style={{
                     position:'absolute',
                     top: -6,
                     left: -6,
-                    background:'var(--bg-surface)',
-                    border:'2px solid var(--border)',
-                    boxShadow:'1px 1px 0 rgba(0,0,0,0.5)',
+                    background:'#fcf8ee',
+                    border:'3px solid #85613c',
+                    boxShadow:'2px 2px 0 rgba(81, 58, 35, 0.6)',
                     borderRadius: 0,
-                    width: 24,
-                    height: 24,
+                    width: 28,
+                    height: 28,
                     display:'flex',
                     alignItems:'center',
                     justifyContent:'center',
@@ -350,7 +351,26 @@ function ProfilePage() {
                   }}
                   title="Customize Avatar"
                 >
-                  
+                  {/* Pencil Icon SVG */}
+                  <svg width="14" height="14" viewBox="0 0 16 16" fill="none" style={{ imageRendering:'pixelated'}}>
+                    {/* Pencil body */}
+                    <rect x="10" y="1" width="2" height="2" fill="#1c130c"/>
+                    <rect x="9" y="2" width="2" height="2" fill="#1c130c"/>
+                    <rect x="8" y="3" width="2" height="2" fill="#fbbf24"/>
+                    <rect x="7" y="4" width="2" height="2" fill="#fbbf24"/>
+                    <rect x="6" y="5" width="2" height="2" fill="#fbbf24"/>
+                    <rect x="5" y="6" width="2" height="2" fill="#fbbf24"/>
+                    <rect x="4" y="7" width="2" height="2" fill="#b45309"/>
+                    <rect x="3" y="8" width="2" height="2" fill="#b45309"/>
+                    <rect x="2" y="9" width="2" height="2" fill="#513a23"/>
+                    <rect x="1" y="10" width="2" height="2" fill="#513a23"/>
+                    {/* Pencil tip */}
+                    <rect x="11" y="0" width="2" height="1" fill="#6b5139"/>
+                    <rect x="0" y="11" width="2" height="2" fill="#291d12"/>
+                    {/* Highlight */}
+                    <rect x="8" y="4" width="1" height="1" fill="#fcd34d"/>
+                    <rect x="6" y="6" width="1" height="1" fill="#fcd34d"/>
+                  </svg>
                 </button>
 
                 <div 
@@ -641,7 +661,7 @@ function ProfilePage() {
             left: 0,
             width:'100vw',
             height:'100vh',
-            background:'rgba(15, 17, 23, 0.85)',
+            background:'rgba(42, 31, 46, 0.92)',
             backdropFilter:'blur(8px)',
             display:'flex',
             alignItems:'center',
@@ -650,65 +670,68 @@ function ProfilePage() {
           }}
         >
           <div 
-            className="card rpg-panel"
+            className="card rpg-panel rpg-panel-sandstone"
             style={{ 
               width:'100%', 
-              maxWidth:'380px', 
-              padding:'var(--space-5)', 
+              maxWidth:'420px', 
+              padding:'var(--space-6)', 
               borderRadius: 0,
+              border:'4px solid #513a23',
+              boxShadow:'4px 4px 0 rgba(0,0,0,0.7), inset 2px 2px 4px rgba(0,0,0,0.15)',
               display:'flex',
               flexDirection:'column',
               alignItems:'center',
               gap:'var(--space-5)'
             }}
           >
-            <h3 className="font-pixel" style={{ margin: 0, fontSize:'0.8rem', color:'var(--accent)', borderBottom:'2px solid var(--border)', paddingBottom:'var(--space-2)', width:'100%', textAlign:'center'}}>AVATAR CREATOR
+            <h3 className="font-pixel" style={{ margin: 0, fontSize:'0.85rem', color:'#1c130c', borderBottom:'3px solid #85613c', paddingBottom:'var(--space-3)', width:'100%', textAlign:'center', fontWeight: 900, letterSpacing:'0.05em', textShadow:'none'}}>
+              ⚔ AVATAR CREATOR ⚔
             </h3>
 
             {/* Avatar Preview */}
             <div 
               className="pixel-avatar"
               style={{
-                width: 108,
-                height: 108,
+                width: 120,
+                height: 120,
                 borderRadius: 0,
-                background:'var(--bg-surface)',
-                padding:'6px',
-                border:'3px solid var(--border)',
-                boxShadow:'4px 4px 0 rgba(0,0,0,0.5)',
+                background:'#fcf8ee',
+                padding:'8px',
+                border:'4px solid #85613c',
+                boxShadow:'3px 3px 0 rgba(81, 58, 35, 0.6), inset 1px 1px 2px rgba(0,0,0,0.1)',
                 display:'flex',
                 alignItems:'center',
                 justifyContent:'center'
               }}
             >
-              <CustomAvatar skin={customSkin} hair={customHair} eyes={customEyes} fhair={customFhair} tattoo={customTattoo} hcolor={customHcolor} size={96} />
+              <CustomAvatar skin={customSkin} hair={customHair} eyes={customEyes} fhair={customFhair} tattoo={customTattoo} hcolor={customHcolor} size={104} />
             </div>
 
             {/* Attributes Adjusters Grid */}
-            <div style={{ width:'100%', display:'flex', flexDirection:'column', gap:'12px'}}>
+            <div style={{ width:'100%', display:'flex', flexDirection:'column', gap:'14px'}}>
               
               {/* Skin Adjuster */}
-              <div className="flex justify-between items-center" style={{ borderBottom:'1px solid var(--border)', paddingBottom:'6px'}}>
-                <span className="font-pixel text-muted" style={{ fontSize:'0.45rem'}}>SKIN TONE</span>
-                <div style={{ display:'flex', alignItems:'center', gap:'8px'}}>
+              <div className="flex justify-between items-center" style={{ borderBottom:'2px solid #85613c', paddingBottom:'8px', background:'rgba(255,255,255,0.3)', padding:'8px 10px', border:'2px solid #d8a96d' }}>
+                <span className="font-pixel" style={{ fontSize:'0.55rem', color:'#1c130c', fontWeight:800}}>SKIN TONE</span>
+                <div style={{ display:'flex', alignItems:'center', gap:'10px'}}>
                   <button 
                     onClick={() => setCustomSkin(prev => (prev - 1 + 5) % 5)}
                     className="font-pixel"
-                    onMouseEnter={(e) => { e.currentTarget.style.transform ='scale(1.3)'; e.currentTarget.style.color ='#fff'; }}
-                    onMouseLeave={(e) => { e.currentTarget.style.transform ='scale(1)'; e.currentTarget.style.color ='var(--accent)'; }}
-                    style={{ background:'none', border:'none', color:'var(--accent)', cursor:'pointer', fontSize:'0.65rem', padding:'2px 6px', transition:'transform 0.1s ease, color 0.1s ease', display:'inline-block'}}
+                    onMouseEnter={(e) => { e.currentTarget.style.transform ='scale(1.2)'; e.currentTarget.style.color ='#b45309'; }}
+                    onMouseLeave={(e) => { e.currentTarget.style.transform ='scale(1)'; e.currentTarget.style.color ='#513a23'; }}
+                    style={{ background:'none', border:'none', color:'#513a23', cursor:'pointer', fontSize:'0.75rem', padding:'4px 8px', transition:'transform 0.1s ease, color 0.1s ease', display:'inline-block', fontWeight:900}}
                   >
                     ◀
                   </button>
-                  <span className="font-pixel" style={{ fontSize:'10px', minWidth:'42px', textAlign:'center', display:'inline-block'}}>
+                  <span className="font-pixel" style={{ fontSize:'0.65rem', minWidth:'48px', textAlign:'center', display:'inline-block', color:'#1c130c', fontWeight:700}}>
                     {customSkin + 1} / 5
                   </span>
                   <button 
                     onClick={() => setCustomSkin(prev => (prev + 1) % 5)}
                     className="font-pixel"
-                    onMouseEnter={(e) => { e.currentTarget.style.transform ='scale(1.3)'; e.currentTarget.style.color ='#fff'; }}
-                    onMouseLeave={(e) => { e.currentTarget.style.transform ='scale(1)'; e.currentTarget.style.color ='var(--accent)'; }}
-                    style={{ background:'none', border:'none', color:'var(--accent)', cursor:'pointer', fontSize:'0.65rem', padding:'2px 6px', transition:'transform 0.1s ease, color 0.1s ease', display:'inline-block'}}
+                    onMouseEnter={(e) => { e.currentTarget.style.transform ='scale(1.2)'; e.currentTarget.style.color ='#b45309'; }}
+                    onMouseLeave={(e) => { e.currentTarget.style.transform ='scale(1)'; e.currentTarget.style.color ='#513a23'; }}
+                    style={{ background:'none', border:'none', color:'#513a23', cursor:'pointer', fontSize:'0.75rem', padding:'4px 8px', transition:'transform 0.1s ease, color 0.1s ease', display:'inline-block', fontWeight:900}}
                   >
                     ▶
                   </button>
@@ -858,7 +881,7 @@ function ProfilePage() {
             </div>
 
             {/* Action Buttons */}
-            <div style={{ display:'flex', gap:'10px', width:'100%', marginTop:'var(--space-2)'}}>
+            <div style={{ display:'flex', gap:'12px', width:'100%', marginTop:'var(--space-4)'}}>
               <button
                 onClick={() => {
                   handleEquipAvatar(`custom:${customSkin}-${customHair}-${customEyes}-${customFhair}-${customTattoo}-${customHcolor}`);
@@ -867,16 +890,28 @@ function ProfilePage() {
                 className="font-pixel"
                 style={{
                   flex: 1,
-                  padding:'10px',
-                  fontSize:'0.55rem',
-                  background:'var(--success)',
-                  color:'#000',
-                  border:'2px solid #000',
-                  boxShadow:'2px 2px 0 rgba(0,0,0,0.5)',
+                  padding:'12px',
+                  fontSize:'0.65rem',
+                  background:'#15803d',
+                  color:'#fff',
+                  border:'3px solid #1c130c',
+                  boxShadow:'3px 3px 0 rgba(0,0,0,0.6)',
                   cursor:'pointer',
-                  fontWeight: 800
+                  fontWeight: 900,
+                  letterSpacing:'0.05em',
+                  transition:'all 0.1s ease'
                 }}
-              >SAVE AVATAR
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.transform ='translate(-1px, -1px)';
+                  e.currentTarget.style.boxShadow ='4px 4px 0 rgba(0,0,0,0.6)';
+                  e.currentTarget.style.background ='#16a34a';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.transform ='translate(0, 0)';
+                  e.currentTarget.style.boxShadow ='3px 3px 0 rgba(0,0,0,0.6)';
+                  e.currentTarget.style.background ='#15803d';
+                }}
+              >✓ SAVE AVATAR
               </button>
               
               <button
@@ -884,15 +919,28 @@ function ProfilePage() {
                 className="font-pixel"
                 style={{
                   flex: 1,
-                  padding:'10px',
-                  fontSize:'0.55rem',
-                  background:'var(--bg-surface)',
-                  color:'var(--ink-secondary)',
-                  border:'2px solid var(--border)',
-                  boxShadow:'2px 2px 0 rgba(0,0,0,0.5)',
-                  cursor:'pointer'
+                  padding:'12px',
+                  fontSize:'0.65rem',
+                  background:'#fcf8ee',
+                  color:'#513a23',
+                  border:'3px solid #85613c',
+                  boxShadow:'3px 3px 0 rgba(81, 58, 35, 0.6)',
+                  cursor:'pointer',
+                  fontWeight: 700,
+                  letterSpacing:'0.05em',
+                  transition:'all 0.1s ease'
                 }}
-              >CANCEL
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.transform ='translate(-1px, -1px)';
+                  e.currentTarget.style.boxShadow ='4px 4px 0 rgba(81, 58, 35, 0.6)';
+                  e.currentTarget.style.background ='#f3e6c4';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.transform ='translate(0, 0)';
+                  e.currentTarget.style.boxShadow ='3px 3px 0 rgba(81, 58, 35, 0.6)';
+                  e.currentTarget.style.background ='#fcf8ee';
+                }}
+              >✕ CANCEL
               </button>
             </div>
 

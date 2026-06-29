@@ -8,60 +8,6 @@ import { getLeaderboard } from '../services/userService.js';
 
 const router = Router();
 
-function parseBudget(msg) {
-  const text = msg.toLowerCase();
-  const lakhMatch = text.match(/(\d+(?:\.\d+)?)\s*(?:lakh|lacs?)/);
-  if (lakhMatch) {
-    return parseFloat(lakhMatch[1]) * 100000;
-  }
-  const numericMatch = text.match(/(?:₹|rs\.?)\s*(\d+(?:,\d+)*)\s*(?:thousand|k)?/i) || text.match(/\b(\d{4,9})\b/);
-  if (numericMatch) {
-    let val = parseFloat(numericMatch[1].replace(/,/g, ''));
-    if (text.includes('thousand') || text.includes(' k')) val *= 1000;
-    return val;
-  }
-  return null;
-}
-
-const solveKnapsack = (items, capacity) => {
-  if (!items || items.length === 0 || capacity <= 0) {
-    return { selected: [], totalCost: 0, totalValue: 0 };
-  }
-  const scale = 100;
-  const W = Math.floor(capacity / scale);
-  const n = items.length;
-  const K = Array(n + 1).fill(0).map(() => Array(W + 1).fill(0));
-  
-  for (let i = 1; i <= n; i++) {
-    const item = items[i - 1];
-    const w = Math.max(1, Math.floor(item.cost / scale));
-    const v = item.value;
-    for (let j = 0; j <= W; j++) {
-      if (w <= j) {
-        K[i][j] = Math.max(K[i - 1][j], K[i - 1][j - w] + v);
-      } else {
-        K[i][j] = K[i - 1][j];
-      }
-    }
-  }
-  
-  const selected = [];
-  let j = W;
-  for (let i = n; i > 0; i--) {
-    const item = items[i - 1];
-    const w = Math.max(1, Math.floor(item.cost / scale));
-    if (K[i][j] !== K[i - 1][j]) {
-      selected.push(item.original);
-      j -= w;
-    }
-  }
-  return {
-    selected,
-    totalCost: selected.reduce((sum, item) => sum + item.estimated_cost, 0),
-    totalValue: selected.reduce((sum, item) => sum + item.priority_score, 0)
-  };
-};
-
 router.post('/chat', requireAuth, async (req, res) => {
   try {
     const { message, chatHistory } = req.body;
@@ -116,34 +62,54 @@ router.post('/chat', requireAuth, async (req, res) => {
 
     // Fetch Leaderboard data
     const leaderboard = await getLeaderboard(10);
+    
+    // Find the current logged-in user's stats
+    const currentUserUid = req.user?.uid;
+    let currentUserStats = null;
+    if (currentUserUid) {
+      currentUserStats = leaderboard.find(u => u.uid === currentUserUid);
+      // If not in top 10, fetch directly
+      if (!currentUserStats) {
+        try {
+          const userDoc = await db.collection('users').doc(currentUserUid).get();
+          if (userDoc.exists) {
+            const userData = userDoc.data();
+            const level = userData.level || Math.floor(Math.sqrt((userData.xp || 0) / 50)) + 1;
+            const verifications = userData.verifications_made || 0;
+            const accurate = userData.accurate_verifications || 0;
+            currentUserStats = {
+              uid: currentUserUid,
+              display_name: userData.display_name || 'Administrator',
+              level,
+              xp: userData.xp || 0,
+              gold: userData.gold || 0,
+              trust_score: userData.trust_score !== undefined ? userData.trust_score : 0.5,
+              contribution_score: userData.contribution_score || 0,
+              reports_submitted: userData.reports_submitted || 0,
+              verifications_made: verifications,
+              accurate_verifications: accurate,
+              accuracy: verifications > 0 ? Math.round((accurate / verifications) * 100) : 100
+            };
+          }
+        } catch (err) {
+          console.warn('[Copilot] Could not fetch current user stats:', err.message);
+        }
+      }
+    }
+    
     const leaderboardSummary = leaderboard.map((u, i) => {
       const level = u.level || Math.floor(Math.sqrt((u.xp || 0) / 50)) + 1;
-      return `${i + 1}. User: "${u.display_name || 'Anonymous'}" (Level: ${level}, XP: ${u.xp || 0}, Reputation Trust: ${u.trust_score !== undefined ? u.trust_score.toFixed(2) : '0.50'}, Reports: ${u.reports || 0}, Votes: ${u.verifications_made || 0})`;
+      const verifications = u.verifications_made || 0;
+      const accurate = u.accurate_verifications || 0;
+      const reports = u.reports_submitted || u.reports || 0;
+      const trustScore = u.trust_score !== undefined ? u.trust_score : 0.5;
+      const contributionScore = u.contribution_score !== undefined ? u.contribution_score : 0;
+      const accuracy = verifications > 0 ? Math.round((accurate / verifications) * 100) : 100;
+      
+      return `${i + 1}. User: "${u.display_name || 'Anonymous'}" (Level: ${level}, XP: ${u.xp || 0}, Gold: ${u.gold || 0}, Reputation Trust: ${trustScore.toFixed(2)}, Contribution Score: ${contributionScore}, Reports: ${reports}, Votes: ${verifications}, Accurate: ${accurate}, Accuracy: ${accuracy}%)`;
     }).join('\n');
 
-    // 4. Check for Budget/Knapsack Queries
-    const detectedBudget = parseBudget(message);
-    let knapsackOutput = '';
-    if (detectedBudget !== null) {
-      const itemsForKnapsack = activeTickets.map(t => ({
-        id: t.id,
-        cost: t.estimated_cost || 4000,
-        value: t.priority_score || 10,
-        original: t
-      }));
-      const optimal = solveKnapsack(itemsForKnapsack, detectedBudget);
-      knapsackOutput = `
-[KNAPSACK SOLVER EXECUTION RESULT]
-Target Budget Capacity: ₹${detectedBudget.toLocaleString()}
-Optimal Selected Missions: ${optimal.selected.length} resolved
-Optimal Selection list:
-${optimal.selected.map(t => `- [Mission #${t.id}] Title: "${t.title}", Ward: ${t.ward}, Cost: ₹${(t.estimated_cost || 4000).toLocaleString()}, Priority Score: ${t.priority_score}`).join('\n')}
-Total Optimal Cost: ₹${optimal.totalCost.toLocaleString()}
-Total Priority Utility gained: +${optimal.totalValue} points
-`;
-    }
-
-    // 5. Compile summaries
+    // Compile summaries
     const activeSummary = activeTickets.map((t) => 
       `- [Mission #${t.id}] Title: "${t.title}", Ward: ${t.ward}, Category: ${t.category}, Priority: ${t.priority_score}, Severity: ${t.severity}${t.root_cause ? `, Root Cause: ${t.root_cause.cause} (${t.root_cause.confidence}% confidence)` : ''}`
     ).join('\n');
@@ -152,22 +118,47 @@ Total Priority Utility gained: +${optimal.totalValue} points
       `- Ward: ${r.ward}, Category: ${r.category}, Recurrence Risk: ${Math.round(r.probability * 100)}%, Recommended Action: ${r.recommendedAction || r.recommendation}`
     ).join('\n');
 
-    const systemPrompt = `You are the Lucknow Sentinel Civic Copilot, a municipal executive decision-support system.
-You assist the City Administrator (the user) in managing municipal budgets, analyzing ward health, prioritizing active reports, and routing dispatch crews.
-You have real-time access to the municipal database ledger, recurrence hazard risks, active report clusters, and physical infrastructure assets.
+    const systemPrompt = `You are the Lucknow Sentinel Civic Copilot, a community management and analytics assistant.
+You help citizens and administrators track community issues, analyze ward health, understand priority reports, and monitor civic engagement.
+You have real-time access to the community database, citizen contributions, ward statistics, and infrastructure health metrics.
 
-You are fully conversant in the advanced engineering and mathematical literature of the Sentinel Civic system:
-1. **Bayesian Consensus Verification**: Citizen sensor upvotes and downvotes are weighted by their reputation trust, combined with AI vision model classification priors, to resolve a posterior probability verification score.
-2. **Weibull Recurrence Risk**: Analysis of resolved events is fitted using a Weibull distribution MLE to calculate the municipal hazard rate and forecast recurrence probability within the next 14 days.
-3. **DBSCAN Geospatial Clustering**: Incoming duplicate reports are grouped within 50-meter geofenced boundaries using composite DBSCAN spatial metrics.
-4. **Dynamic Priority Index**: Threat priorities are dynamically calculated based on ward population density, average severity, and spatial recurrence history.
-5. **Multi-Agent Orchestration**: Citizen logs are processed asynchronously via a background team of specialized agents (Intake, Classification, Verification, and Dispatch).
+**IMPORTANT: When the user asks about "my gold", "my XP", "my level", "my stats", or "my profile", they are asking about THEIR PERSONAL CITIZEN ACCOUNT stats from the Community Leaderboard!**
 
-**RULES OF COMMAND**:
-- Ground your advice on the following real-time database context. Quote exact assets, wards, and category counts.
-- Focus purely on priority, severity, ward, and category metrics. Do NOT display or mention cost estimates for tickets/reports unless the Administrator explicitly asks for a budget optimization/Knapsack treasury query.
-- Use a professional, premium, data-driven command-center aesthetic (e.g., address the user as "Administrator", refer to citizen sensor networks, active report clusters, and department dispatches).
-- Answer in clear, engaging Markdown. Make frequent use of bold highlights, list structures, and ticket links like [Report #ticket_id] which render as clickable references.
+**HOW TO HANDLE PERSONAL QUERIES:**
+- If user says "my gold" or "show me my gold" → Show their Gold amount from CURRENT USER PERSONAL STATS
+- If user says "my XP" or "my level" → Show their XP and Level from CURRENT USER PERSONAL STATS
+- If user says "my stats" or "my profile" → Show their full stats: Level, XP, Gold, Reports, Votes, Accuracy, Trust Score
+- The logged-in user is: "${req.user?.display_name || 'Citizen'}" (UID: ${req.user?.uid || 'unknown'})
+
+${currentUserStats ? `
+[CURRENT USER PERSONAL STATS]
+User: ${currentUserStats.display_name || 'Citizen'}
+Level: ${currentUserStats.level || 1}
+XP: ${currentUserStats.xp || 0}
+Gold: ${currentUserStats.gold || 0}
+Trust Score: ${(currentUserStats.trust_score || 0.5).toFixed(2)}
+Contribution Score: ${currentUserStats.contribution_score || 0}
+Reports Submitted: ${currentUserStats.reports_submitted || 0}
+Verifications Made: ${currentUserStats.verifications_made || 0}
+Accurate Verifications: ${currentUserStats.accurate_verifications || 0}
+Verification Accuracy: ${currentUserStats.accuracy || 100}%
+
+**USE THESE STATS when the user asks about "my" personal data!**
+` : ''}
+
+You understand the technical systems behind the Sentinel Civic platform:
+1. **Bayesian Consensus Verification**: Citizen votes are weighted by reputation trust and combined with AI classification confidence.
+2. **Weibull Recurrence Risk**: Historical data is analyzed to predict future issue recurrence probability.
+3. **DBSCAN Geospatial Clustering**: Duplicate reports within 50 meters are automatically grouped.
+4. **Dynamic Priority Index**: Priorities are calculated from severity, ward density, and historical patterns.
+5. **Multi-Agent Processing**: Reports are processed by specialized AI agents for classification and routing.
+
+**RESPONSE GUIDELINES**:
+- Ground answers in the real-time database context provided below
+- Focus on priority, severity, ward, and category metrics
+- Use clear, engaging Markdown with bold highlights and structured lists
+- Reference specific reports using [Report #ticket_id] format
+- Help users understand trends, patterns, and actionable insights
 
 ---
 [REAL-TIME CONTEXT: MUNICIPAL INFRASTRUCTURE ASSETS]
@@ -184,10 +175,22 @@ ${recurrenceSummary || 'No high-risk recurrence hotspots forecasted at this time
 [REAL-TIME CONTEXT: COMMUNITY LEADERBOARD (TOP CITIZENS)]
 ${leaderboardSummary || 'No citizen data registered in the ledger.'}
 
+[REAL-TIME CONTEXT: WARD HEALTH ANALYTICS]
+${stats?.wardHealthScores ? Object.entries(stats.wardHealthScores).map(([ward, score]) => 
+  `Ward: ${ward}, Health Index: ${score}%${score < 50 ? ' ⚠️ CRITICAL' : score < 75 ? ' ⚠️ WARNING' : ''}`
+).join('\n') : 'No ward health data available.'}
+
+[REAL-TIME CONTEXT: DEPARTMENT RISK ASSESSMENT]
+${stats?.departmentRisks ? Object.entries(stats.departmentRisks).map(([dept, risk]) => 
+  `Department: ${dept}, Avg Priority Risk: ${risk}${risk > 70 ? ' ⚠️ HIGH' : risk > 40 ? ' ⚠️ MODERATE' : ''}`
+).join('\n') : 'No department risk data available.'}
+
 [REAL-TIME CONTEXT: METRICS]
 Active Ward Health stats: ${JSON.stringify(stats?.byWard || {})}
 Department Ledger: ${JSON.stringify(stats?.deptLeaderboard || [])}
-${knapsackOutput ? `\n${knapsackOutput}\nUse this Knapsack Solver result to tell the Administrator exactly how to spend their budget to maximize utility!` : ''}
+Average Resolution Time: ${stats?.avgResolutionHours ? Math.round(stats.avgResolutionHours) + ' hours' : 'N/A'}
+Active Reporters (Last 7 days): ${stats?.activeReporters || 0}
+Total Issues Resolved This Week: ${stats?.resolvedThisWeek || 0}
 ---`;
 
     const messages = [
