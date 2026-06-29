@@ -454,36 +454,6 @@ function Navbar({ isConnected, onOpenQuestSidebar }) {
                 overflow: 'visible'
               }}
             >
-              {/* Center Hub: Slot Details */}
-              <div
-                style={{
-                  position: 'absolute',
-                  left: '145px',
-                  top: '145px',
-                  width: '130px',
-                  height: '130px',
-                  borderRadius: '50%',
-                  background: '#fcf8ee',
-                  border: '4px solid #85613c',
-                  boxShadow: 'inset 2px 2px 4px rgba(0,0,0,0.15)',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  padding: '8px',
-                  textAlign: 'center',
-                  zIndex: 3,
-                  pointerEvents: 'none'
-                }}
-              >
-                <span className="font-pixel" style={{ fontSize: '9px', color: '#b45309', fontWeight: 'bold' }}>
-                  {hoveredSlot ? hoveredSlot.name.toUpperCase() : (activeIndex !== -1 ? slots[activeIndex].name.toUpperCase() : 'HUD NAV')}
-                </span>
-                <span className="font-pixel text-muted" style={{ fontSize: '7px', marginTop: '4px', lineHeight: 1.2, display: 'block', maxWidth: '110px', textShadow: 'none' }}>
-                  {hoveredSlot ? hoveredSlot.desc : (activeIndex !== -1 ? slots[activeIndex].desc : 'Select destination')}
-                </span>
-              </div>
-
               {/* Rotating Pointer Indicator (Coded) */}
               {selectedIndex !== -1 && (
                 <div
@@ -572,25 +542,16 @@ function Navbar({ isConnected, onOpenQuestSidebar }) {
                       height: '60px',
                       borderRadius: '50%',
                       cursor: 'pointer',
-                      background: hoveredSlot?.name === slot.name ? 'rgba(251, 191, 36, 0.15)' : 'transparent',
-                      border: hoveredSlot?.name === slot.name ? '2px solid #b45309' : 'none',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      color: hoveredSlot?.name === slot.name ? '#b45309' : '#513a23',
+                      background: 'transparent',
+                      border: 'none',
                       outline: 'none',
                       padding: 0,
                       zIndex: 4,
                       pointerEvents: 'auto',
-                      WebkitTapHighlightColor: 'transparent',
-                      transition: 'all 0.2s ease'
+                      WebkitTapHighlightColor: 'transparent'
                     }}
                     title={slot.name}
-                  >
-                    <span style={{ transform: 'scale(1.25)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                      {slot.icon}
-                    </span>
-                  </button>
+                  />
                 );
               })}
             </motion.div>
