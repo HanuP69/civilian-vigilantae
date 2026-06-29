@@ -599,22 +599,7 @@ function Navbar({ isConnected, onOpenQuestSidebar }) {
         )}
       </AnimatePresence>
 
-      {/* Mobile Bottom RPG Hotbar */}
-      <div className="mobile-rpg-hotbar">
-        {slots.slice(0, 6).map((slot) => {
-          const isActive = location.pathname === slot.path;
-          return (
-            <button
-              key={slot.name}
-              onClick={() => handleNav(slot.path, slot.name)}
-              className={`hotbar-item ${isActive ? 'active' : ''}`}
-              title={slot.name}
-            >
-              <span>{slot.icon}</span>
-            </button>
-          );
-        })}
-      </div>
+
     </>
   );
 }

@@ -587,7 +587,9 @@ function ReportPage() {
                           padding:'6px 10px',
                           fontSize:'7.5px',
                           color:'#b45309',
-                          cursor:'pointer'
+                          cursor:'pointer',
+                          lineHeight: 1.4,
+                          textAlign: 'left'
                         }}
                       >
                         {ex}

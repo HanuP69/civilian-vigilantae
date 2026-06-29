@@ -1083,78 +1083,28 @@ tr:hover td { background: var(--bg-surface); }
   .stats-row { grid-template-columns: repeat(2, 1fr); }
   .home-grid { grid-template-columns: 1fr; }
   .home-map-col { position: static; height: 60vw; min-height: 280px; }
-  .home-feed-col { height: auto; max-height: 80vh; }
   .ticket-grid { grid-template-columns: 1fr; gap: var(--space-6); }
-}
 
-/* Mobile bottom RPG hotbar — quick nav shortcuts, hidden above tablet width */
-.mobile-rpg-hotbar {
-  display: none;
-}
-
-@media (max-width: 768px) {
-  .mobile-rpg-hotbar {
-    display: flex;
-    position: fixed;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    z-index: var(--z-sticky);
-    background: linear-gradient(180deg, oklch(0.12 0.02 260 / 0.97) 0%, oklch(0.08 0.02 260 / 0.99) 100%);
-    border-top: 2px solid var(--border);
-    box-shadow: 0 -4px 16px rgba(0, 0, 0, 0.5);
-    padding: 8px max(8px, env(safe-area-inset-left)) calc(8px + env(safe-area-inset-bottom)) max(8px, env(safe-area-inset-right));
-    justify-content: space-around;
-    align-items: center;
-    gap: 4px;
-  }
-
-  .hotbar-item {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    flex: 1;
-    min-width: 0;
-    height: 48px;
-    background: transparent;
-    border: none;
-    border-radius: 0;
-    color: var(--ink-secondary);
-    font-size: 1.25rem;
-    cursor: pointer;
-    transition: color 0.15s ease, background 0.15s ease;
-  }
-
-  .hotbar-item.active {
-    color: var(--accent);
-    background: rgba(232, 168, 50, 0.12);
-    box-shadow: inset 0 2px 0 var(--accent);
-  }
-
-  .hotbar-item:active {
-    transform: scale(0.92);
-  }
-
-  /* Push the Co-Pilot floating trigger above the bottom hotbar */
+  /* Position the Co-Pilot floating trigger at the bottom right */
   .copilot-trigger {
-    bottom: calc(66px + env(safe-area-inset-bottom) + 12px) !important;
+    bottom: calc(env(safe-area-inset-bottom) + 12px) !important;
     right: 12px !important;
   }
 
-  /* Keep toasts clear of the bottom hotbar */
+  /* Keep toasts clear of the viewport bottom */
   .toast-container {
-    bottom: calc(66px + env(safe-area-inset-bottom) + var(--space-4));
+    bottom: calc(env(safe-area-inset-bottom) + var(--space-4)) !important;
   }
 }
 
 @media (max-width: 480px) {
   .stats-row { grid-template-columns: 1fr; }
-  .app-main { padding: var(--space-3); padding-top: 88px; padding-bottom: 84px; }
+  .app-main { padding: var(--space-3); padding-top: 88px; padding-bottom: 24px; }
   .panel, .card { padding: var(--space-4); }
   .toast-container {
     left: var(--space-4);
     right: var(--space-4);
-    bottom: calc(66px + env(safe-area-inset-bottom) + var(--space-4));
+    bottom: calc(env(safe-area-inset-bottom) + var(--space-4)) !important;
   }
   .toast { max-width: 100%; }
 }
