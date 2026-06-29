@@ -290,10 +290,12 @@ function ReportPage() {
   const mediaType = file ? (file.type.startsWith('video') ?'video': file.type.startsWith('audio') ?'audio':'image') : null;
 
   return (
-    <PageShell 
-      title="Report a Civic Issue"
-      subtitle="AI-assisted classification, geocode deduplication, and automated ward dispatch"
-    >
+    <PageShell>
+      <div style={{ maxWidth: '680px', margin: '0 auto' }}>
+        <h1 className="hud-page-title" style={{ textAlign: 'center' }}>Report a Civic Issue</h1>
+        <p className="hud-page-subtitle" style={{ textAlign: 'center', margin: '0 auto var(--space-6) auto' }}>
+          AI-assisted classification, geocode deduplication, and automated ward dispatch
+        </p>
 
       <div className="rpg-panel-sandstone animate-fade-up stagger-2" style={{ padding:'6px', marginBottom:'var(--space-6)', borderRadius: 0 }}>
         <div className="card pixel-border" style={{ background:'#fcf8ee', border:'2px solid #85613c', padding:'16px 20px', color:'#291d12'}}>
@@ -755,6 +757,7 @@ function ReportPage() {
           />
         )}
       </AnimatePresence>
+      </div>
     </PageShell>
   );
 }
