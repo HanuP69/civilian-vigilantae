@@ -709,6 +709,33 @@
   letter-spacing: 1px !important;
 }
 
+/* Override: .rpg-panel-sandstone .card.pixel-border span/div sets color:inherit which clobbers gold colors.
+   Gold-balance-box lives INSIDE .card.pixel-border so we need higher specificity here. */
+.rpg-panel-sandstone .card.pixel-border .gold-balance-box,
+.rpg-panel-sandstone .gold-balance-box {
+  background: linear-gradient(135deg, #2a1d10 0%, #1c130c 100%) !important;
+  border: 3px solid #513a23 !important;
+  outline: 2px solid #d8a96d !important;
+  outline-offset: -7px !important;
+}
+.rpg-panel-sandstone .card.pixel-border .gold-balance-box .gold-value,
+.rpg-panel-sandstone .card.pixel-border .gold-balance-box span.gold-value,
+.rpg-panel-sandstone .gold-balance-box .gold-value {
+  color: #ffd54a !important;
+  text-shadow: 0 0 8px rgba(255, 213, 74, 0.45) !important;
+}
+.rpg-panel-sandstone .card.pixel-border .gold-balance-box .gold-label,
+.rpg-panel-sandstone .card.pixel-border .gold-balance-box span.gold-label,
+.rpg-panel-sandstone .gold-balance-box .gold-label {
+  color: #ffe9a8 !important;
+  text-shadow: none !important;
+}
+/* Also fix the inner div (coin + value row) — color:inherit was turning it brown */
+.rpg-panel-sandstone .card.pixel-border .gold-balance-box div,
+.rpg-panel-sandstone .gold-balance-box div {
+  color: #ffd54a !important;
+}
+
 /* ---------- Sandstone Tablet & Parchment Auth Pages ---------- */
 .auth-tablet {
   display: grid !important;
@@ -1026,4 +1053,3 @@
   border-width: 7px 4px 0 !important;
   bottom: -4px !important;
 }
-
