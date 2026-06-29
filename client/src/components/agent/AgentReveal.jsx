@@ -145,11 +145,11 @@ function AgentReveal({ steps, isComplete, result, startedAt, onClose }) {
                     </div>
                   )}
                 </div>
-                <div className="flex gap-3" style={{ marginTop: '14px' }}>
+                <div className="flex gap-3" style={{ marginTop: '14px', flexWrap: 'wrap' }}>
                   {finalTicketId && (
-                    <button className="font-pixel" style={{ padding: '8px 14px', background: '#b45309', border: '1px solid #513a23', color: '#fff', cursor: 'pointer', fontSize: '9px' }} onClick={() => navigate(`/ticket/${finalTicketId}`)}>VIEW QUEST</button>
+                    <button className="font-pixel" style={{ padding: '8px 14px', background: '#b45309', border: '1px solid #513a23', color: '#fff', cursor: 'pointer', fontSize: '9px', lineHeight: 1.3, textAlign: 'center' }} onClick={() => navigate(`/ticket/${finalTicketId}`)}>VIEW QUEST</button>
                   )}
-                  <button className="font-pixel" style={{ padding: '8px 14px', background: '#fffbeb', border: '1px solid #85613c', color: '#b45309', cursor: 'pointer', fontSize: '9px' }} onClick={onClose}>REPORT ANOTHER</button>
+                  <button className="font-pixel" style={{ padding: '8px 14px', background: '#fffbeb', border: '1px solid #85613c', color: '#b45309', cursor: 'pointer', fontSize: '9px', lineHeight: 1.3, textAlign: 'center' }} onClick={onClose}>REPORT ANOTHER</button>
                 </div>
               </motion.div>
             )}

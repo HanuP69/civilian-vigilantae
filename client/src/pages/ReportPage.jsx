@@ -694,12 +694,12 @@ function ReportPage() {
                     {result.ticket_id && (
                       <p className="font-pixel" style={{ fontSize:'8px', color:'#6b5139', marginTop:'8px'}}>QUEST ID: <span className="font-mono">{result.ticket_id}</span></p>
                     )}
-                    <div className="flex gap-3" style={{ marginTop:'16px'}}>
+                    <div className="flex gap-3" style={{ marginTop:'16px', flexWrap:'wrap'}}>
                       {result.ticket_id && (
-                        <Link to={`/ticket/${result.ticket_id}`} className="font-pixel" style={{ padding:'8px 14px', background:'#b45309', border:'1px solid #513a23', color:'#fff', textDecoration:'none', fontSize:'9px'}}>VIEW QUEST</Link>
+                        <Link to={`/ticket/${result.ticket_id}`} className="font-pixel" style={{ padding:'8px 14px', background:'#b45309', border:'1px solid #513a23', color:'#fff', textDecoration:'none', fontSize:'9px', lineHeight: 1.3, textAlign: 'center'}}>VIEW QUEST</Link>
                       )}
-                      <button className="font-pixel" onClick={resetForm} style={{ padding:'8px 14px', background:'#fffbeb', border:'1px solid #85613c', color:'#b45309', cursor:'pointer', fontSize:'9px'}}>REPORT ANOTHER</button>
-                      <button className="font-pixel" onClick={() => navigate('/')} style={{ padding:'8px 14px', background:'transparent', border:'none', color:'#6b5139', cursor:'pointer', fontSize:'9px'}}>BACK TO BOARD</button>
+                      <button className="font-pixel" onClick={resetForm} style={{ padding:'8px 14px', background:'#fffbeb', border:'1px solid #85613c', color:'#b45309', cursor:'pointer', fontSize:'9px', lineHeight: 1.3, textAlign: 'center'}}>REPORT ANOTHER</button>
+                      <button className="font-pixel btn-text" onClick={() => navigate('/')} style={{ padding:'8px 14px', background:'transparent', border:'none', color:'#6b5139', cursor:'pointer', fontSize:'9px', lineHeight: 1.3, textAlign: 'center'}}>BACK TO BOARD</button>
                     </div>
                   </div>
                 )}
