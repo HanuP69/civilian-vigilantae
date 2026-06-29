@@ -435,9 +435,9 @@ function ProfilePage() {
             <div className="pixel-border gold-balance-box" style={{ background: '#1c130c', border: '2px solid #d8a96d', padding: '10px 14px', borderRadius: 0, textAlign: 'center', boxShadow: 'inset 1px 1px 4px rgba(0,0,0,0.8), 2px 2px 0 rgba(0,0,0,0.4)' }}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}>
                 <CoinIcon size={20} />
-                <span className="font-pixel gold-value" style={{ color: '#fcd34d', textShadow: '1px 1px 0 #000', fontSize: '1.15rem', fontWeight: 800, lineHeight: 1 }}>{user.gold || 0}</span>
+                <span className="font-pixel gold-value" style={{ color: '#ffffff', textShadow: '1px 1px 0 #000', fontSize: '1.15rem', fontWeight: 800, lineHeight: 1 }}>{user.gold || 0}</span>
               </div>
-              <span className="font-pixel gold-label" style={{ color: '#ecdcb9', textShadow: '1px 1px 0 #000', fontSize: '8px', fontWeight: 600, display: 'block', marginTop: '4px' }}>GOLD BALANCE</span>
+              <span className="font-pixel gold-label" style={{ color: '#ffffff', textShadow: '1px 1px 0 #000', fontSize: '8px', fontWeight: 600, display: 'block', marginTop: '4px' }}>GOLD BALANCE</span>
             </div>
           </div>
         </div>
