@@ -71,6 +71,8 @@ button,
 .map-container {
   border-radius: 0 !important;
   border: 4px solid var(--hud-border) !important;
+  position: relative !important;  /* For absolute positioned children */
+  overflow: visible !important;  /* Allow controls to show */
 }
 
 /* Input fields - squared */
@@ -159,6 +161,8 @@ img[alt*="Avatar"] {
   border-radius: 0 !important;
   border: 3px solid var(--hud-border) !important;
   box-shadow: 2px 2px 0 rgba(0,0,0,0.6) !important;
+  z-index: 1000 !important;  /* Ensure visibility above map */
+  position: relative !important;
 }
 
 .layer-chip-v2.active,
@@ -166,6 +170,12 @@ img[alt*="Avatar"] {
   box-shadow: 
     2px 2px 0 rgba(0,0,0,0.6),
     0 0 12px rgba(244, 196, 48, 0.6) !important;
+}
+
+/* Layer toggle wrapper - ensure high z-index */
+.layer-toggle-v2,
+.layer-toggle {
+  z-index: 1000 !important;
 }
 
 /* Legend - squared */

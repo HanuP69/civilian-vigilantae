@@ -170,14 +170,14 @@
 
 /* --- Map --- */
 .map-wrapper-v2 { 
-  overflow: hidden;
+  overflow: visible;  /* Allow controls to show above map */
   border: 4px solid var(--hud-border);
 }
 .layer-toggle-v2 {
   position: absolute;
   top: 16px;
   left: 16px;
-  z-index: 20;
+  z-index: 1000;  /* High z-index to appear above map */
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
@@ -187,15 +187,17 @@
   font-family: var(--font-pixel);
   font-size: 0.55rem;
   padding: 8px 12px;
-  background: rgba(42, 31, 46, 0.95);
+  background: rgba(42, 31, 46, 0.98);  /* More opaque */
   color: var(--hud-ink-dim);
   border: 3px solid var(--hud-border);
   cursor: pointer;
   transition: all 0.2s ease;
   box-shadow: 2px 2px 0 rgba(0,0,0,0.6);
+  position: relative;  /* Ensure proper stacking */
+  z-index: 1;
 }
 .layer-chip-v2:hover {
-  background: rgba(61, 47, 63, 0.95);
+  background: rgba(61, 47, 63, 0.98);
   transform: translate(-1px, -1px);
   box-shadow: 3px 3px 0 rgba(0,0,0,0.6);
 }
@@ -206,13 +208,14 @@
   box-shadow: 
     2px 2px 0 rgba(0,0,0,0.6),
     0 0 12px rgba(244, 196, 48, 0.6);
+  font-weight: 700;
 }
 .layer-legend-v2 {
   position: absolute;
   bottom: 16px;
   left: 16px;
-  z-index: 20;
-  background: rgba(42, 31, 46, 0.95);
+  z-index: 1000;  /* High z-index */
+  background: rgba(42, 31, 46, 0.98);
   border: 3px solid var(--hud-border);
   padding: 10px 12px;
   display: flex;
