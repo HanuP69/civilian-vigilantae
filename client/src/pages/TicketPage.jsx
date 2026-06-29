@@ -292,7 +292,7 @@ function TicketPage() {
             {activeExplainTab === 'diagnostics' && (
               <>
                 {/* 1. Verification Consensus Outcome */}
-                <div className="panel rpg-panel" style={{ borderRadius: 0 }}>
+                <div className="panel rpg-panel rpg-panel-sandstone" style={{ borderRadius: 0 }}>
                   <h3 className="section-title font-pixel" style={{ fontSize: '0.65rem', color: 'var(--success)', marginBottom: 'var(--space-3)' }}>
                     [ ✅ VERIFICATION PROBABILITY P(V) ]
                   </h3>
@@ -312,7 +312,7 @@ function TicketPage() {
 
                 {/* Root Cause Diagnosis */}
                 {ticket.root_cause && ticket.root_cause.explanation !== displayExplanation && (
-                  <div className="panel rpg-panel" style={{ borderRadius: 0 }}>
+                  <div className="panel rpg-panel rpg-panel-sandstone" style={{ borderRadius: 0 }}>
                     <h3 className="section-title font-pixel" style={{ fontSize: '0.65rem', color: 'var(--accent)', marginBottom: 'var(--space-3)' }}>
                       [ 🧠 ROOT CAUSE DIAGNOSIS ]
                     </h3>
@@ -335,7 +335,7 @@ function TicketPage() {
                   (() => {
                     const graphNode = INFRASTRUCTURE_GRAPH[ticket.category];
                     return (
-                      <div className="panel rpg-panel" style={{ borderRadius: 0 }}>
+                      <div className="panel rpg-panel rpg-panel-sandstone" style={{ borderRadius: 0 }}>
                         <h3 className="section-title font-pixel" style={{ fontSize: '0.65rem', color: 'var(--accent)', marginBottom: 'var(--space-4)' }}>
                           [ 🕸️ INFRASTRUCTURE IMPACT CASCADE ]
                         </h3>
@@ -393,7 +393,7 @@ function TicketPage() {
             {activeExplainTab === 'telemetry' && (
               <>
                 {/* 2. Why This Priority? */}
-                <div className="panel rpg-panel" style={{ borderRadius: 0 }}>
+                <div className="panel rpg-panel rpg-panel-sandstone" style={{ borderRadius: 0 }}>
                   <h3 className="section-title font-pixel" style={{ fontSize: '0.65rem', color: 'var(--warning)', marginBottom: 'var(--space-3)' }}>
                     [ ⚖️ PRIORITY SCORE (CONFIDENCE INDEX) ]
                   </h3>
@@ -417,7 +417,7 @@ function TicketPage() {
                 </div>
 
                 {/* 3. Cluster Evidence */}
-                <div className="panel rpg-panel" style={{ borderRadius: 0 }}>
+                <div className="panel rpg-panel rpg-panel-sandstone" style={{ borderRadius: 0 }}>
                   <h3 className="section-title font-pixel" style={{ fontSize: '0.65rem', color: 'var(--accent)', marginBottom: 'var(--space-3)' }}>
                     [ 🗺️ CLUSTER EVIDENCE ]
                   </h3>
@@ -438,7 +438,7 @@ function TicketPage() {
                 </div>
 
                 {/* 4. SLA Risk */}
-                <div className="panel rpg-panel" style={{ borderRadius: 0 }}>
+                <div className="panel rpg-panel rpg-panel-sandstone" style={{ borderRadius: 0 }}>
                   <h3 className="section-title font-pixel" style={{ fontSize: '0.65rem', color: 'var(--error)', marginBottom: 'var(--space-3)' }}>
                     [ 🔮 SLA BREACH PROBABILITY P(B) ]
                   </h3>
@@ -466,7 +466,7 @@ function TicketPage() {
 
             {activeExplainTab === 'evidence' && ticket.media_urls && ticket.media_urls.length > 0 && (
               /* 6. Submitted Evidence Media List */
-              <div className="panel rpg-panel" style={{ borderRadius: 0 }}>
+              <div className="panel rpg-panel rpg-panel-sandstone" style={{ borderRadius: 0 }}>
                 <h3 className="section-title font-pixel" style={{ fontSize: '0.65rem', color: 'var(--accent)', marginBottom: 'var(--space-4)' }}>
                   [ 📷 SUBMITTED EVIDENCE ]
                 </h3>
@@ -486,7 +486,7 @@ function TicketPage() {
                       </div>
                     );
                     if (type === 'audio') return (
-                      <div key={i} className="panel rpg-panel flex items-center gap-4" style={{ padding: 'var(--space-4)', borderRadius: 0 }}>
+                      <div key={i} className="panel rpg-panel rpg-panel-sandstone flex items-center gap-4" style={{ padding: 'var(--space-4)', borderRadius: 0 }}>
                         <div style={{ width: 40, height: 40, borderRadius: 0, background: 'var(--accent-muted)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
                         </div>
@@ -541,7 +541,7 @@ function TicketPage() {
         <div className="flex flex-col gap-6">
 
           {/* 1. Community Consensus Voting Block (Moved to Top) */}
-          <div className="panel rpg-panel" style={{ borderRadius: 0 }}>
+          <div className="panel rpg-panel rpg-panel-sandstone" style={{ borderRadius: 0 }}>
             <h4 className="label font-pixel" style={{ fontSize: '10px', marginBottom: 'var(--space-4)' }}>COMMUNITY CONSENSUS</h4>
             <div className="flex flex-col gap-3">
               <button
@@ -590,7 +590,7 @@ function TicketPage() {
 
           {/* 2. Interactive Geolocation Minimap */}
           {ticket.lat != null && ticket.lng != null && (
-            <div className="panel rpg-panel" style={{ borderRadius: 0, padding: 0, overflow: 'hidden', border: '1px solid var(--border)' }}>
+            <div className="panel rpg-panel rpg-panel-sandstone" style={{ borderRadius: 0, padding: 0, overflow: 'hidden', border: '1px solid var(--border)' }}>
               <h4 className="label font-pixel" style={{ fontSize: '10px', padding: 'var(--space-3) var(--space-4)', marginBottom: 0, borderBottom: '1px solid var(--border-subtle)' }}>
                 🗺️ INCIDENT SITE LOCATION
               </h4>
@@ -616,7 +616,7 @@ function TicketPage() {
 
           {/* 3. Priority Rating Block */}
           {ticket.priority_score != null && !isNaN(ticket.priority_score) && (
-            <div className="panel rpg-panel" style={{ borderColor: 'var(--accent-muted)', borderRadius: 0 }}>
+            <div className="panel rpg-panel rpg-panel-sandstone" style={{ borderColor: 'var(--accent-muted)', borderRadius: 0 }}>
               <h4 className="label font-pixel" style={{ fontSize: '10px', marginBottom: 'var(--space-2)' }}>PRIORITY SCORE INDEX (0-100)</h4>
               <div className="flex items-end justify-between" style={{ marginBottom: 'var(--space-3)' }}>
                 <span className="font-pixel" style={{ fontSize: '1.25rem', lineHeight: 1, color: ticket.priority_score > 70 ? 'var(--error)' : 'var(--accent)' }}>
@@ -641,7 +641,7 @@ function TicketPage() {
 
           {/* 4. Resolution Deadline Block */}
           {slaDeadline && (
-            <div className="panel rpg-panel" style={{ borderRadius: 0 }}>
+            <div className="panel rpg-panel rpg-panel-sandstone" style={{ borderRadius: 0 }}>
               <h4 className="label font-pixel" style={{ fontSize: '10px', marginBottom: 'var(--space-3)' }}>RESOLUTION DEADLINE</h4>
               <div className="font-mono text-sm text-primary" style={{ marginBottom: 'var(--space-3)' }}>{slaDeadline.toLocaleString()}</div>
               {slaRemaining != null && slaRemaining > 0 ? (
@@ -688,7 +688,7 @@ function TicketPage() {
             display: 'flex',
             flexDirection: 'column',
             gap: 'var(--space-4)',
-          }} className="panel rpg-panel animate-scale-in rpg-scrollbar">
+          }} className="panel rpg-panel rpg-panel-sandstone animate-scale-in rpg-scrollbar">
             <div className="flex justify-between items-center" style={{ borderBottom: '1px solid var(--accent-muted)', paddingBottom: 'var(--space-2)' }}>
               <span className="font-pixel text-xs" style={{ color: 'var(--accent)' }}>
                 [ 🛡️ VERIFY MUNICIPAL EVIDENCE ]

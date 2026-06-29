@@ -424,8 +424,11 @@
   --hud-card-active-bg: #fdfaf3 !important;
   --accent: #b45309 !important; /* deep high-contrast warm brown/orange instead of light yellow */
   --accent-muted: rgba(180, 83, 9, 0.15) !important;
+  --bg-primary: #f3e6c4 !important;
   --bg-secondary: #ebdcb9 !important;
   --bg-surface: #fffbeb !important;
+  --bg-elevated: #fdfaf3 !important;
+  --bg-hover: #f3e6c4 !important;
   --border: #85613c !important;
   --border-subtle: #a17c55 !important;
 
@@ -461,14 +464,17 @@
 }
 
 
-/* Ensure headings inside sandstone panels are high-contrast gold/parchment with dark shadow */
+/* Ensure headings inside sandstone panels default to a high-contrast dark ink color with a light
+   parchment-colored outline halo for legibility against the noisy sandstone texture. Not !important,
+   so headings that already set their own inline color (var(--accent), var(--error), var(--success), etc.)
+   keep that semantic color instead of being forced to one fixed color. */
 .rpg-panel-sandstone h1,
 .rpg-panel-sandstone h2,
 .rpg-panel-sandstone h3,
 .rpg-panel-sandstone h4,
 .rpg-panel-sandstone h5 {
-  color: #ecdcb9 !important;
-  text-shadow: 2px 2px 0 #513a23 !important;
+  color: #291d12;
+  text-shadow: 1px 1px 0 #fdf6e3, -1px -1px 0 #fdf6e3, 1px -1px 0 #fdf6e3, -1px 1px 0 #fdf6e3;
 }
 
 /* Subtitles/labels directly on sandstone background */
@@ -533,33 +539,116 @@
   border: 1px solid #513a23 !important;
 }
 
+/* ---------- Sandstone support for Dashboard / Ticket / Missions / Leaderboard panels ---------- */
+
+/* Grafana-style KPI cards (Dashboard analytics grid) reskinned as parchment tiles */
+.rpg-panel-sandstone.grafana-kpi-card,
+.rpg-panel-sandstone .grafana-kpi-card {
+  background: #fcf8ee !important;
+  border: 3px solid #513a23 !important;
+  box-shadow: 2px 2px 0 rgba(81, 58, 35, 0.4) !important;
+}
+.rpg-panel-sandstone .grafana-kpi-card.success,
+.rpg-panel-sandstone.grafana-kpi-card.success { border-color: var(--success) !important; }
+.rpg-panel-sandstone .grafana-kpi-card.danger,
+.rpg-panel-sandstone.grafana-kpi-card.danger { border-color: var(--error) !important; }
+.rpg-panel-sandstone .grafana-kpi-card.warning,
+.rpg-panel-sandstone.grafana-kpi-card.warning { border-color: var(--warning) !important; }
+.rpg-panel-sandstone .grafana-kpi-title { color: #6b5139 !important; }
+.rpg-panel-sandstone .grafana-kpi-val { color: #291d12 !important; }
+
+/* Summary / reward sub-cards (Missions XP+Gold chips) */
+.rpg-panel-sandstone .summary-card {
+  background: #fcf8ee !important;
+  border: 2px solid #85613c !important;
+  border-left: 3px solid #b45309 !important;
+  box-shadow: 2px 2px 0 rgba(81, 58, 35, 0.3) !important;
+}
+
+/* Mission / quest cards rendered with the parchment treatment (left border kept for status accent) */
+.rpg-panel-sandstone.mission-card,
+.rpg-panel-sandstone .mission-card {
+  background: #fcf8ee !important;
+  border-top: 3px solid #513a23 !important;
+  border-right: 3px solid #513a23 !important;
+  border-bottom: 3px solid #513a23 !important;
+}
+
+/* Inline code/formula boxes need a light readable surface on parchment */
+.rpg-panel-sandstone .formula-box {
+  background: #2a1d10 !important;
+  color: #ecdcb9 !important;
+  border: 1px solid #513a23 !important;
+}
+
+/* Cool-toned method banner swapped for warm parchment chip */
+.rpg-panel-sandstone .method-banner {
+  background: #ecdcb9 !important;
+  border: 1px solid #b45309 !important;
+  color: #4a3522 !important;
+}
+
+/* Tab toggles (Hexmap / Card List, etc.) inside sandstone panels */
+.rpg-panel-sandstone .btn-toggle {
+  border-color: #85613c !important;
+  color: #4a3522 !important;
+}
+.rpg-panel-sandstone .btn-toggle:hover {
+  background: rgba(81, 58, 35, 0.08) !important;
+  color: #291d12 !important;
+}
+.rpg-panel-sandstone .btn-toggle.active {
+  background: #b45309 !important;
+  color: #fffbeb !important;
+  border-color: #b45309 !important;
+}
+
+/* Dark modal-style explanation overlays keep their own scrim, just align border */
+.rpg-panel-sandstone .metric-explanation-panel {
+  border: 1px solid #513a23 !important;
+}
+
+/* Row hover state used in recurrence/ward lists */
+.rpg-panel-sandstone .recurrence-row,
+.rpg-panel-sandstone .leaderboard-row {
+  background: #fcf8ee !important;
+  border-color: #85613c !important;
+}
+.rpg-panel-sandstone .recurrence-row:hover {
+  background: #f3e6c4 !important;
+}
+
 /* Premium High-Contrast Gold Balance Box */
 .gold-balance-box {
   margin-top: var(--space-5) !important;
-  background: #1c130c !important; /* Rich dark wood backdrop */
-  border: 2px solid #d8a96d !important; /* Glowing gold frame */
-  padding: 10px 14px !important;
+  background: linear-gradient(135deg, #2a1d10 0%, #1c130c 100%) !important; /* Rich dark wood backdrop */
+  border: 3px solid #513a23 !important;
+  outline: 2px solid #d8a96d !important;
+  outline-offset: -7px !important;
+  padding: 12px 14px !important;
   text-align: center !important;
   border-radius: 0 !important;
-  box-shadow: inset 1px 1px 4px rgba(0,0,0,0.8), 2px 2px 0 rgba(0,0,0,0.4) !important;
+  box-shadow: inset 0 0 0 1px rgba(0,0,0,0.6), 3px 3px 0 rgba(0,0,0,0.5) !important;
 }
 
 .gold-balance-box .gold-value {
-  font-size: 1.1rem !important;
-  color: #ffffff !important; /* Force white color */
+  font-size: 1.2rem !important;
+  color: #ffd54a !important; /* Bright high-contrast amber, not white-on-white-shadow */
   display: block !important;
-  text-shadow: 1px 1px 0 #000 !important;
+  text-shadow: 1px 1px 0 #000, 0 0 10px rgba(255, 213, 74, 0.35) !important;
   font-weight: 800 !important;
+  letter-spacing: 0.5px !important;
 }
 
 .gold-balance-box .gold-label {
-  font-size: 8px !important;
-  color: #ffffff !important; /* Force white color */
-  margin-top: 4px !important;
+  font-size: 9px !important;
+  color: #fffbeb !important; /* Warm near-white, brighter than pure white-on-shadow */
+  margin-top: 5px !important;
   display: block !important;
   text-shadow: 1px 1px 0 #000 !important;
-  opacity: 0.95 !important;
+  opacity: 1 !important;
   font-weight: 600 !important;
+  letter-spacing: 1.5px !important;
 }
 
 /* ---------- Sandstone Tablet & Parchment Auth Pages ---------- */

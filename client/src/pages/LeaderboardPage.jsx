@@ -166,7 +166,7 @@ function LeaderboardPage() {
             <motion.div
               key={user.id || user.uid || i}
               variants={itemAnim}
-              className="card rpg-panel flex items-center gap-4 leaderboard-row"
+              className="card rpg-panel rpg-panel-sandstone flex items-center gap-4 leaderboard-row"
               style={{
                 padding: 'var(--space-3) var(--space-4)',
                 borderRadius: 0
@@ -257,7 +257,7 @@ function LeaderboardPage() {
         })}
 
         {users.length === 0 && (
-          <div className="card" style={{ textAlign: 'center', padding: 'var(--space-8)', borderRadius: 0 }}>
+          <div className="card rpg-panel rpg-panel-sandstone" style={{ textAlign: 'center', padding: 'var(--space-8)', borderRadius: 0 }}>
             <span className="font-mono text-muted text-sm">NO DATA DETECTED</span>
           </div>
         )}

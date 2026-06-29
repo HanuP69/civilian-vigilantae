@@ -59,7 +59,7 @@ function MissionsPage() {
       </div>
 
       {missions.length === 0 ? (
-        <div className="card rpg-panel text-center" style={{ padding: 'var(--space-8)', borderRadius: 0 }}>
+        <div className="card rpg-panel rpg-panel-sandstone text-center" style={{ padding: 'var(--space-8)', borderRadius: 0 }}>
           <p className="font-pixel" style={{ fontSize: '0.65rem', color: 'var(--ink-muted)' }}>NO ACTIVE MISSIONS AT THIS TIME.</p>
         </div>
       ) : (
@@ -78,7 +78,7 @@ function MissionsPage() {
               <motion.div 
                 key={mission.id}
                 variants={itemAnim}
-                className={`card rpg-panel ${isCompleted ? 'success' : ''} mission-card`}
+                className={`card rpg-panel rpg-panel-sandstone ${isCompleted ? 'success' : ''} mission-card`}
                 onClick={handleCardClick}
                 style={{ 
                   borderRadius: 0,

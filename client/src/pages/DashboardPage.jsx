@@ -748,7 +748,7 @@ function DashboardPage() {
                 <motion.div
                   key={kpi.label}
                   variants={itemAnim}
-                  className={`grafana-kpi-card ${kpi.danger ? 'danger' : kpi.success ? 'success' : ''}`}
+                  className={`grafana-kpi-card rpg-panel-sandstone ${kpi.danger ? 'danger' : kpi.success ? 'success' : ''}`}
                 >
                   <div className="flex flex-col gap-1" style={{ height: '100%', justifyContent: 'space-between' }}>
                     <div className="flex items-center justify-between">
@@ -787,7 +787,7 @@ function DashboardPage() {
           </div>
 
           {/* Grafana-style Hotspot Heatmap Panel with Hexmap Toggle */}
-          <motion.div variants={itemAnim} className="card rpg-panel" style={{ marginBottom: 'var(--space-6)', position: 'relative', borderRadius: 0 }}>
+          <motion.div variants={itemAnim} className="card rpg-panel rpg-panel-sandstone" style={{ marginBottom: 'var(--space-6)', position: 'relative', borderRadius: 0 }}>
             <div className="flex items-center justify-between" style={{ marginBottom: 'var(--space-4)', flexWrap: 'wrap', gap: 'var(--space-2)' }}>
               <div className="flex items-center gap-3">
                 <h3 className="font-pixel" style={{ fontSize: '0.65rem', margin: 0, color: 'var(--accent)' }}>[ 🗺️ WARD ISSUES HEATMAP ]</h3>
@@ -965,7 +965,7 @@ function DashboardPage() {
       {dashboardTab === 'infrastructure' && (
         <>
           {/* Infrastructure Assets Health Ledger */}
-          <motion.div variants={itemAnim} className="card rpg-panel" style={{ marginBottom: 'var(--space-6)', position: 'relative', borderRadius: 0 }}>
+          <motion.div variants={itemAnim} className="card rpg-panel rpg-panel-sandstone" style={{ marginBottom: 'var(--space-6)', position: 'relative', borderRadius: 0 }}>
             <div className="flex items-center justify-between" style={{ marginBottom: 'var(--space-4)', flexWrap: 'wrap', gap: 'var(--space-2)' }}>
               <div className="flex items-center gap-3">
                 <h3 className="font-pixel" style={{ fontSize: '0.65rem', margin: 0, color: 'var(--accent)' }}>[ 🕸️ INFRASTRUCTURE ASSETS LEDGER ]</h3>
@@ -1067,7 +1067,7 @@ function DashboardPage() {
           </motion.div>
 
           {departments.length > 0 && (
-            <motion.div variants={itemAnim} className="card rpg-panel" style={{ display: 'flex', flexDirection: 'column', position: 'relative', borderRadius: 0 }}>
+            <motion.div variants={itemAnim} className="card rpg-panel rpg-panel-sandstone" style={{ display: 'flex', flexDirection: 'column', position: 'relative', borderRadius: 0 }}>
               <div className="flex items-center justify-between" style={{ marginBottom: 'var(--space-4)' }}>
                 <div className="flex items-center gap-2">
                   <h3 className="font-pixel" style={{ fontSize: '0.65rem', margin: 0, color: 'var(--accent)' }}>[ 🛡️ DEPARTMENT PERFORMANCE LEDGER ]</h3>
@@ -1171,7 +1171,7 @@ function DashboardPage() {
                 <motion.div
                   key={kpi.label}
                   variants={itemAnim}
-                  className={`grafana-kpi-card ${kpi.danger ? 'danger' : kpi.warning ? 'warning' : kpi.success ? 'success' : ''}`}
+                  className={`grafana-kpi-card rpg-panel-sandstone ${kpi.danger ? 'danger' : kpi.warning ? 'warning' : kpi.success ? 'success' : ''}`}
                 >
                   <div className="flex flex-col gap-1" style={{ height: '100%', justifyContent: 'space-between' }}>
                     <div className="flex items-center justify-between">
@@ -1261,7 +1261,7 @@ function DashboardPage() {
           </InteractivePanel>
 
           {recurrence.length > 0 && (
-            <motion.div variants={itemAnim} className="card rpg-panel" style={{ display: 'flex', flexDirection: 'column', position: 'relative', borderRadius: 0, marginTop: 'var(--space-6)' }}>
+            <motion.div variants={itemAnim} className="card rpg-panel rpg-panel-sandstone" style={{ display: 'flex', flexDirection: 'column', position: 'relative', borderRadius: 0, marginTop: 'var(--space-6)' }}>
               <div className="flex items-center justify-between" style={{ marginBottom: 'var(--space-4)' }}>
                 <div className="flex items-center gap-2">
                   <h3 className="font-pixel" style={{ fontSize: '0.65rem', margin: 0, color: 'var(--accent)' }}>[ 🔮 RECURRENCE FORECAST ORACLE ]</h3>
@@ -1389,7 +1389,7 @@ function InteractivePanel({ title, subtitle, panelKey, activeInfo, onToggleInfo,
   return (
     <motion.div 
       variants={itemAnim} 
-      className="card rpg-panel chart-card" 
+      className="card rpg-panel rpg-panel-sandstone chart-card" 
       style={{ display: 'flex', flexDirection: 'column', position: 'relative', borderRadius: 0 }}
     >
       <div className="chart-card-header" style={{ marginBottom: 'var(--space-3)' }}>
