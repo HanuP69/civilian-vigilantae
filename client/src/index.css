@@ -1163,7 +1163,7 @@ tr:hover td { background: var(--bg-surface); }
   position: fixed;
   inset: 0;
   z-index: var(--z-modal-backdrop);
-  background: rgba(0, 0, 0, 0.45);
+  background: transparent;
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
   display: flex;
