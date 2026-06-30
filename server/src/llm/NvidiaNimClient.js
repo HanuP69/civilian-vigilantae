@@ -163,7 +163,7 @@ export class NvidiaNimClient extends LLMClient {
     super();
     this.invokeUrl = 'https://integrate.api.nvidia.com/v1/chat/completions';
     this.model = config.nvidiaModel || 'minimaxai/minimax-m3';
-    this.apiKey = config.nvidiaApiKey || process.env.NIM || process.env.NVIDIA_API_KEY;
+    this.apiKey = process.env.NIM || process.env.NVIDIA_API_KEY || config.nvidiaApiKey;
   }
 
   /**

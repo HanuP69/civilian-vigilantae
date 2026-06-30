@@ -450,7 +450,7 @@ export async function processReport(reportData, onStep) {
 
 export async function processSchedulerTick(onStep) {
   const { db } = await import('../config/firebase.js');
-  const trace = createTraceLogger('scheduler-tick', onStep);
+  const overallTrace = [];
 
   const ticketsSnap = await db.collection('tickets').get();
   const openTickets = [];
@@ -459,31 +459,35 @@ export async function processSchedulerTick(onStep) {
     if (['reported', 'verified', 'in_progress'].includes(t.status)) openTickets.push(t);
   });
 
-  if (openTickets.length === 0) return { processed: 0, trace: trace.getSteps() };
+  if (openTickets.length === 0) return { processed: 0, trace: [] };
 
   let processedCount = 0;
   for (const t of openTickets) {
-    const completeSLA = trace.startStep('check_sla_status', { ticket_id: t.id });
+    const ticketTrace = createTraceLogger(`scheduler-tick-${t.id}`, onStep);
+
+    const completeSLA = ticketTrace.startStep('check_sla_status', { ticket_id: t.id });
     const slaResult = await toolHandlers.check_sla_status({ ticket_id: t.id });
     completeSLA(slaResult, `SLA Checked. Breach probability: ${slaResult.probability ?? 0}`);
 
     if (slaResult.probability > 0.8 || slaResult.is_breached) {
-      await GovernanceAgent.executeEscalate(t, trace);
+      await GovernanceAgent.executeEscalate(t, ticketTrace);
     }
 
-    const completePriority = trace.startStep('compute_priority', { ticket_id: t.id });
+    const completePriority = ticketTrace.startStep('compute_priority', { ticket_id: t.id });
     const priorityResult = await toolHandlers.compute_priority({ ticket_id: t.id });
     completePriority(priorityResult, `Priority recalculated: ${priorityResult.priority_score}`);
 
-    // Update ticket agent trace
+    // Update ticket agent trace (limit trace to last 100 entries to prevent long-term bloat)
     const ticketDoc = await db.collection('tickets').doc(t.id).get();
     if (ticketDoc.exists) {
       const existingTrace = ticketDoc.data().agent_trace || [];
+      const updatedTrace = [...existingTrace, ...ticketTrace.getSteps()];
       await db.collection('tickets').doc(t.id).update({
-        agent_trace: [...existingTrace, ...trace.getSteps()],
+        agent_trace: updatedTrace.slice(-100),
       });
     }
 
+    overallTrace.push(...ticketTrace.getSteps());
     processedCount++;
   }
 
@@ -505,5 +509,5 @@ export async function processSchedulerTick(onStep) {
     console.warn('[Scheduler] Demo users cleanup failed:', err.message);
   }
 
-  return { processed: processedCount, trace: trace.getSteps() };
+  return { processed: processedCount, trace: overallTrace };
 }
