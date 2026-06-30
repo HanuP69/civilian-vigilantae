@@ -262,7 +262,7 @@ function HomePage() {
     <PageShell wide>
 
       {/* ── Hero Banner ── */}
-      <section className="story-banner-v2 animate-fade-up" aria-label="Sentinel Civic Overview">
+      <section className="story-banner-v2 animate-fade-up" aria-label="Citizen Vigilantae Overview">
         <Panel lg notched className="story-banner-v2-inner rpg-panel-sandstone">
           <div className="card pixel-border" style={{ background: '#fcf8ee', border: '2px solid #85613c', padding: 'var(--space-6)', width: '100%', color: '#291d12', margin: 0, boxPattern: 'none' }}>
             <div className="story-banner-v2-grid">

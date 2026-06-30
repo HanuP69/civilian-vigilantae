@@ -304,7 +304,7 @@ function ReportPage() {
             <span className="info-pill" style={{ borderRadius: 0, background:'#fffbeb', border:'1px solid #85613c', color:'#b45309', fontWeight: 600 }}>Scans duplicate reports</span>
             <span className="info-pill" style={{ borderRadius: 0, background:'#fffbeb', border:'1px solid #85613c', color:'#b45309', fontWeight: 600 }}>Dispatches to Ward Hero</span>
           </div>
-          <p style={{ marginTop:'var(--space-3)', color:'#4a3522', fontWeight: 500, fontSize:'0.9rem', lineHeight: 1.5 }}>Report local troubles to the Town Council. The Sentinel AI understands the problem, checks for similar reports, and alerts the nearest active wards immediately.
+          <p style={{ marginTop:'var(--space-3)', color:'#4a3522', fontWeight: 500, fontSize:'0.9rem', lineHeight: 1.5 }}>Report local troubles to the Town Council. The Citizen Vigilantae AI understands the problem, checks for similar reports, and alerts the nearest active wards immediately.
           </p>
         </div>
       </div>
@@ -441,7 +441,7 @@ function ReportPage() {
               <div className="flex flex-col gap-6 animate-fade-up">
                 <div className="flex items-center justify-between" style={{ borderBottom:'2px solid #85613c', paddingBottom:'6px', marginBottom:'12px'}}>
                   <h3 className="font-pixel" style={{ fontSize:'14px', color:'#291d12', margin: 0 }}>UPLOAD EVIDENCE</h3>
-                  <span className="font-pixel" style={{ fontSize:'7.5px', color:'#6b5139'}}>OPTIONAL · POWERS SENTINEL AI</span>
+                  <span className="font-pixel" style={{ fontSize:'7.5px', color:'#6b5139'}}>OPTIONAL · POWERS VIGILANTE AI</span>
                 </div>
                 
                 <div

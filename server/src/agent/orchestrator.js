@@ -426,7 +426,7 @@ export async function processReport(reportData, onStep) {
   const { analyzeRootCause } = await import('../services/rootCauseService.js');
   const rootCauseResult = await analyzeRootCause(ctx.classificationResult.category, reportsForRootCause);
 
-  trace.logStep('agent_response', {}, { text: 'Report processing complete.' }, 'SENTINEL-CIVIC pipeline operations complete.', 0);
+  trace.logStep('agent_response', {}, { text: 'Report processing complete.' }, 'CITIZEN-VIGILANTAE pipeline operations complete.', 0);
 
   // Store full trace and dynamic calculations in Firestore
   await db.collection('tickets').doc(ticketId).update({

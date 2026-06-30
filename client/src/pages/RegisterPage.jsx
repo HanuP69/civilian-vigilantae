@@ -102,7 +102,7 @@ function RegisterPage() {
         {/* Left: Storytelling panel */}
         <div className="auth-story-side" aria-hidden="true">
         <div style={{ marginBottom: 'var(--space-4)' }}>
-          <span className="story-banner-tag">SENTINEL CIVIC</span>
+          <span className="story-banner-tag">CITIZEN VIGILANTAE</span>
         </div>
         <h1 className="auth-story-headline">
           Join the<br />
@@ -124,7 +124,7 @@ function RegisterPage() {
             New Recruit Registration
           </span>
           <h2 style={{ fontSize: '1.6rem', marginTop: 'var(--space-2)', fontStyle: 'italic' }}>
-            Join Sentinel Civic
+            Join Citizen Vigilantae
           </h2>
         </div>
 

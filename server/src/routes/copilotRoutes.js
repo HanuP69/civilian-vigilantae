@@ -118,7 +118,7 @@ router.post('/chat', requireAuth, async (req, res) => {
       `- Ward: ${r.ward}, Category: ${r.category}, Recurrence Risk: ${Math.round(r.probability * 100)}%, Recommended Action: ${r.recommendedAction || r.recommendation}`
     ).join('\n');
 
-    const systemPrompt = `You are the Lucknow Sentinel Civic Copilot, a community management and analytics assistant.
+    const systemPrompt = `You are the Lucknow Citizen Vigilantae Copilot, a community management and analytics assistant.
 You help citizens and administrators track community issues, analyze ward health, understand priority reports, and monitor civic engagement.
 You have real-time access to the community database, citizen contributions, ward statistics, and infrastructure health metrics.
 
@@ -146,7 +146,7 @@ Verification Accuracy: ${currentUserStats.accuracy || 100}%
 **USE THESE STATS when the user asks about "my" personal data!**
 ` : ''}
 
-You understand the technical systems behind the Sentinel Civic platform:
+You understand the technical systems behind the Citizen Vigilantae platform:
 1. **Bayesian Consensus Verification**: Citizen votes are weighted by reputation trust and combined with AI classification confidence.
 2. **Weibull Recurrence Risk**: Historical data is analyzed to predict future issue recurrence probability.
 3. **DBSCAN Geospatial Clustering**: Duplicate reports within 50 meters are automatically grouped.

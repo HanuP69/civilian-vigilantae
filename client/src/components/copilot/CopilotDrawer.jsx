@@ -45,7 +45,7 @@ function CopilotDrawer() {
   const { isAuthenticated } = useAuth();
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState([
-    { role: 'model', content: 'Greetings, Citizen. I am the Sentinel Civic Copilot. Ask me about active reports, spatial recurrence risks, or municipal resource dispatches.' }
+    { role: 'model', content: 'Greetings, Citizen. I am the Citizen Vigilantae Copilot. Ask me about active reports, spatial recurrence risks, or municipal resource dispatches.' }
   ]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
@@ -262,7 +262,7 @@ function CopilotDrawer() {
                 />
                 <div>
                   <h3 className="font-pixel" style={{ fontSize: '11px', color: '#fcd34d', margin: 0, textShadow: '1px 1px 0 #000' }}>
-                    SENTINEL CIVIC CO-PILOT
+                    CITIZEN VIGILANTAE CO-PILOT
                   </h3>
                   <span className="font-pixel" style={{ fontSize: '9px', marginTop: '2px', display: 'block', color: '#ecdcb9', textShadow: '1px 1px 0 #000' }}>LUCKNOW WATCH GUILD ASSISTANT</span>
                 </div>
@@ -334,7 +334,7 @@ function CopilotDrawer() {
                               padding: '1px'
                             }} 
                           />
-                          <span>SENTINEL AI</span>
+                          <span>VIGILANTE AI</span>
                         </>
                       ) : (
                         <span>👤 CITIZEN SENSOR</span>

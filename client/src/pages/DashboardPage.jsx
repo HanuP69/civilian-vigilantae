@@ -639,7 +639,7 @@ function DashboardPage() {
     { label:'ISSUES IN JOURNAL', value: stats?.total, spark: createdSpark, sparkColor:'var(--accent)', panelKey:'total_issues'},
     { label:'ISSUES RESOLVED', value: stats?.resolvedThisWeek, spark: resolvedSpark, sparkColor:'var(--success)', panelKey:'resolved_7d', success: true },
     { label:'AVG RESOLUTION', value: stats?.avgResolutionHours != null ? Math.round(stats.avgResolutionHours) : null, suffix:'h', panelKey:'avg_resolution'},
-    { label:'SENTINELS ACTIVE', value: stats?.activeReporters, panelKey:'active_reporters'},
+    { label:'VIGILANTES ACTIVE', value: stats?.activeReporters, panelKey:'active_reporters'},
     { label:'EXPIRING ISSUES', value: slaAtRisk, danger: slaAtRisk > 0, panelKey:'sla_risk'},
   ];
 

@@ -85,7 +85,7 @@ function LoginPage() {
         {/* Left: Storytelling panel */}
         <div className="auth-story-side" aria-hidden="true">
         <div style={{ marginBottom: 'var(--space-4)' }}>
-          <span className="story-banner-tag">SENTINEL CIVIC</span>
+          <span className="story-banner-tag">CITIZEN VIGILANTAE</span>
         </div>
         <h1 className="auth-story-headline">
           Your city has<br />
@@ -93,7 +93,7 @@ function LoginPage() {
           Let's fix them.
         </h1>
         <p className="auth-story-body">
-          Sentinel Civic is a hyperlocal intelligence platform where citizens report,
+          Citizen Vigilantae is a hyperlocal intelligence platform where citizens report,
           verify, and track community problems — powered by agentic AI that works
           24/7 to route, prioritize, and resolve issues before they escalate.
         </p>
@@ -116,7 +116,7 @@ function LoginPage() {
             Tactical Command Auth
           </span>
           <h2 style={{ fontSize: '1.6rem', marginTop: 'var(--space-2)', fontStyle: 'italic' }}>
-            Sentinel Access
+            Vigilante Access
           </h2>
         </div>
 
@@ -164,7 +164,7 @@ function LoginPage() {
             className="btn btn-primary"
             disabled={submitting || isSuccess}
             style={{ padding: '10px 20px', borderRadius: 0, width: '100%', justifyContent: 'center', fontWeight: 700, marginTop: 'var(--space-1)', fontSize: '0.9rem' }}
-            aria-label={isSuccess ? 'Access granted, redirecting' : submitting ? 'Authenticating, please wait' : 'Sign in to Sentinel Civic'}
+            aria-label={isSuccess ? 'Access granted, redirecting' : submitting ? 'Authenticating, please wait' : 'Sign in to Citizen Vigilantae'}
           >
             {isSuccess ? '✓ Access Granted' : submitting ? 'Authenticating…' : 'Enter Console'}
           </button>

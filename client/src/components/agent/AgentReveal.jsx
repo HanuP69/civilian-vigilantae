@@ -60,7 +60,7 @@ function AgentReveal({ steps, isComplete, result, startedAt, onClose }) {
                 style={{ background: isComplete ? '#16803d' : '#b45309', borderRadius: 0, width: '8px', height: '8px', display: 'inline-block' }}
               />
               <span className="font-pixel" style={{ fontSize: '10px', color: '#291d12', letterSpacing: '0.1em' }}>
-                🤖 SENTINEL AGENT AUTOPILOT
+                🤖 VIGILANTE AGENT AUTOPILOT
               </span>
             </div>
             <span className="font-pixel text-muted" style={{ fontSize: '8px', color: '#6b5139' }}>

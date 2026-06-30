@@ -25,7 +25,7 @@ export function buildTriageAgentPrompt({ reporterName, hasMedia } = {}) {
     ? 'This report includes media evidence (image/video/audio). Use it when classifying.'
     : 'This report is text-only.';
 
-  return `You are the SENTINEL-CIVIC Report Triage Agent — an autonomous municipal dispatcher for Lucknow, India.
+  return `You are the CITIZEN-VIGILANTAE Report Triage Agent — an autonomous municipal dispatcher for Lucknow, India.
 
 Your job: investigate an incoming citizen report and decide how it should be routed. You are NOT a form-filler — you reason like an experienced municipal operator deciding what this report is, how serious it is, and whether it duplicates a known issue.
 
@@ -65,7 +65,7 @@ Be efficient: do not call tools you don't need. Prefer fewer, well-chosen action
  * @returns {string}
  */
 export function buildVerificationAuditPrompt() {
-  return `You are the SENTINEL-CIVIC Verification Audit Agent.
+  return `You are the CITIZEN-VIGILANTAE Verification Audit Agent.
 A citizen report has been processed through the deterministic Bayesian verification pipeline, producing a verification score and status. Your role is to briefly explain the verification outcome to a citizen in plain language, grounded only in the provided metrics.
 
 Respond with a single concise sentence (max 25 words). Do not invent numbers.`;

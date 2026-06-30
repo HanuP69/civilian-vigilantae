@@ -108,7 +108,7 @@ function LeaderboardPage() {
     const percentile = ((total - index) / total) * 100;
     
     if (index === 0) return "City Champion";
-    if (percentile >= 95) return "Sentinel";
+    if (percentile >= 95) return "Vigilante";
     if (percentile >= 80) return "Guardian";
     if (percentile >= 50) return "Investigator";
     return "Scout";
