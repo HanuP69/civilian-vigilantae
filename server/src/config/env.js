@@ -52,6 +52,10 @@ const config = Object.freeze({
   ollamaBaseUrl:        process.env.OLLAMA_BASE_URL       || 'http://localhost:11434',
   ollamaModel:          process.env.OLLAMA_MODEL || 'qwen2.5:7b-instruct-q4_K_M',
   ollamaVisionModel:    process.env.OLLAMA_VISION_MODEL   || 'llava:latest',
+
+  // NVIDIA NIM
+  nvidiaApiKey:         process.env.NIM || process.env.NVIDIA_API_KEY || '',
+  nvidiaModel:          process.env.NVIDIA_MODEL || 'minimaxai/minimax-m3',
 });
 
 export default config;

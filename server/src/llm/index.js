@@ -9,6 +9,7 @@
 import config from '../config/env.js';
 import { GeminiClient } from './GeminiClient.js';
 import { OllamaClient } from './OllamaClient.js';
+import { NvidiaNimClient } from './NvidiaNimClient.js';
 
 /** @type {import('./LLMClient.js').LLMClient|null} */
 let _instance = null;
@@ -33,6 +34,9 @@ export function getLLMClient() {
   if (backend === 'gemini') {
     console.log('[LLM] Using Gemini backend: gemini-2.5-flash');
     _instance = new GeminiClient();
+  } else if (backend === 'nvidia' || backend === 'nim') {
+    console.log('[LLM] Using NVIDIA NIM backend:', config.nvidiaModel);
+    _instance = new NvidiaNimClient();
   } else {
     console.log('[LLM] Using Ollama backend:', config.ollamaModel);
     _instance = new OllamaClient();
