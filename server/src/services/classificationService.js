@@ -2,6 +2,12 @@ import { getLLMClient } from '../llm/index.js';
 import config from '../config/env.js';
 import { retryWithBackoff } from '../utils/retryHelper.js';
 
+const CATEGORIES = ["pothole", "water_leak", "streetlight", "waste", "road_damage", "drainage", "other"];
+
+/**
+ * Primary classifier — full reasoning pass over the citizen's text + media,
+ * via Gemini 2.5 Flash's native multimodal understanding.
+ */
 export async function classifyWithLLM(base64Data, mimeType, text = '') {
   const mediaKind = mimeType.startsWith('video') ? 'video' : mimeType.startsWith('audio') ? 'audio' : 'image';
   const prompt = `You are a civic issue classifier for an Indian city. Analyze this ${mediaKind} and any text description to classify the issue.
@@ -43,74 +49,100 @@ Respond in JSON format:
   }
 }
 
-export async function classifyWithCloudVision(base64Data) {
+/**
+ * Secondary, INDEPENDENT visual-only auditor classification.
+ *
+ * Replaces the earlier Google Cloud Vision label-detection signal. Gemini 2.5
+ * Flash is natively multimodal, so instead of calling out to a separate vision
+ * API, we make a second, deliberately isolated call: the model is told to
+ * reason purely from pixels (it never sees the citizen's text description),
+ * which gives a genuinely independent second opinion for the Bayesian
+ * consensus fusion below — the same statistical role Cloud Vision used to
+ * play, without the extra GCP dependency or credential surface.
+ *
+ * Returns null (rather than throwing) when there's no media to audit or the
+ * call fails — callers must treat a null result as "no independent signal
+ * available" and fall back to the primary classifier alone.
+ */
+export async function classifyWithVisualAudit(base64Data, mimeType) {
+  if (!base64Data) return null;
+
+  const mediaKind = mimeType?.startsWith('video') ? 'video' : 'image';
+  const prompt = `You are an independent visual auditor for a civic issue reporting system. You are shown ONLY the attached ${mediaKind} — you have not been given any citizen-written description, and you must not assume one. Identify the civic issue category using purely visual evidence.
+
+Respond in JSON format:
+{
+  "category": one of ["pothole", "water_leak", "streetlight", "waste", "road_damage", "drainage", "other"],
+  "confidence": number 0-1,
+  "visual_evidence": ["short phrase", "short phrase"]
+}
+List 2-4 concrete things you actually see (e.g. "cracked asphalt", "standing water", "broken lamp post").`;
+
   try {
-    const vision = await import('@google-cloud/vision');
-    const client = new vision.ImageAnnotatorClient();
-    const [result] = await client.labelDetection({ image: { content: base64Data } });
-    const labels = result.labelAnnotations || [];
+    const client = getLLMClient();
+    const media = { mimeType, data: base64Data };
+    const response = await retryWithBackoff(() => client.chatWithMedia(prompt, media));
+    const responseText = response.text || '';
+    let cleanText = responseText.replace(/```json/gi, '').replace(/```/g, '').trim();
+    const startIdx = cleanText.indexOf('{');
+    const endIdx = cleanText.lastIndexOf('}');
+    if (startIdx === -1 || endIdx === -1 || startIdx > endIdx) {
+      throw new Error('No JSON object boundaries found');
+    }
+    cleanText = cleanText.substring(startIdx, endIdx + 1);
+    const parsed = JSON.parse(cleanText);
+
+    const category = CATEGORIES.includes(parsed.category) ? parsed.category : 'other';
+    const confidence = typeof parsed.confidence === 'number' ? Math.min(Math.max(parsed.confidence, 0), 1) : 0.5;
+
     return {
-      labels: labels.map(l => ({ description: l.description, score: l.score })),
-      confidence: labels[0]?.score || 0,
-      source: 'cloud_vision',
+      category,
+      confidence,
+      visual_evidence: Array.isArray(parsed.visual_evidence) ? parsed.visual_evidence : [],
+      source: 'gemini_visual_audit',
     };
   } catch (err) {
-    console.warn('[CloudVision] Unavailable, skipping:', err.message);
+    console.warn('[VisualAudit] Independent visual classification failed, skipping consensus fusion:', err.message);
     return null;
   }
 }
 
-const CATEGORIES = ["pothole", "water_leak", "streetlight", "waste", "road_damage", "drainage", "other"];
-
-const VISION_TO_CATEGORY = {
-  'Pothole': 'pothole', 'Road surface': 'pothole', 'Asphalt': 'pothole',
-  'Water': 'water_leak', 'Pipe': 'water_leak', 'Leak': 'water_leak', 'Plumbing': 'water_leak',
-  'Street light': 'streetlight', 'Light fixture': 'streetlight', 'Lamp': 'streetlight',
-  'Waste': 'waste', 'Garbage': 'waste', 'Litter': 'waste', 'Trash': 'waste', 'Pollution': 'waste',
-  'Road': 'road_damage', 'Crack': 'road_damage', 'Infrastructure': 'road_damage',
-  'Drain': 'drainage', 'Sewer': 'drainage', 'Flood': 'drainage', 'Manhole': 'drainage',
-};
-
-export function computeBayesianConsensus(gemini, vision) {
-  // 1. Gemini/LLM Prior
-  const pGem = gemini.confidence || 0.5;
+/**
+ * Bayesian consensus fusion between two INDEPENDENT classification opinions:
+ *  - `primary`   — the main text+media-aware classifier (treated as the prior)
+ *  - `secondary` — the visual-only auditor (treated as the likelihood)
+ *
+ * This is a 2-classifier Naive-Bayes ensemble run entirely on Gemini 2.5
+ * Flash (one call sees text+media, the other sees media only), replacing the
+ * earlier Gemini + Google Cloud Vision fusion. Math is unchanged: multiply
+ * prior x likelihood per category, normalize to a posterior, and report
+ * Shannon entropy of that posterior as an uncertainty signal.
+ *
+ * If no independent signal is available (no media, or the audit call
+ * failed), the likelihood is uniform across categories, so the posterior
+ * collapses to the primary classifier's own confidence — i.e. consensus
+ * degrades gracefully to single-model classification rather than failing.
+ *
+ * @param {{category: string, confidence: number}} primary
+ * @param {{category: string, confidence: number}|null} secondary
+ */
+export function computeBayesianConsensus(primary, secondary) {
+  // 1. Prior — primary classifier's own confidence distribution
+  const pPrimary = primary.confidence || 0.5;
   const prior = {};
   CATEGORIES.forEach(c => {
-    if (c === gemini.category) {
-      prior[c] = pGem;
-    } else {
-      prior[c] = (1 - pGem) / (CATEGORIES.length - 1);
-    }
+    prior[c] = c === primary.category ? pPrimary : (1 - pPrimary) / (CATEGORIES.length - 1);
   });
 
-  // 2. Vision Likelihood
+  // 2. Likelihood — independent visual-audit opinion (or uniform if unavailable)
   const likelihood = {};
-  const rawScores = {};
-  CATEGORIES.forEach(c => { rawScores[c] = 0; });
-
-  if (vision && vision.labels && vision.labels.length > 0) {
-    vision.labels.forEach(label => {
-      for (const [keyword, category] of Object.entries(VISION_TO_CATEGORY)) {
-        if (label.description.toLowerCase().includes(keyword.toLowerCase())) {
-          rawScores[category] += label.score || 0;
-        }
-      }
-    });
-    // Softmax normalization
-    const exps = {};
-    let sumExp = 0;
+  if (secondary && secondary.category) {
+    const pSecondary = secondary.confidence ?? 0.5;
     CATEGORIES.forEach(c => {
-      exps[c] = Math.exp(rawScores[c]);
-      sumExp += exps[c];
-    });
-    CATEGORIES.forEach(c => {
-      likelihood[c] = exps[c] / sumExp;
+      likelihood[c] = c === secondary.category ? pSecondary : (1 - pSecondary) / (CATEGORIES.length - 1);
     });
   } else {
-    // Uniform likelihood
-    CATEGORIES.forEach(c => {
-      likelihood[c] = 1 / CATEGORIES.length;
-    });
+    CATEGORIES.forEach(c => { likelihood[c] = 1 / CATEGORIES.length; });
   }
 
   // 3. Posterior Consensus
@@ -120,8 +152,6 @@ export function computeBayesianConsensus(gemini, vision) {
     posterior[c] = prior[c] * likelihood[c];
     sumPosterior += posterior[c];
   });
-
-  // Normalize
   CATEGORIES.forEach(c => {
     posterior[c] = posterior[c] / sumPosterior;
   });
@@ -136,7 +166,7 @@ export function computeBayesianConsensus(gemini, vision) {
     }
   });
 
-  // Shannon Entropy
+  // Shannon Entropy — disagreement between the two opinions shows up as higher entropy
   let entropy = 0;
   CATEGORIES.forEach(c => {
     const p = posterior[c];
@@ -149,32 +179,25 @@ export function computeBayesianConsensus(gemini, vision) {
     consensusCategory: maxCat,
     consensusConfidence: maxProb,
     entropy: Math.round(entropy * 100) / 100,
-    posteriorDistribution: posterior
+    posteriorDistribution: posterior,
   };
-}
-
-export function mapVisionLabelsToCategory(labels) {
-  for (const label of labels) {
-    for (const [keyword, category] of Object.entries(VISION_TO_CATEGORY)) {
-      if (label.description.toLowerCase().includes(keyword.toLowerCase())) return category;
-    }
-  }
-  return null;
 }
 
 export async function classifyMedia(base64Data, mimeType, text) {
   let llm;
-  let vision;
-  
-  const [llmResult, visionResult] = await Promise.allSettled([
+  let visualAudit;
+
+  const isVisualMedia = mimeType?.startsWith('image') || mimeType?.startsWith('video');
+
+  const [llmResult, auditResult] = await Promise.allSettled([
     classifyWithLLM(base64Data, mimeType, text),
-    mimeType.startsWith('image') ? classifyWithCloudVision(base64Data) : Promise.resolve(null),
+    isVisualMedia ? classifyWithVisualAudit(base64Data, mimeType) : Promise.resolve(null),
   ]);
 
   llm = llmResult.status === 'fulfilled' ? llmResult.value : null;
-  vision = visionResult.status === 'fulfilled' ? visionResult.value : null;
+  visualAudit = auditResult.status === 'fulfilled' ? auditResult.value : null;
 
-  // Fallback if LLM classification with vision failed:
+  // Fallback if LLM classification with media failed:
   // If we had media but the classification returned an error or failed, try a text-only classification fallback!
   if (!llm || llm.source === 'error') {
     console.warn('[Classifier] Media classification failed/errored. Retrying with text-only fallback...');
@@ -186,8 +209,8 @@ export async function classifyMedia(base64Data, mimeType, text) {
     }
   }
 
-  const consensus = computeBayesianConsensus(llm, vision);
-  const agreement = consensus.consensusCategory === llm.category;
+  const consensus = computeBayesianConsensus(llm, visualAudit);
+  const agreement = !visualAudit || consensus.consensusCategory === llm.category;
 
   // Confidence threshold: check if classification is uncertain (confidence < 0.65)
   const isUncertain = consensus.consensusConfidence < 0.65;
@@ -198,14 +221,19 @@ export async function classifyMedia(base64Data, mimeType, text) {
       severity: llm.severity,
       confidence: consensus.consensusConfidence,
       reasoning: llm.reasoning,
-      evidence: llm.evidence || 'No visual evidence detected',
+      evidence: visualAudit?.visual_evidence?.length
+        ? visualAudit.visual_evidence.join(', ')
+        : (llm.evidence || 'No visual evidence detected'),
       source: llm.source,
       entropy: consensus.entropy,
       original_llm: llm,
+      visual_audit: visualAudit,
       uncertain_classification: isUncertain,
     },
-    cloudVisionResult: vision,
+    // Field name kept as `cloudVisionResult` for backward DB-schema compatibility
+    // (older seeded tickets and downstream consumers expect this key); it now
+    // carries the Gemini visual-audit result instead of a Cloud Vision response.
+    cloudVisionResult: visualAudit,
     classificationAgreement: agreement,
   };
 }
-
