@@ -35,7 +35,7 @@ async function run() {
 
   console.log("\n--- CLASSIFICATION METRICS ---");
   console.log(`Tickets with AI Classification: ${totalWithAI}`);
-  console.log(`Tickets with Cloud Vision Labeling: ${totalWithVision}`);
+  console.log(`Tickets with Independent Visual-Audit Opinion: ${totalWithVision}`);
   console.log(`Multi-Model Agreement Rate: ${totalWithAI > 0 ? ((agreedCount / totalWithAI) * 100).toFixed(2) : 0}%`);
   console.log(`Average posterior distribution entropy: ${entropyCount > 0 ? (totalEntropy / entropyCount).toFixed(4) : "N/A"}`);
 

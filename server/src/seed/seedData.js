@@ -81,7 +81,7 @@ function enrichAgentFields(ticket, priorityScore, vUp, vDown, category, severity
   const deadlineDate = new Date(slaDeadline);
   
   ticket.verification_score = vScore;
-  ticket.verification_explanation = `Bayesian consensus calculated valid issue state at ${vScore}% probability. Supported by ${vUp} citizen upvotes, AI computer vision label validation, and proximity cluster confirmation.`;
+  ticket.verification_explanation = `Bayesian consensus calculated valid issue state at ${vScore}% probability. Supported by ${vUp} citizen upvotes, independent Gemini visual-audit validation, and proximity cluster confirmation.`;
 
   ticket.priority_explanation = `Civic priority index calibrated at ${Math.round(priorityScore)}/100. Factors weighed: ${severity.toUpperCase()} hazard level, asset category index, and community feedback weighting.`;
 
@@ -321,75 +321,51 @@ export function generateTickets(count = 800) {
       elapsedHours: Math.min(elapsedHours, slaHours * 2), slaHours, category,
     });
 
-    let cloudVisionResult = null;
+    let cloudVisionResult = null; // holds the simulated independent Gemini visual-audit opinion (field name kept for DB-schema compatibility)
     let classificationAgreement = true;
     const aiClassification = { category, severity, confidence: Math.round(rand(0.75, 0.95) * 100) / 100, source: 'llm' };
 
-    // Simulate Cloud Vision labeling for 40% of reports
+    // Simulate a second, independent Gemini visual-audit opinion for 40% of reports
+    // (mirrors classificationService.classifyWithVisualAudit + computeBayesianConsensus)
     if (Math.random() < 0.40) {
-      const isAgreed = Math.random() >= 0.15; // 85% agreement
-      const visionScore = Math.round(rand(0.60, 0.95) * 100) / 100;
-      
-      const matchedLabel = isAgreed
-        ? (category === 'pothole' ? 'Pothole' : (category === 'water_leak' ? 'Water pipe' : (category === 'streetlight' ? 'Street light' : 'Garbage')))
-        : (category === 'pothole' ? 'Water pipe' : 'Pothole');
-        
+      const isAgreed = Math.random() >= 0.15; // 85% agreement between the two independent calls
+      const auditConfidence = Math.round(rand(0.60, 0.95) * 100) / 100;
+      const auditCategory = isAgreed ? category : (category === 'pothole' ? 'water_leak' : 'pothole');
+
       cloudVisionResult = {
-        labels: [
-          { description: matchedLabel, score: visionScore }
-        ],
-        confidence: visionScore,
-        source: 'cloud_vision'
+        category: auditCategory,
+        confidence: auditConfidence,
+        visual_evidence: [],
+        source: 'gemini_visual_audit',
       };
-      
+
       classificationAgreement = isAgreed;
-      
-      // Calculate Bayesian consensus probability and entropy
-      const prior = {};
+
+      // Bayesian consensus: prior (primary classifier) x likelihood (visual auditor)
       const CATEGORIES_LIST = ['pothole', 'water_leak', 'streetlight', 'waste', 'road_damage', 'drainage', 'other'];
+      const prior = {};
       CATEGORIES_LIST.forEach(c => {
         prior[c] = (c === category) ? aiClassification.confidence : (1 - aiClassification.confidence) / (CATEGORIES_LIST.length - 1);
       });
-      
+
       const likelihood = {};
-      CATEGORIES_LIST.forEach(c => { likelihood[c] = 0; });
-      
-      const VISION_TO_CATEGORY_MAPPING = {
-        'Pothole': 'pothole', 'Road surface': 'pothole',
-        'Water': 'water_leak', 'Pipe': 'water_leak', 'Leak': 'water_leak',
-        'Street light': 'streetlight',
-        'Garbage': 'waste', 'Waste': 'waste',
-      };
-      
-      for (const [kw, cat] of Object.entries(VISION_TO_CATEGORY_MAPPING)) {
-        if (matchedLabel.toLowerCase().includes(kw.toLowerCase())) {
-          likelihood[cat] += visionScore;
-        }
-      }
-      
-      // Softmax likelihood
-      const exps = {};
-      let sumExp = 0;
       CATEGORIES_LIST.forEach(c => {
-        exps[c] = Math.exp(likelihood[c]);
-        sumExp += exps[c];
+        likelihood[c] = (c === auditCategory) ? auditConfidence : (1 - auditConfidence) / (CATEGORIES_LIST.length - 1);
       });
-      CATEGORIES_LIST.forEach(c => { likelihood[c] = exps[c] / sumExp; });
-      
-      // Posterior
+
       const posterior = {};
       let sumPost = 0;
       CATEGORIES_LIST.forEach(c => {
         posterior[c] = prior[c] * likelihood[c];
         sumPost += posterior[c];
       });
-      
+
       let entropy = 0;
       CATEGORIES_LIST.forEach(c => {
         const p = posterior[c] / sumPost;
         if (p > 0) entropy -= p * Math.log2(p);
       });
-      
+
       aiClassification.entropy = Math.round(entropy * 100) / 100;
     }
 
