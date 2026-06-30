@@ -334,7 +334,7 @@ function CopilotDrawer() {
                               padding: '1px'
                             }} 
                           />
-                          <span>VIGILANTE AI</span>
+                          <span>VIGILANTAE AI</span>
                         </>
                       ) : (
                         <span>👤 CITIZEN SENSOR</span>

@@ -18,7 +18,7 @@ const SHOP_ITEMS = [
   { id: 'avatar_cypher', name: 'Future Watcher Avatar', cost: 60, type: 'avatar', value: 'cypher' },
   { id: 'avatar_hero', name: 'Urban Legend Avatar', cost: 80, type: 'avatar', value: 'hero' },
   { id: 'badge_legend', name: 'Lucknow Legend Badge', cost: 80, type: 'badge', value: 'Lucknow Legend', emoji: '👑' },
-  { id: 'badge_sentinel', name: 'SLA Sentinel Badge', cost: 40, type: 'badge', value: 'SLA Sentinel', emoji: '🛡️' }
+  { id: 'badge_sentinel', name: 'Vigilantae Badge', cost: 40, type: 'badge', value: 'Vigilantae', emoji: '🛡️' }
 ];
 
 const INITIAL_QUESTS = [

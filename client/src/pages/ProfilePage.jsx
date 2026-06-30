@@ -15,7 +15,7 @@ const SHOP_ITEMS = [
   { id:'avatar_cypher', name:'Future Watcher Avatar', cost: 60, type:'avatar', value:'cypher', desc:'Netrunner pixel visor sprite'},
   { id:'avatar_hero', name:'Urban Legend Avatar', cost: 80, type:'avatar', value:'hero', desc:'Neon cape superhero sprite'},
   { id:'badge_legend', name:'Lucknow Legend Badge', cost: 80, type:'badge', value:'Lucknow Legend', desc:'A royal crown next to your username'},
-  { id:'badge_sentinel', name:'SLA Sentinel Badge', cost: 40, type:'badge', value:'SLA Sentinel', desc:'A tactical shield badge'}
+  { id:'badge_sentinel', name:'Vigilantae Badge', cost: 40, type:'badge', value:'Vigilantae', desc:'A tactical shield badge'}
 ];
 
 const CoinIcon = ({ size = 16, style = {} }) => (

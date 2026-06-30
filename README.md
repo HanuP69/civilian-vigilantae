@@ -170,3 +170,4 @@ Unit tests cover DBSCAN clustering, Weibull MLE/CDF, Haversine distance, priorit
 
 ---
 
+*Built solo for the OmniBoard hackathon — see `SUBMISSION.md` for the formatted project-description content (problem statement, solution overview, key features, technologies used) ready to paste into the submission Google Doc.*

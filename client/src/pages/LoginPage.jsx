@@ -116,7 +116,7 @@ function LoginPage() {
             Tactical Command Auth
           </span>
           <h2 style={{ fontSize: '1.6rem', marginTop: 'var(--space-2)', fontStyle: 'italic' }}>
-            Vigilante Access
+            Vigilantae Access
           </h2>
         </div>
 
